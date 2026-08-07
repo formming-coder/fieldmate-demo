@@ -22,10 +22,25 @@ export default function Settings() {
   const navigate = useNavigate()
   const { logout } = useAuth()
   const [darkMode, setDarkMode] = useState(false)
+  const [toast, setToast] = useState('')
 
   const handleLogout = async () => {
     await logout()
     navigate('/login', { replace: true })
+  }
+
+  const handleRowAction = (rowKey: string) => {
+    const messages: Record<string, string> = {
+      ภาษา: 'กำหนดภาษาเป็นไทยเรียบร้อยแล้ว',
+      ธีม: 'กำหนดธีมสว่างสำหรับเดโมแล้ว',
+      การแจ้งเตือน: 'เปิดศูนย์การแจ้งเตือนสำหรับงานภาคสนามแล้ว',
+      ออฟไลน์: 'เปิดการซิงก์อัจฉริยะแบบออฟไลน์แล้ว',
+      Version: 'แสดงข้อมูลเวอร์ชันสำหรับเดโมแล้ว',
+      ความเป็นส่วนตัว: 'เปิดนโยบายความเป็นส่วนตัวขององค์กรแล้ว',
+      ข้อกำหนด: 'เปิดข้อกำหนดการใช้งานภายในองค์กรแล้ว',
+      เกี่ยวกับ: 'เปิดรายละเอียดแอปฟีลด์เมต AI แล้ว',
+    }
+    setToast(messages[rowKey] || 'เปิดรายการตั้งค่าแล้ว')
   }
 
   return (
@@ -44,7 +59,16 @@ export default function Settings() {
                 <strong>{row.key}</strong>
                 <span>{row.key === 'โหมดมืด' ? (darkMode ? 'เปิด' : 'ปิด') : row.detail}</span>
               </div>
-              {row.key === 'โหมดมืด' ? <button type="button" onClick={() => setDarkMode((current) => !current)}>{darkMode ? 'ปิดใช้งาน' : 'เปิดใช้งาน'}</button> : <button type="button">เปิด</button>}
+              {row.key === 'โหมดมืด' ? (
+                <button type="button" onClick={() => {
+                  setDarkMode((current) => !current)
+                  setToast(darkMode ? 'ปิดโหมดมืดแล้ว' : 'เปิดโหมดมืดแล้ว')
+                }}>
+                  {darkMode ? 'ปิดใช้งาน' : 'เปิดใช้งาน'}
+                </button>
+              ) : (
+                <button type="button" onClick={() => handleRowAction(row.key)}>เปิด</button>
+              )}
             </article>
           ))}
         </section>
@@ -55,6 +79,8 @@ export default function Settings() {
           <p>{env.appMode === 'development' ? 'กำลังใช้การเข้าสู่ระบบโหมดสาธิต และจะเปิดใช้งาน Microsoft เมื่อสลับเป็นโหมดใช้งานจริง' : 'เซสชัน Microsoft ถูกจัดการด้วยการยืนยันตัวตนแบบปลอดภัยผ่านการเปลี่ยนเส้นทาง'}</p>
           <Button type="button" variant="secondary" fullWidth onClick={() => void handleLogout()}>ออกจากระบบ</Button>
         </section>
+
+        {toast ? <div className="entry-toast">{toast}</div> : null}
       </div>
     </Layout>
   )

@@ -4,9 +4,10 @@ import { motion } from 'framer-motion'
 type FloatingSearchProps = {
   value: string
   onChange: (value: string) => void
+  onVoice?: () => void
 }
 
-function FloatingSearch({ value, onChange }: FloatingSearchProps) {
+function FloatingSearch({ value, onChange, onVoice }: FloatingSearchProps) {
   return (
     <motion.div
       className="map-floating-search"
@@ -21,7 +22,7 @@ function FloatingSearch({ value, onChange }: FloatingSearchProps) {
         placeholder="ค้นหาทรัพย์ จังหวัด ถนน เจ้าของ รหัสทรัพย์"
         aria-label="ค้นหาทรัพย์"
       />
-      <button type="button" className="map-floating-search-mic" aria-label="ค้นหาด้วยเสียง">🎤</button>
+      <button type="button" className="map-floating-search-mic" aria-label="ค้นหาด้วยเสียง" onClick={onVoice}>🎤</button>
     </motion.div>
   )
 }

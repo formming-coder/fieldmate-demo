@@ -250,6 +250,59 @@
   font-weight: 800;
 }
 
+.smart-current-location-pill {
+  position: absolute;
+  z-index: 768;
+  left: 14px;
+  right: 14px;
+  bottom: calc(var(--smart-safe-bottom) + 276px);
+  border-radius: 999px;
+  padding: 7px 12px;
+  background: rgba(40, 113, 213, 0.16);
+  border: 1px solid rgba(34, 101, 191, 0.28);
+  color: #143c75;
+  font-size: 0.72rem;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.smart-map-summary-card {
+  position: absolute;
+  z-index: 766;
+  left: 14px;
+  right: 72px;
+  bottom: calc(var(--smart-safe-bottom) + 186px);
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  border-radius: 14px;
+  padding: 10px;
+  background: rgba(255, 252, 246, 0.92);
+  border: 1px solid rgba(55, 42, 26, 0.14);
+  box-shadow: 0 10px 24px rgba(43, 28, 9, 0.16);
+}
+
+.smart-map-summary-card div {
+  border-radius: 10px;
+  padding: 8px;
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.smart-map-summary-card span {
+  display: block;
+  font-size: 0.66rem;
+  color: #6f5a3f;
+}
+
+.smart-map-summary-card strong {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.72rem;
+  color: #33250f;
+}
+
 .smart-map-floating-top {
   position: absolute;
   z-index: 640;
@@ -446,6 +499,21 @@
   bottom: calc(var(--smart-safe-bottom) + 88px);
   display: flex;
   gap: 8px;
+}
+
+.smart-map-action-toast {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: calc(88px + env(safe-area-inset-bottom));
+  z-index: 2250;
+  padding: 10px 12px;
+  border-radius: 999px;
+  background: rgba(17, 24, 39, 0.9);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  box-shadow: 0 12px 24px rgba(2, 6, 23, 0.24);
 }
 
 .smart-map-meta-pills span {
@@ -765,12 +833,17 @@
 }
 
 .smart-marker {
-  min-width: 74px;
-  min-height: 34px;
+  min-width: 118px;
+  min-height: 50px;
   border-radius: 12px;
-  display: inline-flex;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-areas:
+    'icon price'
+    'id status'
+    'meta meta';
   align-items: center;
-  gap: 4px;
+  gap: 2px 6px;
   padding: 6px 8px;
   border: 1px solid rgba(49, 31, 5, 0.2);
   background: rgba(255, 252, 246, 0.94);
@@ -785,13 +858,57 @@
 }
 
 .smart-marker-type {
+  grid-area: icon;
   font-size: 0.85rem;
 }
 
 .smart-marker-price {
-  font-size: 0.71rem;
+  grid-area: price;
+  font-size: 0.66rem;
   font-weight: 800;
   color: #553400;
+}
+
+.smart-marker-id {
+  grid-area: id;
+  font-size: 0.59rem;
+  color: #5f5244;
+}
+
+.smart-marker-status {
+  grid-area: status;
+  justify-self: end;
+  padding: 2px 6px;
+  border-radius: 999px;
+  font-size: 0.54rem;
+  font-weight: 800;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.smart-marker-meta {
+  grid-area: meta;
+  font-size: 0.57rem;
+  color: #69533b;
+}
+
+.smart-marker-status-for-sale .smart-marker-status {
+  color: #0a5d1e;
+  background: rgba(114, 228, 129, 0.32);
+}
+
+.smart-marker-status-sold .smart-marker-status {
+  color: #665f57;
+  background: rgba(191, 189, 186, 0.42);
+}
+
+.smart-marker-status-pending .smart-marker-status {
+  color: #7a4b00;
+  background: rgba(255, 198, 105, 0.44);
+}
+
+.smart-marker-status-appraisal .smart-marker-status {
+  color: #1d4a8d;
+  background: rgba(141, 195, 255, 0.38);
 }
 
 .smart-cluster {
@@ -825,6 +942,81 @@
   border: 2px solid #fff;
   background: radial-gradient(circle at 30% 30%, #91f0ff, #0088ff 70%);
   box-shadow: 0 0 0 6px rgba(0, 136, 255, 0.2), 0 10px 18px rgba(3, 44, 84, 0.28);
+}
+
+.smart-sheet-content {
+  display: grid;
+  gap: 12px;
+}
+
+.smart-sheet-summary {
+  display: grid;
+  grid-template-columns: 92px 1fr;
+  gap: 10px;
+  border-radius: 14px;
+  padding: 10px;
+  background: rgba(255, 252, 246, 0.9);
+  border: 1px solid rgba(49, 33, 13, 0.12);
+}
+
+.smart-sheet-summary img {
+  width: 100%;
+  height: 92px;
+  border-radius: 12px;
+  object-fit: cover;
+}
+
+.smart-sheet-title {
+  font-size: 0.84rem;
+  font-weight: 800;
+}
+
+.smart-sheet-line {
+  margin-top: 4px;
+  font-size: 0.69rem;
+  color: #635442;
+}
+
+.smart-sheet-kpis {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.smart-sheet-kpis div {
+  border-radius: 12px;
+  padding: 8px;
+  border: 1px solid rgba(43, 31, 16, 0.1);
+  background: rgba(255, 255, 255, 0.78);
+}
+
+.smart-sheet-kpis span {
+  display: block;
+  font-size: 0.62rem;
+  color: #6c5b45;
+}
+
+.smart-sheet-kpis strong {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.74rem;
+  color: #392c1b;
+}
+
+.smart-sheet-actions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.smart-sheet-actions button {
+  border: 1px solid rgba(44, 29, 10, 0.12);
+  border-radius: 12px;
+  min-height: 40px;
+  background: rgba(255, 255, 255, 0.86);
+  color: #49330f;
+  font-size: 0.72rem;
+  font-weight: 800;
 }
 
 @keyframes smart-shimmer {
@@ -871,6 +1063,11 @@
   .smart-ai-panel {
     right: auto;
     width: min(420px, calc(100vw - 220px));
+  }
+
+  .smart-map-summary-card,
+  .smart-current-location-pill {
+    left: max(16px, calc((100vw - 500px) / 2));
   }
 
   .smart-sheet {

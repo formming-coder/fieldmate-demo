@@ -23,6 +23,7 @@ function PropertyInfo({ property, aiConfidence, distanceKm, statusLabel }: Prope
   const navigate = useNavigate()
   const timelineRef = useRef<HTMLDivElement | null>(null)
   const [startIndex, setStartIndex] = useState(0)
+  const [actionMessage, setActionMessage] = useState('')
 
   const timeline = useMemo<TimelineEvent[]>(() => [
     { id: 'event-1', title: 'ประวัติตรวจสอบ', detail: 'ตรวจสอบภาคสนามเสร็จสิ้น', time: '2026-08-07 09:20' },
@@ -61,9 +62,37 @@ function PropertyInfo({ property, aiConfidence, distanceKm, statusLabel }: Prope
         <button type="button" onClick={() => window.open(`https://www.google.com/maps?q=${property.latitude},${property.longitude}`, '_blank', 'noopener,noreferrer')}>เริ่มนำทาง</button>
         <button type="button" onClick={() => navigate('/camera')}>เปิดกล้อง</button>
         <button type="button" onClick={() => navigate('/ai-summary')}>สรุป AI</button>
-        <button type="button">บันทึก</button>
-        <button type="button">แชร์</button>
+        <button type="button" onClick={() => setActionMessage(`บันทึกรายการ ${property.owner} แล้ว`)}>บันทึก</button>
+        <button
+          type="button"
+          onClick={async () => {
+            const detail = `${property.owner} • ${property.province} • ${property.marketPrice.toLocaleString()} บาท`
+            if (navigator.share) {
+              try {
+                await navigator.share({
+                  title: 'ข้อมูลทรัพย์สินภาคสนาม',
+                  text: detail,
+                })
+                setActionMessage('แชร์ข้อมูลสำเร็จ')
+                return
+              } catch {
+                // If user cancels share, keep the UI silent.
+              }
+            }
+
+            try {
+              await navigator.clipboard.writeText(detail)
+              setActionMessage('คัดลอกข้อมูลเพื่อแชร์แล้ว')
+            } catch {
+              setActionMessage('ไม่สามารถแชร์ได้ในขณะนี้')
+            }
+          }}
+        >
+          แชร์
+        </button>
       </div>
+
+      {actionMessage ? <p className="smart-info-note">{actionMessage}</p> : null}
 
       <div className="smart-timeline-wrap">
         <h3>ไทม์ไลน์</h3>

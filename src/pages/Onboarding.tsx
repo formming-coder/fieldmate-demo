@@ -14,7 +14,7 @@ const slides = [
   },
   {
     title: 'บันทึกหลักฐานด้วยความช่วยเหลือจาก AI',
-    description: 'ใช้ AI Camera สำหรับ OCR ข้อมูลกำกับภาพ คะแนนคุณภาพ และการเก็บภาพอย่างเป็นระบบ',
+    description: 'ใช้กล้อง AI สำหรับ OCR ข้อมูลกำกับภาพ คะแนนคุณภาพ และการเก็บภาพอย่างเป็นระบบ',
     icon: '📷',
   },
   {
@@ -29,7 +29,7 @@ function completeOnboarding() {
   window.localStorage.setItem(ONBOARDING_STORAGE_KEY, 'true')
 }
 
-export default function Onboarding() {
+export default function Onboarding({ onComplete }: { onComplete?: () => void }) {
   const navigate = useNavigate()
   const [index, setIndex] = useState(0)
   const slide = slides[index]
@@ -40,7 +40,8 @@ export default function Onboarding() {
   const goNext = () => {
     if (isLast) {
       completeOnboarding()
-      navigate('/welcome')
+      onComplete?.()
+      navigate('/login')
       return
     }
     setIndex((current) => current + 1)
@@ -48,7 +49,8 @@ export default function Onboarding() {
 
   const skip = () => {
     completeOnboarding()
-    navigate('/welcome')
+    onComplete?.()
+    navigate('/login')
   }
 
   return (

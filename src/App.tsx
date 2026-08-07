@@ -8,6 +8,7 @@ import ProtectedRoute from './lib/auth/ProtectedRoute'
 import { useAuth } from './lib/auth/useAuth'
 
 const ONBOARDING_STORAGE_KEY = 'fieldmate-onboarding-complete'
+const PERMISSIONS_STORAGE_KEY = 'fieldmate-permissions-complete'
 const Onboarding = lazy(() => import('./pages/Onboarding'))
 const Welcome = lazy(() => import('./pages/Welcome'))
 const Login = lazy(() => import('./pages/Login'))
@@ -33,18 +34,25 @@ function readBooleanFlag(key: string) {
   return window.localStorage.getItem(key) === 'true'
 }
 
-function getDefaultRoute(isAuthenticated: boolean, onboardingComplete: boolean) {
+function getDefaultRoute(isAuthenticated: boolean, onboardingComplete: boolean, permissionsComplete: boolean) {
   if (!isAuthenticated && !onboardingComplete) return '/onboarding'
   if (!isAuthenticated) return '/login'
-  return '/home'
+  if (!permissionsComplete) return '/permissions'
+  return '/map'
 }
 
 function AnimatedRoutes({
   isAuthenticated,
   onboardingComplete,
+  permissionsComplete,
+  onOnboardingComplete,
+  onPermissionsComplete,
 }: {
   isAuthenticated: boolean
   onboardingComplete: boolean
+  permissionsComplete: boolean
+  onOnboardingComplete: () => void
+  onPermissionsComplete: () => void
 }) {
   const location = useLocation()
 
@@ -60,16 +68,12 @@ function AnimatedRoutes({
       >
         <Suspense fallback={<Splash />}>
         <Routes location={location}>
-          <Route path="/" element={<Navigate to={getDefaultRoute(isAuthenticated, onboardingComplete)} replace />} />
-          <Route path="/onboarding" element={isAuthenticated ? <Navigate to="/home" replace /> : onboardingComplete ? <Navigate to="/welcome" replace /> : <Onboarding />} />
-          <Route path="/welcome" element={isAuthenticated ? <Navigate to="/home" replace /> : <Welcome />} />
-          <Route path="/login" element={isAuthenticated ? <Navigate to="/home" replace /> : <Login />} />
-          <Route path="/permissions" element={<Permission onComplete={() => {
-            if (typeof window !== 'undefined') {
-              window.localStorage.setItem('fieldmate-permissions-complete', 'true')
-            }
-          }} />} />
-          <Route path="/home" element={<ProtectedRoute route="home"><Home /></ProtectedRoute>} />
+          <Route path="/" element={<Navigate to={getDefaultRoute(isAuthenticated, onboardingComplete, permissionsComplete)} replace />} />
+          <Route path="/onboarding" element={isAuthenticated ? <Navigate to="/map" replace /> : onboardingComplete ? <Navigate to="/login" replace /> : <Onboarding onComplete={onOnboardingComplete} />} />
+          <Route path="/welcome" element={isAuthenticated ? <Navigate to="/map" replace /> : <Welcome />} />
+          <Route path="/login" element={isAuthenticated ? <Navigate to="/map" replace /> : <Login />} />
+          <Route path="/permissions" element={isAuthenticated && permissionsComplete ? <Navigate to="/map" replace /> : <Permission onComplete={onPermissionsComplete} />} />
+          <Route path="/home" element={<Navigate to="/map" replace />} />
           <Route path="/dashboard" element={<ProtectedRoute route="dashboard"><Dashboard /></ProtectedRoute>} />
           <Route path="/map" element={<ProtectedRoute route="map"><SmartMap /></ProtectedRoute>} />
           <Route path="/gis" element={<ProtectedRoute route="gis"><GISHome /></ProtectedRoute>} />
@@ -95,7 +99,22 @@ function App() {
   const { isAuthenticated, loading } = useAuth()
   const [showAppCover, setShowAppCover] = useState(true)
   const [loaded, setLoaded] = useState(false)
-  const [onboardingComplete] = useState(() => readBooleanFlag(ONBOARDING_STORAGE_KEY))
+  const [onboardingComplete, setOnboardingComplete] = useState(() => readBooleanFlag(ONBOARDING_STORAGE_KEY))
+  const [permissionsComplete, setPermissionsComplete] = useState(() => readBooleanFlag(PERMISSIONS_STORAGE_KEY))
+
+  const handleOnboardingComplete = () => {
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem(ONBOARDING_STORAGE_KEY, 'true')
+    }
+    setOnboardingComplete(true)
+  }
+
+  const handlePermissionsComplete = () => {
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem(PERMISSIONS_STORAGE_KEY, 'true')
+    }
+    setPermissionsComplete(true)
+  }
 
   useEffect(() => {
     if (showAppCover) return
@@ -110,7 +129,15 @@ function App() {
 
       {!showAppCover && (!loaded || loading) && <Splash />}
 
-      {!showAppCover && loaded && !loading && <AnimatedRoutes isAuthenticated={isAuthenticated} onboardingComplete={onboardingComplete} />}
+      {!showAppCover && loaded && !loading && (
+        <AnimatedRoutes
+          isAuthenticated={isAuthenticated}
+          onboardingComplete={onboardingComplete}
+          permissionsComplete={permissionsComplete}
+          onOnboardingComplete={handleOnboardingComplete}
+          onPermissionsComplete={handlePermissionsComplete}
+        />
+      )}
     </BrowserRouter>
   )
 }

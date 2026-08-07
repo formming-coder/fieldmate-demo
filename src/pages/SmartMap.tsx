@@ -45,6 +45,28 @@ type NearbyItem = {
   similarity: number
 }
 
+function mapPropertyType(type?: string) {
+  const lower = (type || '').toLowerCase()
+  if (lower.includes('land')) return 'ที่ดิน'
+  if (lower.includes('house')) return 'บ้านเดี่ยว'
+  if (lower.includes('town')) return 'ทาวน์โฮม'
+  if (lower.includes('condo')) return 'คอนโด'
+  if (lower.includes('commercial')) return 'อาคารพาณิชย์'
+  return 'ทรัพย์สิน'
+}
+
+function mapPropertyStatus(status?: string) {
+  const lower = (status || '').toLowerCase()
+  if (lower.includes('sold') || lower.includes('verified') || lower.includes('archived')) return 'Sold'
+  if (lower.includes('pending')) return 'Pending'
+  if (lower.includes('appraisal') || lower.includes('inspected')) return 'Appraisal'
+  return 'For Sale'
+}
+
+function thaiDate(value: string) {
+  return new Date(value).toLocaleDateString('th-TH', { day: '2-digit', month: 'short', year: 'numeric' })
+}
+
 function UserPulseMarker({ onLocate }: { onLocate: (lat: number, lon: number) => void }) {
   const [position, setPosition] = useState<[number, number] | null>(null)
 
@@ -128,6 +150,7 @@ export default function SmartMap() {
   const [activeFilter, setActiveFilter] = useState<SmartFilter>('all')
   const [mapMode, setMapMode] = useState<MapMode>('street')
   const [showLayers, setShowLayers] = useState(false)
+  const [showTraffic, setShowTraffic] = useState(true)
   const [showAITips, setShowAITips] = useState(true)
   const [isOffline, setIsOffline] = useState(() => (typeof navigator !== 'undefined' ? !navigator.onLine : false))
   const [queueCount, setQueueCount] = useState(() => getOfflineQueueCounts().total)
@@ -138,6 +161,7 @@ export default function SmartMap() {
   const [tileErrorCount, setTileErrorCount] = useState(0)
   const [mapRetrySeed, setMapRetrySeed] = useState(0)
   const [isMapBusy, setIsMapBusy] = useState(true)
+  const [actionMessage, setActionMessage] = useState('')
   const mapFrameRef = useRef<HTMLDivElement | null>(null)
   const hasAutoCenteredRef = useRef(false)
   const { location, accuracyLevel, permission, error: gpsError, requestCurrentPosition } = useLiveLocation({ highAccuracy: true, watch: true, timeoutMs: 12000 })
@@ -179,6 +203,12 @@ export default function SmartMap() {
 
     return () => observer.disconnect()
   }, [])
+
+  useEffect(() => {
+    if (!actionMessage) return
+    const timer = window.setTimeout(() => setActionMessage(''), 2200)
+    return () => window.clearTimeout(timer)
+  }, [actionMessage])
 
   const refreshProperties = async () => {
     await refetch()
@@ -253,6 +283,7 @@ export default function SmartMap() {
 
   const selectedConfidence = selectedProperty ? confidenceFromProperty(selectedProperty) : 0
   const selectedDistance = nearbyProperties[0]?.distanceKm || 0.9
+  const selectedDistanceLabel = `${selectedDistance.toFixed(1)} กม.`
 
   const onLocate = (lat: number, lon: number) => {
     setCenter([lat, lon])
@@ -267,6 +298,11 @@ export default function SmartMap() {
       setZoom(16)
       setIsMapBusy(false)
     }
+  }
+
+  const requestCurrentGps = () => {
+    requestCurrentLocation()
+    setActionMessage('กำลังอัปเดต Current GPS')
   }
 
   const centerOnProperty = (property: Property) => {
@@ -318,6 +354,33 @@ export default function SmartMap() {
     if (!nearest) return
     centerOnProperty(nearest)
   }
+
+  const openPropertyNavigation = () => {
+    if (!selectedProperty) return
+    const destination = `${selectedProperty.latitude},${selectedProperty.longitude}`
+    window.open(`https://www.google.com/maps/dir/?api=1&destination=${destination}&travelmode=driving`, '_blank', 'noopener,noreferrer')
+  }
+
+  const summaryNearbyForSale = useMemo(() => {
+    if (!location) return 0
+    return properties.filter((item) => {
+      const distance = Math.abs(item.latitude - location.latitude) + Math.abs(item.longitude - location.longitude)
+      const status = mapPropertyStatus(item.status)
+      return distance <= 0.08 && status === 'For Sale'
+    }).length
+  }, [location, properties])
+
+  const summaryTasksToday = useMemo(() => {
+    return properties.filter((item) => {
+      const date = new Date(item.lastInspection)
+      const today = new Date()
+      return date.toDateString() === today.toDateString()
+    }).length
+  }, [properties])
+
+  const summarySaved = useMemo(() => properties.filter((item) => mapPropertyStatus(item.status) !== 'Pending').length, [properties])
+
+  const currentLocationText = location ? `${location.latitude.toFixed(5)}, ${location.longitude.toFixed(5)}` : 'กำลังค้นหาตำแหน่ง'
 
   const openNavigation = () => {
     if (!selectedProperty || typeof window === 'undefined') return
@@ -380,9 +443,10 @@ export default function SmartMap() {
             <MapFlyTo center={center} zoom={zoom} />
             <MapInteraction onLocate={onLocate} measureMode={measureMode} onMeasurePoint={addMeasurePoint} />
             <UserPulseMarker onLocate={onLocate} />
-            <Circle center={center || DEFAULT_CENTER} radius={1200} pathOptions={{ color: '#FFC107', fillColor: '#FFE28A', fillOpacity: 0.14 }} />
+            <Circle center={center || DEFAULT_CENTER} radius={Math.max(140, location?.accuracy || 360)} pathOptions={{ color: '#2f8fff', fillColor: '#7cc4ff', fillOpacity: 0.2 }} />
             {livePosition ? <Marker position={livePosition} icon={L.divIcon({ className: 'smart-live-location-marker' })} /> : null}
             {measurePoints.length ? <Polyline positions={measurePoints} pathOptions={{ color: '#1d5eff', weight: 4, dashArray: '8 8' }} /> : null}
+            {showTraffic ? <Polyline positions={[[13.729, 100.507], [13.734, 100.518], [13.742, 100.529], [13.753, 100.541]]} pathOptions={{ color: '#e34c2f', weight: 7, opacity: 0.5 }} /> : null}
 
             {clusters.map((node, index) => {
               if (node.items.length > 1) {
@@ -452,22 +516,41 @@ export default function SmartMap() {
             </div>
           ) : null}
 
+          <div className="smart-current-location-pill">ตำแหน่งปัจจุบัน: {currentLocationText}</div>
+
+          <div className="smart-map-summary-card">
+            <div><span>ตำแหน่งปัจจุบัน</span><strong>{currentLocationText}</strong></div>
+            <div><span>ประกาศขายใกล้ฉัน</span><strong>{summaryNearbyForSale} รายการ</strong></div>
+            <div><span>งานของวันนี้</span><strong>{summaryTasksToday} งาน</strong></div>
+            <div><span>ทรัพย์ที่บันทึกไว้</span><strong>{summarySaved} รายการ</strong></div>
+          </div>
+
           <div className="smart-map-floating-top">
-            <FloatingSearch value={searchQuery} onChange={setSearchQuery} />
+            <FloatingSearch
+              value={searchQuery}
+              onChange={setSearchQuery}
+              onVoice={() => {
+                setSearchQuery('บ้านเดี่ยวใกล้สุขุมวิท')
+                setActionMessage('เติมคำค้นหาด้วยเสียงสำหรับเดโมแล้ว')
+              }}
+            />
             <FilterChips value={activeFilter} onChange={setActiveFilter} />
           </div>
 
           <div className="smart-map-fabs">
-            <MapFAB label="ตำแหน่งปัจจุบัน" icon="my_location" onClick={requestCurrentLocation} />
+            <MapFAB label="ค้นหา" icon="search" onClick={() => setActionMessage('โฟกัสช่องค้นหาแล้ว')} />
+            <MapFAB label="Filter" icon="tune" onClick={() => setShowLayers((current) => !current)} />
+            <MapFAB label="Current GPS" icon="my_location" onClick={requestCurrentGps} />
+            <MapFAB label="Layers" icon="layers" onClick={() => setShowLayers((current) => !current)} />
+            <MapFAB label="Nearby" icon="near_me" onClick={findNearbyProperty} />
+            <MapFAB label="Traffic" icon={showTraffic ? 'traffic' : 'route'} onClick={() => setShowTraffic((current) => !current)} />
+            <MapFAB label="Compass" icon="explore" onClick={() => setZoom(13)} />
             <MapFAB label="ซูมเข้า" icon="add" onClick={() => setZoom((current) => Math.min(current + 1, 20))} />
             <MapFAB label="ซูมออก" icon="remove" onClick={() => setZoom((current) => Math.max(current - 1, 5))} />
-            <MapFAB label="เข็มทิศ" icon="explore" onClick={() => setZoom(13)} />
-            <MapFAB label="หาใกล้ฉัน" icon="near_me" onClick={findNearbyProperty} />
             <MapFAB label="วัดระยะ" icon={measureMode ? 'straighten' : 'route'} onClick={() => {
               setMeasureMode((current) => !current)
               setMeasurePoints([])
             }} />
-            <MapFAB label="ชั้นข้อมูล" icon="layers" onClick={() => setShowLayers((current) => !current)} />
             <MapFAB label="คำแนะนำ AI" icon="auto_awesome" onClick={() => setShowAITips((current) => !current)} />
             {selectedProperty ? <MapFAB label="นำทาง" icon="navigation" onClick={openNavigation} /> : null}
             <MapFAB label="GIS อัจฉริยะ" icon="public" onClick={() => navigate('/gis')} />
@@ -478,6 +561,7 @@ export default function SmartMap() {
             <button type="button" className={mapMode === 'street' ? 'active' : ''} onClick={() => setMapMode('street')}>ถนน</button>
             <button type="button" className={mapMode === 'satellite' ? 'active' : ''} onClick={() => setMapMode('satellite')}>ดาวเทียม</button>
             <button type="button" className={mapMode === 'terrain' ? 'active' : ''} onClick={() => setMapMode('terrain')}>ภูมิประเทศ</button>
+            <button type="button" className={showTraffic ? 'active' : ''} onClick={() => setShowTraffic((current) => !current)}>การจราจร</button>
           </div>
 
           {showAITips && selectedProperty ? (
@@ -489,6 +573,7 @@ export default function SmartMap() {
           <div className="smart-map-meta-pills">
             <span>{filteredProperties.length} รายการ</span>
             <span>{mapMode === 'satellite' ? 'ดาวเทียม' : mapMode === 'terrain' ? 'ภูมิประเทศ' : 'ถนน'}</span>
+            <span>{showTraffic ? 'Traffic เปิด' : 'Traffic ปิด'}</span>
             <span>{googleKeyReady ? 'คีย์แผนที่พร้อมใช้' : 'คีย์แผนที่ยังไม่พร้อม'}</span>
             {measurePoints.length === 2 ? <span>{measureDistance.toFixed(2)} กม.</span> : null}
             <button type="button" className="smart-map-gis-pill" onClick={() => navigate('/gis')}>GIS อัจฉริยะ</button>
@@ -499,11 +584,30 @@ export default function SmartMap() {
         {!selectedProperty && !loading ? (
           <button type="button" className="smart-open-camera" onClick={() => navigate('/camera')}>เปิดกล้อง AI</button>
         ) : null}
+
+        {actionMessage ? <div className="smart-map-action-toast" role="status" aria-live="polite">{actionMessage}</div> : null}
       </div>
 
       <BottomSheet open={Boolean(selectedProperty)} onClose={() => setSelectedId(null)}>
         {selectedProperty ? (
-          <>
+          <div className="smart-sheet-content">
+            <section className="smart-sheet-summary">
+              <img src={selectedProperty.images[0]} alt={selectedProperty.owner} />
+              <div>
+                <div className="smart-sheet-title">{selectedProperty.owner}</div>
+                <div className="smart-sheet-line">{selectedProperty.province} • เขตสำรวจหลัก</div>
+                <div className="smart-sheet-line">ID: {selectedProperty.id} • {mapPropertyType(selectedProperty.type)} • {mapPropertyStatus(selectedProperty.status)}</div>
+                <div className="smart-sheet-line">อัปเดตล่าสุด {thaiDate(selectedProperty.lastInspection)}</div>
+              </div>
+            </section>
+
+            <section className="smart-sheet-kpis">
+              <div><span>ราคา</span><strong>{formatThaiCurrency(selectedProperty.marketPrice)}</strong></div>
+              <div><span>ราคาต่อ ตร.ม.</span><strong>{formatThaiCurrency(Math.round(selectedProperty.marketPrice / 120))}</strong></div>
+              <div><span>เจ้าของ</span><strong>{selectedProperty.owner}</strong></div>
+              <div><span>ระยะห่างจาก Current Location</span><strong>{selectedDistanceLabel}</strong></div>
+            </section>
+
             <Suspense fallback={<div className="smart-gallery-skeleton" />}>
               <PropertyGallery images={selectedProperty.images} title={selectedProperty.owner} />
             </Suspense>
@@ -520,7 +624,13 @@ export default function SmartMap() {
             <Suspense fallback={null}>
               <NearbyCarousel items={nearbyProperties} onSelect={centerOnProperty} />
             </Suspense>
-          </>
+
+            <section className="smart-sheet-actions">
+              <button type="button" onClick={() => navigate(`/property/${selectedProperty.id}`)}>ดูรายละเอียด</button>
+              <button type="button" onClick={() => navigate('/assessment')}>เริ่มประเมิน</button>
+              <button type="button" onClick={openPropertyNavigation}>นำทาง</button>
+            </section>
+          </div>
         ) : null}
       </BottomSheet>
     </Layout>

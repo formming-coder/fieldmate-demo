@@ -164,6 +164,21 @@
   gap: 8px;
 }
 
+.gis-action-toast {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: calc(env(safe-area-inset-bottom) + 58px);
+  z-index: 642;
+  padding: 10px 12px;
+  border-radius: 999px;
+  background: rgba(17, 24, 39, 0.9);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  box-shadow: 0 12px 24px rgba(2, 6, 23, 0.24);
+}
+
 .gis-status-pills span,
 .gis-property-type,
 .gis-insight-score {

@@ -41,7 +41,7 @@ export default function Login() {
       setToast('เข้าสู่ระบบสำเร็จ')
       setIsRoutingAfterLogin(true)
       await new Promise((resolve) => window.setTimeout(resolve, 1000))
-      navigate('/home', { replace: true })
+      navigate('/permissions', { replace: true })
     } catch (caughtError) {
       setIsSubmitting(false)
       setError(caughtError instanceof Error ? caughtError.message : 'เข้าสู่ระบบไม่สำเร็จ กรุณาลองใหม่อีกครั้ง')
@@ -94,7 +94,7 @@ export default function Login() {
                 <input type="checkbox" checked={rememberMe} onChange={(event) => setRememberMe(event.target.checked)} />
                 <span>จดจำการเข้าสู่ระบบ</span>
               </label>
-              <button type="button" className="entry-text-button">ลืมรหัสผ่าน</button>
+              <button type="button" className="entry-text-button" onClick={() => setToast('ระบบรีเซ็ตรหัสผ่านสำหรับเดโมพร้อมใช้งานผ่านผู้ดูแลระบบ')}>ลืมรหัสผ่าน</button>
             </div>
 
             <Button type="submit" fullWidth disabled={isSubmitting}>{isSubmitting ? (isDevelopmentAuth ? 'กำลังเข้าสู่ระบบ...' : 'กำลังเชื่อมต่อ Microsoft...') : 'เข้าสู่ระบบ'}</Button>

@@ -297,9 +297,13 @@ export default function SharedPropertyIntelligence() {
     if (action === 'คัดลอก OCR') value = selectedProperty.ocrText
     if (action === 'คัดลอกทั้งหมด') value = `${selectedProperty.propertyName}\n${selectedProperty.telephone}\n${selectedProperty.salePrice}\n${selectedProperty.gps}\n${selectedProperty.ocrText}`
 
-    await navigator.clipboard.writeText(value)
-    setMessage(`${action} สำเร็จ`)
-    setCopySheetOpen(false)
+    try {
+      await navigator.clipboard.writeText(value)
+      setMessage(`${action} สำเร็จ`)
+      setCopySheetOpen(false)
+    } catch {
+      setMessage('ไม่สามารถคัดลอกได้ในขณะนี้ กรุณาลองใหม่อีกครั้ง')
+    }
   }
 
   return (
@@ -325,7 +329,7 @@ export default function SharedPropertyIntelligence() {
               onChange={(event) => setSearch(event.target.value)}
               placeholder="ค้นหาชื่อทรัพย์ โครงการ จังหวัด เขต ถนน เบอร์โทร ราคา GPS หรือข้อความ OCR"
             />
-            <button type="button">เสียง</button>
+            <button type="button" onClick={() => setMessage('โหมดค้นหาด้วยเสียงสำหรับเดโมพร้อมใช้งานแล้ว')}>เสียง</button>
           </div>
           <div className="spi-filter-row">
             {FILTERS.map((filter) => (
@@ -344,39 +348,51 @@ export default function SharedPropertyIntelligence() {
         <section className="spi-strip-section">
           <div className="spi-strip-title">อัปโหลดล่าสุด</div>
           <div className="spi-horizontal-rail">
-            {recentUploads.map((property) => (
-              <button key={property.id} type="button" className="spi-mini-card" onClick={() => setSelectedId(property.id)}>
-                <img src={property.image} alt={property.propertyName} />
-                <strong>{property.propertyName}</strong>
-                <span>{property.captureDate}</span>
-              </button>
-            ))}
+            {recentUploads.length ? (
+              recentUploads.map((property) => (
+                <button key={property.id} type="button" className="spi-mini-card" onClick={() => setSelectedId(property.id)}>
+                  <img src={property.image} alt={property.propertyName} />
+                  <strong>{property.propertyName}</strong>
+                  <span>{property.captureDate}</span>
+                </button>
+              ))
+            ) : (
+              <div className="spi-empty-note">ยังไม่มีรายการอัปโหลดล่าสุด</div>
+            )}
           </div>
         </section>
 
         <section className="spi-strip-section">
           <div className="spi-strip-title">ทรัพย์สินใกล้เคียง</div>
           <div className="spi-horizontal-rail">
-            {nearbyProperties.map((property) => (
-              <button key={property.id} type="button" className="spi-mini-card" onClick={() => setSelectedId(property.id)}>
-                <img src={property.image} alt={property.propertyName} />
-                <strong>{property.propertyName}</strong>
-                <span>{property.distance}</span>
-              </button>
-            ))}
+            {nearbyProperties.length ? (
+              nearbyProperties.map((property) => (
+                <button key={property.id} type="button" className="spi-mini-card" onClick={() => setSelectedId(property.id)}>
+                  <img src={property.image} alt={property.propertyName} />
+                  <strong>{property.propertyName}</strong>
+                  <span>{property.distance}</span>
+                </button>
+              ))
+            ) : (
+              <div className="spi-empty-note">ยังไม่พบทรัพย์สินใกล้เคียงตามตัวกรองนี้</div>
+            )}
           </div>
         </section>
 
         <section className="spi-list">
-          {filteredProperties.map((property) => (
-            <SharedPropertyCard
-              key={property.id}
-              property={property}
-              onOpen={() => setSelectedId(property.id)}
-              onBookmark={() => toggleBookmark(property.id)}
-              onShare={() => shareProperty(property)}
-            />
-          ))}
+          {filteredProperties.length ? (
+            filteredProperties.map((property) => (
+              <SharedPropertyCard
+                key={property.id}
+                property={property}
+                onOpen={() => setSelectedId(property.id)}
+                onBookmark={() => toggleBookmark(property.id)}
+                onShare={() => shareProperty(property)}
+              />
+            ))
+          ) : (
+            <div className="spi-empty-note">ไม่พบข้อมูลตามเงื่อนไขที่เลือก กรุณาปรับคำค้นหาหรือฟิลเตอร์</div>
+          )}
         </section>
 
         <BottomSheet open={Boolean(selectedProperty)} onClose={() => setSelectedId(null)}>

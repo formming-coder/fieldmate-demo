@@ -118,7 +118,7 @@ export default function Home() {
   const quickActions = useMemo(
     () => [
       { icon: 'map', title: 'แผนที่อัจฉริยะ', subtitle: 'สำรวจพื้นที่', path: '/map' },
-      { icon: 'photo_camera', title: 'AI Camera', subtitle: 'บันทึกภาพทรัพย์', path: '/camera' },
+      { icon: 'photo_camera', title: 'กล้อง AI', subtitle: 'บันทึกภาพทรัพย์', path: '/camera' },
       { icon: 'assignment', title: 'ประเมิน', subtitle: 'เปิดงานประเมิน', path: '/assessment' },
       { icon: 'route', title: 'วางแผนเส้นทาง', subtitle: 'วางแผนเส้นทาง', path: '/route-planner' },
       { icon: 'search', title: 'ค้นหา', subtitle: 'ค้นหาข้อมูล', path: '/search' },
@@ -174,7 +174,7 @@ export default function Home() {
           <WelcomeCard
             hours="08:30 - 17:30"
             location="ใจกลางกรุงเทพฯ"
-            weather={`${todayLabel} • 31C`}
+            weather={`${todayLabel} • 31 องศา`}
             summary={`พร้อมเริ่มงานวันนี้ มีนัดหมายสำรวจ ${todayTasks.length} งาน ตำแหน่งปัจจุบันพร้อมใช้งาน และมีรายการรอซิงก์ ${pendingUploads} รายการ`}
           />
         </Suspense>
@@ -218,7 +218,7 @@ export default function Home() {
               ))}
             </div>
           ) : !isLoading ? (
-            <EmptyState title="ยังไม่มีทรัพย์สินในวันนี้" description="เริ่มต้นบันทึกทรัพย์จาก AI Camera เพื่อสร้างข้อมูลสำรวจล่าสุด" action={<button type="button" className="db-empty-cta" onClick={() => navigate('/camera')}>เริ่มบันทึกทรัพย์</button>} />
+            <EmptyState title="ยังไม่มีทรัพย์สินในวันนี้" description="เริ่มต้นบันทึกทรัพย์จากกล้อง AI เพื่อสร้างข้อมูลสำรวจล่าสุด" action={<button type="button" className="db-empty-cta" onClick={() => navigate('/camera')}>เริ่มบันทึกทรัพย์</button>} />
           ) : null}
         </motion.section>
 

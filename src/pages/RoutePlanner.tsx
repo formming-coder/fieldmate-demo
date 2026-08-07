@@ -109,6 +109,7 @@ export default function RoutePlanner() {
   const [showFlood] = useState(true)
   const [showForest] = useState(true)
   const [scrollTop, setScrollTop] = useState(0)
+  const [actionMessage, setActionMessage] = useState('')
 
   useEffect(() => {
     setStops(buildStops(properties))
@@ -164,6 +165,42 @@ export default function RoutePlanner() {
     setZoom(14)
   }
 
+  useEffect(() => {
+    if (!actionMessage) return
+    const timer = window.setTimeout(() => setActionMessage(''), 2200)
+    return () => window.clearTimeout(timer)
+  }, [actionMessage])
+
+  const requestCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      setActionMessage('อุปกรณ์นี้ไม่รองรับ GPS')
+      return
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        onLocate(position.coords.latitude, position.coords.longitude)
+        setActionMessage('อัปเดตตำแหน่งปัจจุบันแล้ว')
+      },
+      () => setActionMessage('ไม่สามารถดึงตำแหน่งปัจจุบันได้ กรุณาตรวจสอบสิทธิ์ GPS')
+    )
+  }
+
+  const applyRouteOptimization = () => {
+    if (!optimizedStops.length) {
+      setActionMessage('ยังไม่มีข้อมูลเส้นทางให้ปรับ')
+      return
+    }
+
+    const first = optimizedStops[0]
+    const firstProperty = properties.find((item) => item.id === first.id)
+    if (firstProperty) {
+      setCenter([firstProperty.latitude, firstProperty.longitude])
+      setZoom(14)
+    }
+    setActionMessage(`ปรับเส้นทางเป็นโหมด${optimizeModeLabel(optimizeMode)} (${routeModeLabel(routeMode)}) แล้ว`)
+  }
+
   return (
     <Layout title="วางแผนเส้นทาง" immersive hideAssistant>
       <div className="rp-page">
@@ -202,9 +239,9 @@ export default function RoutePlanner() {
           </div>
 
           <div className="rp-floating-controls">
-            <button type="button" onClick={() => navigator.geolocation?.getCurrentPosition((position) => onLocate(position.coords.latitude, position.coords.longitude))}>📍</button>
-            <button type="button" onClick={() => navigate('/map')}>🗺</button>
-            <button type="button" onClick={() => setZoom(12)}>🧭</button>
+            <button type="button" aria-label="ระบุตำแหน่งปัจจุบัน" onClick={requestCurrentLocation}>📍</button>
+            <button type="button" aria-label="เปิดแผนที่อัจฉริยะ" onClick={() => navigate('/map')}>🗺</button>
+            <button type="button" aria-label="รีเซ็ตการซูม" onClick={() => setZoom(12)}>🧭</button>
           </div>
 
           <div className="rp-ai-float">
@@ -227,7 +264,7 @@ export default function RoutePlanner() {
                 <button key={mode} type="button" className={routeMode === mode ? 'is-active' : ''} onClick={() => setRouteMode(mode)}>{routeModeLabel(mode)}</button>
               ))}
             </div>
-            <button type="button" className="rp-primary-btn">ปรับเส้นทางแบบ {optimizeModeLabel(optimizeMode)}</button>
+            <button type="button" className="rp-primary-btn" onClick={applyRouteOptimization}>ปรับเส้นทางแบบ {optimizeModeLabel(optimizeMode)}</button>
           </section>
 
           <Suspense fallback={<div className="rp-card">กำลังโหลดคำแนะนำจาก AI...</div>}>
@@ -262,7 +299,14 @@ export default function RoutePlanner() {
                   const absoluteIndex = startIndex + index
                   return (
                     <div key={stop.id} style={{ position: 'absolute', top: absoluteIndex * itemHeight, left: 0, right: 0 }}>
-                      <PropertyStop stop={stop} onOpen={() => setSelectedId(stop.id)} onCall={() => undefined} />
+                      <PropertyStop
+                        stop={stop}
+                        onOpen={() => setSelectedId(stop.id)}
+                        onCall={() => {
+                          window.location.href = `tel:${stop.phone}`
+                          setActionMessage(`กำลังโทรหา ${stop.owner}`)
+                        }}
+                      />
                     </div>
                   )
                 })}
@@ -285,6 +329,8 @@ export default function RoutePlanner() {
           ]} />
 
           <OfflineDownload downloaded={downloaded} pendingUpload={4} cachedRecords={optimizedStops.length} onDownload={() => setDownloaded(true)} />
+
+          {actionMessage ? <div className="rp-toast" role="status" aria-live="polite">{actionMessage}</div> : null}
         </div>
       </div>
 

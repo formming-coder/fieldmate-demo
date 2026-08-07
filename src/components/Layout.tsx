@@ -23,9 +23,9 @@ const titleMap: Record<string, string> = {
 
 const navItems = [
   { label: 'แผนที่', to: '/map', icon: 'map' },
-  { label: 'ถ่ายภาพ', to: '/camera', icon: 'photo_camera' },
-  { label: 'คลังข้อมูล', to: '/album', icon: 'photo_library' },
-  { label: 'ค้นหา', to: '/search', icon: 'search' },
+  { label: 'กล้อง AI', to: '/camera', icon: 'photo_camera' },
+  { label: 'ประเมิน', to: '/assessment', icon: 'assignment' },
+  { label: 'ข้อมูลกลาง', to: '/shared-intelligence', icon: 'hub' },
   { label: 'โปรไฟล์', to: '/profile', icon: 'person' },
 ]
 
@@ -40,8 +40,8 @@ export default function Layout({ children, title, immersive = false, hideAssista
   const filteredNavItems = navItems.filter((item) => {
     if (item.to === '/map') return canAccessAnyRoute(currentRole, ['map'])
     if (item.to === '/camera') return canAccessAnyRoute(currentRole, ['camera'])
-    if (item.to === '/album') return canAccessAnyRoute(currentRole, ['album'])
-    if (item.to === '/search') return canAccessAnyRoute(currentRole, ['search'])
+    if (item.to === '/assessment') return canAccessAnyRoute(currentRole, ['assessment'])
+    if (item.to === '/shared-intelligence') return canAccessAnyRoute(currentRole, ['sharedIntelligence'])
     if (item.to === '/profile') return canAccessAnyRoute(currentRole, ['profile'])
     return true
   })

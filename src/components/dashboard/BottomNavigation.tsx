@@ -3,10 +3,10 @@ import { NavLink } from 'react-router-dom'
 import { motion } from 'framer-motion'
 
 const items = [
-  { to: '/home', label: 'หน้าแรก', icon: 'home' },
   { to: '/map', label: 'แผนที่', icon: 'map' },
-  { to: '/camera', label: 'กล้อง', icon: 'photo_camera' },
+  { to: '/camera', label: 'กล้อง AI', icon: 'photo_camera' },
   { to: '/assessment', label: 'ประเมิน', icon: 'assignment' },
+  { to: '/shared-intelligence', label: 'ข้อมูลกลาง', icon: 'hub' },
   { to: '/profile', label: 'โปรไฟล์', icon: 'person' },
 ]
 

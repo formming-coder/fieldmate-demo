@@ -87,8 +87,9 @@ export default function GISHome() {
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [showLayers, setShowLayers] = useState(true)
   const [satelliteOn, setSatelliteOn] = useState(true)
-  const [radius, setRadius] = useState('1km')
+  const [radius, setRadius] = useState('1 กม.')
   const [offline, setOffline] = useState(() => !navigator.onLine)
+  const [actionMessage, setActionMessage] = useState('')
   const [layers, setLayers] = useState<GISLayerState>({
     forest: { active: true, opacity: 0.78, description: 'เขตคุ้มครอง ป่าสงวน และแนวกันชน' },
     flood: { active: true, opacity: 0.7, description: 'ความเสี่ยงน้ำท่วม ทางระบายน้ำ และระดับน้ำย้อนหลัง' },
@@ -99,7 +100,7 @@ export default function GISHome() {
     satellite: { active: true, opacity: 1, description: 'ภาพถ่ายดาวเทียมความละเอียดสูง' },
     road: { active: true, opacity: 0.82, description: 'การเข้าถึงโครงข่ายถนนและการจัดประเภทถนน' },
     railway: { active: true, opacity: 0.7, description: 'แนวเส้นทางรถไฟและอิทธิพลสถานี' },
-    transit: { active: true, opacity: 0.74, description: 'แนว BTS / MRT และพื้นที่อิทธิพลของสถานี' },
+    transit: { active: true, opacity: 0.74, description: 'แนวรถไฟฟ้าและรถไฟใต้ดิน พร้อมพื้นที่อิทธิพลของสถานี' },
     expressway: { active: true, opacity: 0.76, description: 'การเข้าถึงทางด่วนและทางขึ้นลงในอนาคต' },
     river: { active: true, opacity: 0.58, description: 'อิทธิพลของแม่น้ำสายหลักและบริบทระยะร่น' },
     canal: { active: true, opacity: 0.55, description: 'โครงข่ายคลองและแนวทางระบายน้ำ' },
@@ -124,6 +125,12 @@ export default function GISHome() {
     }
   }, [])
 
+  useEffect(() => {
+    if (!actionMessage) return
+    const timer = window.setTimeout(() => setActionMessage(''), 2200)
+    return () => window.clearTimeout(timer)
+  }, [actionMessage])
+
   const clusters = useMemo<ClusterNode[]>(() => {
     const grouped = new Map<string, ClusterNode>()
     properties.forEach((property) => {
@@ -138,7 +145,7 @@ export default function GISHome() {
   const selectedProperty = useMemo(() => properties.find((item) => item.id === selectedId) || properties[0] || null, [properties, selectedId])
 
   const nearbyPlaces = useMemo(() => {
-    const scale = radius === '500m' ? 0.5 : radius === '1km' ? 1 : radius === '3km' ? 3 : 5
+    const scale = radius === '500 ม.' ? 0.5 : radius === '1 กม.' ? 1 : radius === '3 กม.' ? 3 : 5
     return [
       { label: 'โรงพยาบาลบางนาเจเนอรัล', distance: `${(0.6 * scale).toFixed(1)} กม.`, type: 'โรงพยาบาล' },
       { label: 'โรงเรียนสุขุมวิท', distance: `${(0.8 * scale).toFixed(1)} กม.`, type: 'โรงเรียน' },
@@ -175,6 +182,7 @@ export default function GISHome() {
 
   const refreshMap = async () => {
     await refetch()
+    setActionMessage('รีเฟรชข้อมูลแผนที่แล้ว')
   }
 
   const toggleLayer = (key: GISLayerKey) => {
@@ -208,7 +216,7 @@ export default function GISHome() {
             <TileLayer attribution={satelliteOn ? '&copy; Esri' : '&copy; OpenStreetMap contributors'} url={satelliteOn ? SATELLITE_TILES : STREET_TILES} />
             <MapFlyTo center={center} zoom={zoom} />
             <UserPulseMarker onLocate={onLocate} />
-            {selectedProperty ? <Circle center={[selectedProperty.latitude, selectedProperty.longitude]} radius={radius === '500m' ? 500 : radius === '1km' ? 1000 : radius === '3km' ? 3000 : 5000} pathOptions={{ color: '#ffbf24', fillColor: '#ffe188', fillOpacity: 0.08 }} /> : null}
+            {selectedProperty ? <Circle center={[selectedProperty.latitude, selectedProperty.longitude]} radius={radius === '500 ม.' ? 500 : radius === '1 กม.' ? 1000 : radius === '3 กม.' ? 3000 : 5000} pathOptions={{ color: '#ffbf24', fillColor: '#ffe188', fillOpacity: 0.08 }} /> : null}
             {layers.forest.active ? <ForestOverlay opacity={layers.forest.opacity} /> : null}
             {layers.flood.active ? <FloodOverlay opacity={layers.flood.opacity} /> : null}
             {layers.urban.active ? <UrbanOverlay opacity={layers.urban.opacity} /> : null}
@@ -262,15 +270,36 @@ export default function GISHome() {
           <GISLayerPanel open={showLayers} layers={layers} onToggle={toggleLayer} onOpacityChange={updateOpacity} />
 
           <div className="gis-floating-actions">
-            <button type="button" onClick={() => navigator.geolocation?.getCurrentPosition((position) => onLocate(position.coords.latitude, position.coords.longitude))}>📍</button>
-            <button type="button" onClick={() => setZoom(13)}>🧭</button>
-            <button type="button" onClick={() => navigate('/map')}>🗺</button>
+            <button
+              type="button"
+              aria-label="ระบุตำแหน่งปัจจุบัน"
+              onClick={() => {
+                if (!navigator.geolocation) {
+                  setActionMessage('อุปกรณ์นี้ไม่รองรับ GPS')
+                  return
+                }
+
+                navigator.geolocation.getCurrentPosition(
+                  (position) => {
+                    onLocate(position.coords.latitude, position.coords.longitude)
+                    setActionMessage('อัปเดตตำแหน่งปัจจุบันแล้ว')
+                  },
+                  () => setActionMessage('ไม่สามารถดึงตำแหน่งปัจจุบันได้ กรุณาตรวจสอบสิทธิ์ GPS')
+                )
+              }}
+            >
+              📍
+            </button>
+            <button type="button" aria-label="รีเซ็ตการซูม" onClick={() => setZoom(13)}>🧭</button>
+            <button type="button" aria-label="เปิดแผนที่อัจฉริยะ" onClick={() => navigate('/map')}>🗺</button>
           </div>
 
           <div className="gis-status-pills">
             <span>{offline ? 'ข้อมูลแคชออฟไลน์' : 'ชั้นข้อมูลสด'}</span>
             <span>{properties.length} แปลง</span>
           </div>
+
+          {actionMessage ? <div className="gis-action-toast" role="status" aria-live="polite">{actionMessage}</div> : null}
         </div>
       </div>
 

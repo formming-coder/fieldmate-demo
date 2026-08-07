@@ -155,6 +155,19 @@
   padding: 12px 12px calc(env(safe-area-inset-bottom) + 96px);
 }
 
+.rp-toast {
+  position: sticky;
+  bottom: calc(14px + env(safe-area-inset-bottom));
+  justify-self: center;
+  padding: 10px 12px;
+  border-radius: 999px;
+  background: rgba(17, 24, 39, 0.9);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  box-shadow: 0 12px 24px rgba(2, 6, 23, 0.24);
+}
+
 .rp-chip-row,
 .rp-inline-actions {
   display: flex;

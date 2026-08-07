@@ -85,7 +85,7 @@ export default function Permission({ onComplete }: { onComplete: () => void }) {
 
   const handleContinue = () => {
     onComplete()
-    navigate('/home')
+    navigate('/map')
   }
 
   return (

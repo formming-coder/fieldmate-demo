@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import BrandMark from '../components/BrandMark'
@@ -25,6 +25,13 @@ const features = [
 
 export default function Welcome() {
   const navigate = useNavigate()
+  const [toast, setToast] = useState('')
+
+  useEffect(() => {
+    if (!toast) return
+    const timer = window.setTimeout(() => setToast(''), 2200)
+    return () => window.clearTimeout(timer)
+  }, [toast])
 
   return (
     <EntryShell>
@@ -85,10 +92,12 @@ export default function Welcome() {
         <footer className="welcome-footer">
           <div className="welcome-version">Version v0.0.0</div>
           <div className="welcome-links">
-            <button type="button">ความเป็นส่วนตัว</button>
-            <button type="button">ข้อกำหนด</button>
+            <button type="button" onClick={() => setToast('นโยบายความเป็นส่วนตัวสำหรับเดโมพร้อมใช้งานแล้ว')}>ความเป็นส่วนตัว</button>
+            <button type="button" onClick={() => setToast('ข้อกำหนดการใช้งานสำหรับเดโมพร้อมใช้งานแล้ว')}>ข้อกำหนด</button>
           </div>
         </footer>
+
+        {toast ? <div className="entry-toast">{toast}</div> : null}
       </div>
     </EntryShell>
   )
