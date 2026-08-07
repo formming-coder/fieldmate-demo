@@ -4,6 +4,7 @@ import { QueryClientProvider } from '@tanstack/react-query'
 import App from './App'
 import './index.css'
 import './styles/app.css'
+import { AuthProvider } from './lib/auth/AuthProvider'
 import { AppErrorBoundary } from './lib/errors/AppErrorBoundary'
 import { apiClient } from './lib/http/client'
 import { flushOfflineQueue } from './lib/offline/queue'
@@ -12,9 +13,11 @@ import { queryClient } from './lib/query/client'
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>
     <AppErrorBoundary>
-      <QueryClientProvider client={queryClient}>
-        <App />
-      </QueryClientProvider>
+      <AuthProvider>
+        <QueryClientProvider client={queryClient}>
+          <App />
+        </QueryClientProvider>
+      </AuthProvider>
     </AppErrorBoundary>
   </React.StrictMode>
 )

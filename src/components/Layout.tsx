@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
+import { useAuth } from '../lib/auth/useAuth'
 import FloatingAssistant from './FloatingAssistant'
 import { Avatar, BottomNavigation, IconButton, TopNavigation } from './ui'
 
@@ -30,6 +31,7 @@ const navItems = [
 export default function Layout({ children, title, immersive = false, hideAssistant = false, hideBottomNavigation = false }: { children: React.ReactNode; title?: string; immersive?: boolean; hideAssistant?: boolean; hideBottomNavigation?: boolean }) {
   const location = useLocation()
   const navigate = useNavigate()
+  const { currentUser } = useAuth()
   const [offline, setOffline] = useState(() => typeof navigator !== 'undefined' ? !navigator.onLine : false)
   const resolvedTitle = title ?? titleMap[location.pathname] ?? titleMap['/dashboard'] ?? 'Fieldmate AI'
   const resolvedSubtitle = location.pathname === '/map' ? 'กรุงเทพมหานคร, ไทย' : 'ตำแหน่งปัจจุบัน'
@@ -59,7 +61,7 @@ export default function Layout({ children, title, immersive = false, hideAssista
                   <IconButton label="ค้นหา" onClick={() => navigate('/search')}><span className="material-symbols-rounded" aria-hidden="true">search</span></IconButton>
                   <IconButton label="การแจ้งเตือน" onClick={() => navigate('/notifications')}><span className="material-symbols-rounded" aria-hidden="true">notifications</span></IconButton>
                   <button type="button" className="layout-avatar-button" onClick={() => navigate('/profile')} aria-label="Open profile">
-                    <Avatar name="Field Officer" size={40} />
+                    <Avatar name={currentUser?.name || 'Field Officer'} size={40} />
                   </button>
                 </>
               )}

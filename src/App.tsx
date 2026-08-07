@@ -1,11 +1,11 @@
 import React, { Suspense, lazy, useEffect, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom'
-import { authSession } from './lib/auth/session'
 import GlobalExperienceBanners from './components/GlobalExperienceBanners'
 import AppCover from './pages/AppCover'
 import Splash from './pages/Splash'
-import { authRepository } from './repositories'
+import ProtectedRoute from './lib/auth/ProtectedRoute'
+import { useAuth } from './lib/auth/useAuth'
 
 const ONBOARDING_STORAGE_KEY = 'fieldmate-onboarding-complete'
 const Onboarding = lazy(() => import('./pages/Onboarding'))
@@ -28,47 +28,23 @@ const Profile = lazy(() => import('./pages/Profile'))
 const Settings = lazy(() => import('./pages/Settings'))
 const SharedPropertyIntelligence = lazy(() => import('./pages/SharedPropertyIntelligence'))
 
-const AUTH_STORAGE_KEY = 'fieldmate-authenticated'
-const PERMISSION_STORAGE_KEY = 'fieldmate-permissions-complete'
-
 function readBooleanFlag(key: string) {
   if (typeof window === 'undefined') return false
   return window.localStorage.getItem(key) === 'true'
 }
 
-function getDefaultRoute(isAuthenticated: boolean, permissionsComplete: boolean, onboardingComplete: boolean) {
+function getDefaultRoute(isAuthenticated: boolean, onboardingComplete: boolean) {
   if (!isAuthenticated && !onboardingComplete) return '/onboarding'
-  if (!isAuthenticated) return '/welcome'
-  if (!permissionsComplete) return '/permissions'
+  if (!isAuthenticated) return '/login'
   return '/home'
-}
-
-function GuardedRoute({
-  isAuthenticated,
-  permissionsComplete,
-  children,
-}: {
-  isAuthenticated: boolean
-  permissionsComplete: boolean
-  children: React.ReactNode
-}) {
-  if (!isAuthenticated) return <Navigate to="/welcome" replace />
-  if (!permissionsComplete) return <Navigate to="/permissions" replace />
-  return <>{children}</>
 }
 
 function AnimatedRoutes({
   isAuthenticated,
-  permissionsComplete,
   onboardingComplete,
-  onLogin,
-  onPermissionsComplete,
 }: {
   isAuthenticated: boolean
-  permissionsComplete: boolean
   onboardingComplete: boolean
-  onLogin: (input: { rememberMe: boolean; email?: string; password?: string; provider: 'password' | 'microsoft' }) => Promise<void>
-  onPermissionsComplete: () => void
 }) {
   const location = useLocation()
 
@@ -84,26 +60,30 @@ function AnimatedRoutes({
       >
         <Suspense fallback={<Splash />}>
         <Routes location={location}>
-          <Route path="/" element={<Navigate to={getDefaultRoute(isAuthenticated, permissionsComplete, onboardingComplete)} replace />} />
-          <Route path="/onboarding" element={isAuthenticated ? <Navigate to={permissionsComplete ? '/home' : '/permissions'} replace /> : onboardingComplete ? <Navigate to="/welcome" replace /> : <Onboarding />} />
-          <Route path="/welcome" element={isAuthenticated ? <Navigate to={permissionsComplete ? '/home' : '/permissions'} replace /> : <Welcome />} />
-          <Route path="/login" element={isAuthenticated ? <Navigate to={permissionsComplete ? '/home' : '/permissions'} replace /> : <Login onLogin={onLogin} />} />
-          <Route path="/permissions" element={!isAuthenticated ? <Navigate to="/welcome" replace /> : permissionsComplete ? <Navigate to="/home" replace /> : <Permission onComplete={onPermissionsComplete} />} />
-          <Route path="/home" element={<GuardedRoute isAuthenticated={isAuthenticated} permissionsComplete={permissionsComplete}><Home /></GuardedRoute>} />
-          <Route path="/dashboard" element={<GuardedRoute isAuthenticated={isAuthenticated} permissionsComplete={permissionsComplete}><Dashboard /></GuardedRoute>} />
-          <Route path="/map" element={<GuardedRoute isAuthenticated={isAuthenticated} permissionsComplete={permissionsComplete}><SmartMap /></GuardedRoute>} />
-          <Route path="/gis" element={<GuardedRoute isAuthenticated={isAuthenticated} permissionsComplete={permissionsComplete}><GISHome /></GuardedRoute>} />
-          <Route path="/route-planner" element={<GuardedRoute isAuthenticated={isAuthenticated} permissionsComplete={permissionsComplete}><RoutePlanner /></GuardedRoute>} />
-          <Route path="/camera" element={<GuardedRoute isAuthenticated={isAuthenticated} permissionsComplete={permissionsComplete}><AICamera /></GuardedRoute>} />
-          <Route path="/album" element={<GuardedRoute isAuthenticated={isAuthenticated} permissionsComplete={permissionsComplete}><PropertyAlbum /></GuardedRoute>} />
-          <Route path="/shared-intelligence" element={<GuardedRoute isAuthenticated={isAuthenticated} permissionsComplete={permissionsComplete}><SharedPropertyIntelligence /></GuardedRoute>} />
-          <Route path="/search" element={<GuardedRoute isAuthenticated={isAuthenticated} permissionsComplete={permissionsComplete}><AISearch /></GuardedRoute>} />
-          <Route path="/property/:id" element={<GuardedRoute isAuthenticated={isAuthenticated} permissionsComplete={permissionsComplete}><PropertyDetail /></GuardedRoute>} />
-          <Route path="/ai-summary" element={<GuardedRoute isAuthenticated={isAuthenticated} permissionsComplete={permissionsComplete}><AISummary /></GuardedRoute>} />
-          <Route path="/assessment" element={<GuardedRoute isAuthenticated={isAuthenticated} permissionsComplete={permissionsComplete}><PropertyAssessment /></GuardedRoute>} />
-          <Route path="/notifications" element={<GuardedRoute isAuthenticated={isAuthenticated} permissionsComplete={permissionsComplete}><Notifications /></GuardedRoute>} />
-          <Route path="/profile" element={<GuardedRoute isAuthenticated={isAuthenticated} permissionsComplete={permissionsComplete}><Profile /></GuardedRoute>} />
-          <Route path="/settings" element={<GuardedRoute isAuthenticated={isAuthenticated} permissionsComplete={permissionsComplete}><Settings /></GuardedRoute>} />
+          <Route path="/" element={<Navigate to={getDefaultRoute(isAuthenticated, onboardingComplete)} replace />} />
+          <Route path="/onboarding" element={isAuthenticated ? <Navigate to="/home" replace /> : onboardingComplete ? <Navigate to="/welcome" replace /> : <Onboarding />} />
+          <Route path="/welcome" element={isAuthenticated ? <Navigate to="/home" replace /> : <Welcome />} />
+          <Route path="/login" element={isAuthenticated ? <Navigate to="/home" replace /> : <Login />} />
+          <Route path="/permissions" element={<Permission onComplete={() => {
+            if (typeof window !== 'undefined') {
+              window.localStorage.setItem('fieldmate-permissions-complete', 'true')
+            }
+          }} />} />
+          <Route path="/home" element={<ProtectedRoute><Home /></ProtectedRoute>} />
+          <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+          <Route path="/map" element={<ProtectedRoute><SmartMap /></ProtectedRoute>} />
+          <Route path="/gis" element={<ProtectedRoute><GISHome /></ProtectedRoute>} />
+          <Route path="/route-planner" element={<ProtectedRoute><RoutePlanner /></ProtectedRoute>} />
+          <Route path="/camera" element={<ProtectedRoute><AICamera /></ProtectedRoute>} />
+          <Route path="/album" element={<ProtectedRoute><PropertyAlbum /></ProtectedRoute>} />
+          <Route path="/shared-intelligence" element={<ProtectedRoute><SharedPropertyIntelligence /></ProtectedRoute>} />
+          <Route path="/search" element={<ProtectedRoute><AISearch /></ProtectedRoute>} />
+          <Route path="/property/:id" element={<ProtectedRoute><PropertyDetail /></ProtectedRoute>} />
+          <Route path="/ai-summary" element={<ProtectedRoute><AISummary /></ProtectedRoute>} />
+          <Route path="/assessment" element={<ProtectedRoute><PropertyAssessment /></ProtectedRoute>} />
+          <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
+          <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+          <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
         </Routes>
         </Suspense>
       </motion.div>
@@ -112,10 +92,9 @@ function AnimatedRoutes({
 }
 
 function App() {
+  const { isAuthenticated, loading } = useAuth()
   const [showAppCover, setShowAppCover] = useState(true)
   const [loaded, setLoaded] = useState(false)
-  const [isAuthenticated, setIsAuthenticated] = useState(() => authSession.isAuthenticated() || readBooleanFlag(AUTH_STORAGE_KEY))
-  const [permissionsComplete, setPermissionsComplete] = useState(() => readBooleanFlag(PERMISSION_STORAGE_KEY))
   const [onboardingComplete] = useState(() => readBooleanFlag(ONBOARDING_STORAGE_KEY))
 
   useEffect(() => {
@@ -124,45 +103,14 @@ function App() {
     return () => window.clearTimeout(timeout)
   }, [showAppCover])
 
-  useEffect(() => {
-    const syncAuth = () => setIsAuthenticated(authSession.isAuthenticated() || readBooleanFlag(AUTH_STORAGE_KEY))
-    window.addEventListener('focus', syncAuth)
-    const interval = window.setInterval(syncAuth, 30000)
-    return () => {
-      window.removeEventListener('focus', syncAuth)
-      window.clearInterval(interval)
-    }
-  }, [])
-
-  const handleLogin = async ({ rememberMe, email, password, provider }: { rememberMe: boolean; email?: string; password?: string; provider: 'password' | 'microsoft' }) => {
-    if (provider === 'password') {
-      await authRepository.loginWithPassword(email || '', password || '')
-    } else {
-      await authRepository.loginWithMicrosoft()
-    }
-
-    setIsAuthenticated(true)
-    if (typeof window !== 'undefined' && rememberMe) {
-      window.localStorage.setItem(AUTH_STORAGE_KEY, 'true')
-    }
-  }
-
-  const handlePermissionsComplete = () => {
-    setPermissionsComplete(true)
-    if (typeof window !== 'undefined') {
-      window.localStorage.setItem(AUTH_STORAGE_KEY, 'true')
-      window.localStorage.setItem(PERMISSION_STORAGE_KEY, 'true')
-    }
-  }
-
   return (
     <BrowserRouter>
       <GlobalExperienceBanners />
       {showAppCover && <AppCover onContinue={() => setShowAppCover(false)} />}
 
-      {!showAppCover && !loaded && <Splash />}
+      {!showAppCover && (!loaded || loading) && <Splash />}
 
-      {!showAppCover && loaded && <AnimatedRoutes isAuthenticated={isAuthenticated} permissionsComplete={permissionsComplete} onboardingComplete={onboardingComplete} onLogin={handleLogin} onPermissionsComplete={handlePermissionsComplete} />}
+      {!showAppCover && loaded && !loading && <AnimatedRoutes isAuthenticated={isAuthenticated} onboardingComplete={onboardingComplete} />}
     </BrowserRouter>
   )
 }

@@ -1,4 +1,6 @@
 import { apiClient } from '../lib/http/client'
+import { isDevelopmentMode } from '../config/env'
+import mockNotifications from '../mock/notifications.json'
 import { Notification } from '../types'
 
 type NotificationRecord = {
@@ -22,13 +24,25 @@ function toNotification(record: NotificationRecord): Notification {
 
 export const notificationRepository = {
   async list() {
+    if (isDevelopmentMode) {
+      return (mockNotifications as NotificationRecord[]).map(toNotification)
+    }
+
     const response = await apiClient.get<NotificationRecord[]>('/notifications')
     return response.data.map(toNotification)
   },
   async markRead(id: string) {
+    if (isDevelopmentMode) {
+      return
+    }
+
     await apiClient.patch(`/notifications/${id}/read`)
   },
   async dismiss(id: string) {
+    if (isDevelopmentMode) {
+      return
+    }
+
     await apiClient.delete(`/notifications/${id}`)
   },
 }

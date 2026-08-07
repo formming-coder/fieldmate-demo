@@ -1,6 +1,10 @@
 import React, { useState } from 'react'
 import { motion } from 'framer-motion'
+import { useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
+import { Button } from '../components/ui'
+import { env } from '../config/env'
+import { useAuth } from '../lib/auth/useAuth'
 
 const rows = [
   { key: 'Language', detail: 'English / ไทย' },
@@ -15,7 +19,14 @@ const rows = [
 ] as const
 
 export default function Settings() {
+  const navigate = useNavigate()
+  const { logout } = useAuth()
   const [darkMode, setDarkMode] = useState(false)
+
+  const handleLogout = async () => {
+    await logout()
+    navigate('/login', { replace: true })
+  }
 
   return (
     <Layout title="Settings">
@@ -36,6 +47,13 @@ export default function Settings() {
               {row.key === 'Dark Mode' ? <button type="button" onClick={() => setDarkMode((current) => !current)}>{darkMode ? 'Disable' : 'Enable'}</button> : <button type="button">Open</button>}
             </article>
           ))}
+        </section>
+
+        <section className="settings-hero">
+          <div className="settings-kicker">Authentication</div>
+          <h1>{env.appMode === 'development' ? 'Development Mode' : 'Production Mode'}</h1>
+          <p>{env.appMode === 'development' ? 'Demo Login is active. Microsoft Entra ID will be available after switching to production mode.' : 'Microsoft Entra ID session is managed through secure redirect-based authentication.'}</p>
+          <Button type="button" variant="secondary" fullWidth onClick={() => void handleLogout()}>Logout</Button>
         </section>
       </div>
     </Layout>

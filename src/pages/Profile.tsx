@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
-import { useCurrentOfficerQuery } from '../hooks/useBackendQueries'
+import { useAuth } from '../lib/auth/useAuth'
 
 function AnimatedCounter({ value, suffix = '' }: { value: number; suffix?: string }) {
   const [display, setDisplay] = useState(0)
@@ -35,8 +35,8 @@ function AnimatedCounter({ value, suffix = '' }: { value: number; suffix?: strin
 
 export default function Profile() {
   const navigate = useNavigate()
-  const { data: officer } = useCurrentOfficerQuery()
-  const initials = (officer?.name || 'Field Officer')
+  const { currentUser } = useAuth()
+  const initials = (currentUser?.name || 'Field Officer')
     .split(' ')
     .map((part) => part[0])
     .join('')
@@ -52,8 +52,8 @@ export default function Profile() {
         <section className="profile-hero">
           <div className="profile-avatar">{initials}</div>
           <div>
-            <h1>{officer?.name || 'Field Officer'}</h1>
-            <p>{officer?.role || 'Senior Field Valuer'} • Asset Valuation Department</p>
+            <h1>{currentUser?.name || 'Field Officer'}</h1>
+            <p>{currentUser?.role || 'Senior Field Valuer'} • {currentUser?.department || 'Asset Valuation Department'}</p>
           </div>
           <div className="profile-progress-wrap">
             <svg viewBox="0 0 120 120" className="profile-progress-ring" aria-hidden="true">
@@ -84,8 +84,8 @@ export default function Profile() {
         <section className="profile-section">
           <div className="profile-section-title">Professional Summary</div>
           <div className="profile-summary-list">
-            <div><span>Department</span><strong>Property Valuation</strong></div>
-            <div><span>Role</span><strong>Senior Field Officer</strong></div>
+            <div><span>Department</span><strong>{currentUser?.department || 'Property Valuation'}</strong></div>
+            <div><span>Role</span><strong>{currentUser?.role || 'Senior Field Officer'}</strong></div>
             <div><span>Region</span><strong>Bangkok Metropolitan</strong></div>
             <div><span>Last Sync</span><strong>5 min ago</strong></div>
           </div>

@@ -1,8 +1,8 @@
 import axios from 'axios'
-import { requireApiBaseUrl } from '../../config/env'
+import { env } from '../../config/env'
 import { authSession } from '../auth/session'
 
-const API_BASE_URL = requireApiBaseUrl()
+const API_BASE_URL = env.apiBaseUrl || undefined
 const REFRESH_PATH = '/auth/refresh'
 
 const bare = axios.create({
@@ -22,6 +22,8 @@ export const apiClient = axios.create({
 let refreshPromise: Promise<string | null> | null = null
 
 async function refreshAccessToken(): Promise<string | null> {
+  if (!env.apiBaseUrl) return null
+
   const refreshToken = authSession.getRefreshToken()
   if (!refreshToken) return null
 
