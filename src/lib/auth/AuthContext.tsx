@@ -1,6 +1,7 @@
 import React from 'react'
 import { AppMode } from '../../config/env'
 import { AuthUser } from './AuthStorage'
+import { AppRole } from '../../types/auth'
 
 export type AuthLoginInput = {
   rememberMe: boolean
@@ -14,6 +15,7 @@ export type AuthContextValue = {
   isAuthenticated: boolean
   loading: boolean
   currentUser: AuthUser | null
+  currentRole: AppRole
   login: (input: AuthLoginInput) => Promise<void>
   logout: () => Promise<void>
 }

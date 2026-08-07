@@ -15,7 +15,7 @@ type VersionHistoryProps = {
 function VersionHistory({ items, onCompare }: VersionHistoryProps) {
   return (
     <section className="spi-section">
-      <div className="spi-section-title">Version History</div>
+      <div className="spi-section-title">ประวัติการแก้ไข</div>
       <div className="spi-version-list">
         {items.map((item) => (
           <div key={item.id} className="spi-version-item">
@@ -25,7 +25,7 @@ function VersionHistory({ items, onCompare }: VersionHistoryProps) {
             </div>
             <div>
               <time>{item.when}</time>
-              <button type="button" onClick={() => onCompare(item.id)}>Compare</button>
+              <button type="button" onClick={() => onCompare(item.id)}>เปรียบเทียบ</button>
             </div>
           </div>
         ))}

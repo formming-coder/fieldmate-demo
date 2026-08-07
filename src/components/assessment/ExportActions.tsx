@@ -11,14 +11,14 @@ type ExportActionsProps = {
 function ExportActions({ onPdf, onExcel, onShare, onEmail, onSave }: ExportActionsProps) {
   return (
     <section className="as-card">
-      <h2>Export</h2>
+      <h2>ส่งออกข้อมูล</h2>
       <div className="as-export-grid">
         <button type="button" onClick={onPdf}>PDF</button>
         <button type="button" onClick={onExcel}>Excel</button>
-        <button type="button" onClick={onShare}>Share</button>
-        <button type="button" onClick={onEmail}>Email</button>
+        <button type="button" onClick={onShare}>แชร์</button>
+        <button type="button" onClick={onEmail}>อีเมล</button>
       </div>
-      <button type="button" className="as-save-final" onClick={onSave}>Save Assessment Report</button>
+      <button type="button" className="as-save-final" onClick={onSave}>บันทึกรายงานการประเมิน</button>
     </section>
   )
 }

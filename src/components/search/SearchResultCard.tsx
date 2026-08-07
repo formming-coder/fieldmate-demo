@@ -30,7 +30,7 @@ function SearchResultCard({ result, onOpen, onBookmark }: SearchResultCardProps)
             <h3>{result.title}</h3>
             <p>{result.subtitle}</p>
           </div>
-          <strong>THB {result.price.toLocaleString()}</strong>
+          <strong>{result.price.toLocaleString()} บาท</strong>
         </div>
         <div className="ais-result-meta">
           <span>{result.distance}</span>

@@ -2,6 +2,11 @@ import { AxiosRequestConfig } from 'axios'
 
 const QUEUE_KEY = 'fieldmate:offline:queue'
 
+function broadcastQueueChange() {
+  if (typeof window === 'undefined') return
+  window.dispatchEvent(new CustomEvent('fieldmate:offline-queue-updated'))
+}
+
 export type QueueStatus = 'queued' | 'retrying' | 'conflict'
 
 export type OfflineQueueItem = {
@@ -31,6 +36,7 @@ function readQueue(): OfflineQueueItem[] {
 function writeQueue(items: OfflineQueueItem[]) {
   if (typeof window === 'undefined') return
   window.localStorage.setItem(QUEUE_KEY, JSON.stringify(items))
+  broadcastQueueChange()
 }
 
 function withBackoff(item: OfflineQueueItem): OfflineQueueItem {
@@ -93,4 +99,24 @@ export async function flushOfflineQueue(executor: (request: AxiosRequestConfig) 
 
 export function getOfflineQueueSnapshot() {
   return readQueue()
+}
+
+export function getOfflineQueueCounts() {
+  const items = readQueue()
+  return {
+    total: items.length,
+    queued: items.filter((item) => item.status === 'queued').length,
+    retrying: items.filter((item) => item.status === 'retrying').length,
+    conflicts: items.filter((item) => item.status === 'conflict').length,
+  }
+}
+
+export function retryOfflineQueueItem(id: string) {
+  const queue = readQueue()
+  const next = queue.map((item) => item.id === id ? { ...item, status: 'queued' as QueueStatus, nextAttemptAt: Date.now() } : item)
+  writeQueue(next)
+}
+
+export function clearOfflineQueue() {
+  writeQueue([])
 }

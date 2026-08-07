@@ -13,7 +13,7 @@ function MiniMap({ coordinates, nearby, onOpenMap }: MiniMapProps) {
       <div className="spi-mini-map-overlay">
         <strong>{coordinates}</strong>
         <p>{nearby}</p>
-        <span>Tap to open Smart Map</span>
+        <span>แตะเพื่อเปิดแผนที่อัจฉริยะ</span>
       </div>
     </section>
   )

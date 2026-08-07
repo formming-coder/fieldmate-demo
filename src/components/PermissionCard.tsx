@@ -35,8 +35,8 @@ export default function PermissionCard({
       </div>
       <div className={`entry-permission-status entry-permission-status-${status}`}>{statusText}</div>
       <div className="entry-permission-actions">
-        <Button type="button" fullWidth onClick={onAllow}>Allow</Button>
-        <Button type="button" variant="ghost" fullWidth onClick={onSkip} style={{ border: '1px solid var(--border)', background: 'rgba(255,255,255,0.6)' }}>Skip</Button>
+        <Button type="button" fullWidth onClick={onAllow}>อนุญาต</Button>
+        <Button type="button" variant="ghost" fullWidth onClick={onSkip} style={{ border: '1px solid var(--border)', background: 'rgba(255,255,255,0.6)' }}>ข้าม</Button>
       </div>
     </Card>
   )

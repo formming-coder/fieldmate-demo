@@ -7,11 +7,11 @@ type NearbyAnalysisProps = {
 }
 
 function NearbyAnalysis({ radius, onRadiusChange, items }: NearbyAnalysisProps) {
-  const radii = ['500m', '1km', '3km', '5km']
+  const radii = ['500 ม.', '1 กม.', '3 กม.', '5 กม.']
 
   return (
     <section className="gis-panel-card">
-      <div className="gis-section-title">Nearby Analysis</div>
+      <div className="gis-section-title">วิเคราะห์พื้นที่ใกล้เคียง</div>
       <div className="gis-chip-row">
         {radii.map((item) => (
           <button key={item} type="button" className={radius === item ? 'is-active' : ''} onClick={() => onRadiusChange(item)}>

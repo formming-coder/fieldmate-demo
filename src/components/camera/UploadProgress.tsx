@@ -13,10 +13,17 @@ type UploadProgressProps = {
 }
 
 function UploadProgress({ items, onRetry }: UploadProgressProps) {
+  const statusLabel = (status: UploadItem['status']) => {
+    if (status === 'queued') return 'รออัปโหลด'
+    if (status === 'uploading') return 'กำลังอัปโหลด'
+    if (status === 'done') return 'สำเร็จ'
+    return 'ไม่สำเร็จ'
+  }
+
   return (
     <section className="cam-upload">
       <div className="cam-section-title-row">
-        <h3>Background Upload</h3>
+        <h3>อัปโหลดภาพ</h3>
         <span className="cam-score">{items.filter((item) => item.status === 'done').length}/{items.length}</span>
       </div>
       <div className="cam-upload-list">
@@ -24,10 +31,10 @@ function UploadProgress({ items, onRetry }: UploadProgressProps) {
           <div key={item.id} className="cam-upload-item">
             <div className="cam-upload-top">
               <span>{item.name}</span>
-              <span>{item.status}</span>
+              <span>{statusLabel(item.status)}</span>
             </div>
             <div className="cam-upload-bar"><span style={{ width: `${item.progress}%` }} /></div>
-            {item.status === 'error' ? <button type="button" onClick={() => onRetry(item.id)}>Retry upload</button> : null}
+            {item.status === 'error' ? <button type="button" onClick={() => onRetry(item.id)}>ลองอัปโหลดอีกครั้ง</button> : null}
           </div>
         ))}
       </div>

@@ -14,7 +14,7 @@ function AISummaryCard({ propertyType, condition, risk, comments, completeness, 
   return (
     <section className="cam-ai-summary">
       <div className="cam-section-title-row">
-        <h3>AI Summary</h3>
+        <h3>สรุปผล AI</h3>
         <span className="cam-score">{confidence}%</span>
       </div>
       <div className="cam-ai-thinking" aria-hidden="true">
@@ -26,10 +26,10 @@ function AISummaryCard({ propertyType, condition, risk, comments, completeness, 
         <motion.div className="cam-confidence-fill" initial={{ width: 0 }} animate={{ width: `${confidence}%` }} transition={{ duration: 0.6, ease: 'easeOut' }} />
       </div>
       <div className="cam-ai-grid">
-        <div><span>Detected type</span><strong>{propertyType}</strong></div>
-        <div><span>Condition</span><strong>{condition}</strong></div>
-        <div><span>Risk</span><strong>{risk}</strong></div>
-        <div><span>Completeness</span><strong>{completeness}%</strong></div>
+        <div><span>ประเภทที่ตรวจพบ</span><strong>{propertyType}</strong></div>
+        <div><span>สภาพโดยรวม</span><strong>{condition}</strong></div>
+        <div><span>ความเสี่ยง</span><strong>{risk}</strong></div>
+        <div><span>ความครบถ้วน</span><strong>{completeness}%</strong></div>
       </div>
       <p>{comments}</p>
     </section>

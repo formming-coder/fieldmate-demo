@@ -9,13 +9,13 @@ type GISSummaryProps = {
 function GISSummary({ findings, warnings, recommendation }: GISSummaryProps) {
   return (
     <section className="gis-panel-card">
-      <div className="gis-section-title">Mini Report</div>
+      <div className="gis-section-title">รายงานย่อ</div>
       <div className="gis-summary-block">
-        <strong>Key Findings</strong>
+        <strong>ข้อค้นพบสำคัญ</strong>
         <ul>{findings.map((item) => <li key={item}>{item}</li>)}</ul>
       </div>
       <div className="gis-summary-block">
-        <strong>Warnings</strong>
+        <strong>ข้อควรระวัง</strong>
         <ul>{warnings.map((item) => <li key={item}>{item}</li>)}</ul>
       </div>
       <div className="gis-summary-reco">{recommendation}</div>

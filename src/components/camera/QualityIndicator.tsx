@@ -15,10 +15,10 @@ type QualityIndicatorProps = {
 }
 
 function meterLabel(value: number) {
-  if (value > 84) return 'Excellent'
-  if (value > 68) return 'Good'
-  if (value > 52) return 'Fair'
-  return 'Poor'
+  if (value > 84) return 'ยอดเยี่ยม'
+  if (value > 68) return 'ดี'
+  if (value > 52) return 'พอใช้'
+  return 'ควรถ่ายใหม่'
 }
 
 function QualityIndicator({ metrics }: QualityIndicatorProps) {
@@ -28,18 +28,18 @@ function QualityIndicator({ metrics }: QualityIndicatorProps) {
   return (
     <section className="cam-quality">
       <div className="cam-section-title-row">
-        <h3>Image Quality</h3>
+        <h3>คุณภาพภาพถ่าย</h3>
         <span className={`cam-score ${warn ? 'is-warn' : ''}`}>{meterLabel(avg)} {avg}%</span>
       </div>
       <div className="cam-quality-grid">
-        <div><span>Blur</span><strong>{metrics.blur}%</strong></div>
-        <div><span>Brightness</span><strong>{metrics.brightness}%</strong></div>
-        <div><span>Exposure</span><strong>{metrics.exposure}%</strong></div>
-        <div><span>Angle</span><strong>{metrics.angle}%</strong></div>
-        <div><span>Distance</span><strong>{metrics.distance}%</strong></div>
-        <div><span>Resolution</span><strong>{metrics.resolution}%</strong></div>
+        <div><span>ความคมชัด</span><strong>{metrics.blur}%</strong></div>
+        <div><span>ความสว่าง</span><strong>{metrics.brightness}%</strong></div>
+        <div><span>แสง</span><strong>{metrics.exposure}%</strong></div>
+        <div><span>มุมกล้อง</span><strong>{metrics.angle}%</strong></div>
+        <div><span>ระยะถ่าย</span><strong>{metrics.distance}%</strong></div>
+        <div><span>ความละเอียด</span><strong>{metrics.resolution}%</strong></div>
       </div>
-      {warn ? <p className="cam-warning">Quality warning: retake recommended for valuation accuracy.</p> : <p className="cam-ok">Quality ready for AI valuation pipeline.</p>}
+      {warn ? <p className="cam-warning">คุณภาพภาพยังไม่พร้อม แนะนำให้ถ่ายใหม่เพื่อความแม่นยำในการประเมิน</p> : <p className="cam-ok">คุณภาพภาพพร้อมสำหรับการวิเคราะห์ AI</p>}
     </section>
   )
 }

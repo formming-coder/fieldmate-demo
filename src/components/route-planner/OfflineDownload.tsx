@@ -10,14 +10,14 @@ type OfflineDownloadProps = {
 function OfflineDownload({ downloaded, pendingUpload, cachedRecords, onDownload }: OfflineDownloadProps) {
   return (
     <section className="rp-card">
-      <div className="rp-eyebrow">Offline Support</div>
-      <h2>Route package</h2>
+      <div className="rp-eyebrow">รองรับออฟไลน์</div>
+      <h2>แพ็กเกจเส้นทาง</h2>
       <div className="rp-info-list">
-        <div><span>Offline Maps</span><strong>{downloaded ? 'Downloaded' : 'Ready'}</strong></div>
-        <div><span>Queue Upload</span><strong>{pendingUpload}</strong></div>
-        <div><span>Cached Property Data</span><strong>{cachedRecords}</strong></div>
+        <div><span>แผนที่ออฟไลน์</span><strong>{downloaded ? 'ดาวน์โหลดแล้ว' : 'พร้อมใช้งาน'}</strong></div>
+        <div><span>คิวอัปโหลด</span><strong>{pendingUpload}</strong></div>
+        <div><span>ข้อมูลทรัพย์ในแคช</span><strong>{cachedRecords}</strong></div>
       </div>
-      <button type="button" className="rp-primary-btn" onClick={onDownload}>Download Route</button>
+      <button type="button" className="rp-primary-btn" onClick={onDownload}>ดาวน์โหลดเส้นทาง</button>
     </section>
   )
 }

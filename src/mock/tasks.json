@@ -1,23 +1,37 @@
 [
   {
     "id": "task-001",
-    "title": "Inspect rooftop - Site A",
-    "propertyId": "prop-001",
-    "scheduledAt": "2026-08-06T10:30:00.000Z",
-    "status": "open"
+    "title": "ตรวจสภาพภายนอกทรัพย์สุขุมวิท 62",
+    "propertyId": "prop-bkk-001",
+    "scheduledAt": "2026-08-07T10:30:00.000Z",
+    "status": "pending"
   },
   {
     "id": "task-002",
-    "title": "Property assessment - B",
-    "propertyId": "prop-002",
-    "scheduledAt": "2026-08-06T13:00:00.000Z",
-    "status": "open"
+    "title": "ถ่ายภาพเปรียบเทียบทรัพย์แม่ริม",
+    "propertyId": "prop-cnx-001",
+    "scheduledAt": "2026-08-07T13:00:00.000Z",
+    "status": "in_progress"
   },
   {
     "id": "task-003",
-    "title": "Follow-up photos - Site C",
-    "propertyId": "prop-003",
+    "title": "ยืนยันแนวเขตที่ดินหัวทะเล",
+    "propertyId": "prop-korat-002",
     "scheduledAt": "2026-08-07T09:00:00.000Z",
+    "status": "review"
+  },
+  {
+    "id": "task-004",
+    "title": "สำรวจทรัพย์พาณิชย์ย่านหาดใหญ่",
+    "propertyId": "prop-hat-003",
+    "scheduledAt": "2026-08-08T11:20:00.000Z",
+    "status": "pending"
+  },
+  {
+    "id": "task-005",
+    "title": "สรุปรายงานประเมินอาคารคลองสาน",
+    "propertyId": "prop-bkk-002",
+    "scheduledAt": "2026-08-08T15:00:00.000Z",
     "status": "pending"
   }
 ]

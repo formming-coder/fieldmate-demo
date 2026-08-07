@@ -15,8 +15,8 @@ function AssessmentHeader({ propertyId, owner, inspectionDate, assessor, gps, we
   return (
     <section className="as-card as-header">
       <div>
-        <h1>AI Property Assessment</h1>
-        <p>Premium valuation intelligence for field operations</p>
+        <h1>ประเมินทรัพย์สินด้วย AI</h1>
+        <p>ระบบช่วยประเมินภาคสนามสำหรับเดโมการใช้งานจริง</p>
       </div>
       <motion.span
         className="as-ai-badge"
@@ -27,12 +27,12 @@ function AssessmentHeader({ propertyId, owner, inspectionDate, assessor, gps, we
         {aiStatus}
       </motion.span>
       <div className="as-grid as-header-grid">
-        <div><span>Property ID</span><strong>{propertyId}</strong></div>
-        <div><span>Owner</span><strong>{owner}</strong></div>
-        <div><span>Inspection Date</span><strong>{inspectionDate}</strong></div>
-        <div><span>Assessor</span><strong>{assessor}</strong></div>
+        <div><span>รหัสทรัพย์</span><strong>{propertyId}</strong></div>
+        <div><span>เจ้าของ</span><strong>{owner}</strong></div>
+        <div><span>วันที่ตรวจสอบ</span><strong>{inspectionDate}</strong></div>
+        <div><span>ผู้ประเมิน</span><strong>{assessor}</strong></div>
         <div><span>GPS</span><strong>{gps}</strong></div>
-        <div><span>Weather</span><strong>{weather}</strong></div>
+        <div><span>สภาพอากาศ</span><strong>{weather}</strong></div>
       </div>
     </section>
   )

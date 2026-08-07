@@ -25,14 +25,14 @@ function CameraOverlay({ aid, propertyId, level, compass, gpsAccuracy, timestamp
     <>
       <div className="cam-grid" aria-hidden="true" />
       <div className="cam-golden" aria-hidden="true" />
-      <div className="cam-level" aria-label="Level indicator">
+      <div className="cam-level" aria-label="ตัวชี้วัดระดับ">
         <span style={{ transform: `translateX(${Math.max(-45, Math.min(45, level))}px)` }} />
       </div>
       <div className="cam-overlay-meta">
-        <span>AID {aid}</span>
-        <span>Property {propertyId}</span>
-        <span>GPS ±{gpsAccuracy.toFixed(1)}m</span>
-        <span>Compass {Math.round(compass)}°</span>
+        <span>รหัส {aid}</span>
+        <span>ทรัพย์ {propertyId}</span>
+        <span>GPS ±{gpsAccuracy.toFixed(1)} ม.</span>
+        <span>เข็มทิศ {Math.round(compass)}°</span>
         <span>{timestamp}</span>
       </div>
       {detections.map((detection) => (

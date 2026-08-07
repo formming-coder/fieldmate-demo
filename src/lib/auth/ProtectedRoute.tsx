@@ -1,10 +1,11 @@
 import React from 'react'
 import { Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from './useAuth'
+import { AppRouteKey, canAccessRoute } from './rbac'
 
-export default function ProtectedRoute({ children }: { children: React.ReactNode }) {
+export default function ProtectedRoute({ children, route }: { children: React.ReactNode; route: AppRouteKey }) {
   const location = useLocation()
-  const { isAuthenticated, loading } = useAuth()
+  const { isAuthenticated, loading, currentRole } = useAuth()
 
   if (loading) {
     return (
@@ -20,6 +21,10 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace state={{ from: location.pathname }} />
+  }
+
+  if (!canAccessRoute(currentRole, route)) {
+    return <Navigate to="/dashboard" replace />
   }
 
   return <>{children}</>

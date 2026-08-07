@@ -15,12 +15,12 @@ export function TextField({ label, style, ...props }: TextFieldProps) {
       <input
         {...props}
         style={{
-          minHeight: 48,
+          minHeight: 50,
           borderRadius: radius.large,
           border: `1px solid ${colors.border}`,
           background: colors.surface,
           color: colors.text,
-          padding: `${spacing[3]} ${spacing[4]}`,
+          padding: `${spacing[3]} ${spacing[5]}`,
           fontSize: typography.body.fontSize,
           outline: 'none',
           ...style,

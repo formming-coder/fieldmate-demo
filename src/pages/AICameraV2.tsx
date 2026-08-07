@@ -119,7 +119,7 @@ export default function AICameraV2(){
     setTimeout(async () => {
       const prop = await savePropertyMutation.mutateAsync({
         owner: officer,
-        province: address.province || 'Unknown',
+        province: address.province || 'ไม่ระบุจังหวัด',
         latitude: location[0],
         longitude: location[1],
         marketPrice: Number(price) || 0,
@@ -173,7 +173,7 @@ export default function AICameraV2(){
               </div>
               <div className={s.cameraFooter}>
                 <button className={s.captureBtn} onClick={() => {
-                  const sample = images[0] || 'https://placehold.co/900x1400?text=Property+Capture'
+                  const sample = images[0] || 'https://placehold.co/900x1400?text=ภาพถ่ายทรัพย์'
                   setPreviewImage(sample)
                   setIsAnalyzing(true)
                   setTimeout(() => setIsAnalyzing(false), 900)
@@ -227,7 +227,7 @@ export default function AICameraV2(){
           </div>
           <div className={s.typeGrid}>
             {propertyTypes.map(type => (
-              <button key={type.key} type="button" className={`${s.typeCard} ${propertyType===type.key ? s.typeSelected : ''}`} onClick={()=>{setPropertyType(type.key); addHistory(`Selected ${type.label}`)}}>
+              <button key={type.key} type="button" className={`${s.typeCard} ${propertyType===type.key ? s.typeSelected : ''}`} onClick={()=>{setPropertyType(type.key); addHistory(`เลือกประเภท ${type.label}`)}}>
                 <div className={s.typeEmoji}>{type.emoji}</div>
                 <div>{type.label}</div>
               </button>
@@ -242,7 +242,7 @@ export default function AICameraV2(){
               <div className={s.sectionTitle}>ข้อมูลการขาย</div>
             </div>
           </div>
-          <div className={s.fieldRow}><label>ราคาขาย</label><div className={s.amountInput}><span>THB</span><input value={price} onChange={e=>setPrice(e.target.value)} placeholder="0" /></div></div>
+          <div className={s.fieldRow}><label>ราคาขาย</label><div className={s.amountInput}><span>บาท</span><input value={price} onChange={e=>setPrice(e.target.value)} placeholder="0" /></div></div>
           <div className={s.fieldColumn}>
             <label>เบอร์โทรของผู้ขาย</label>
             {phones.map((phone,index) => (

@@ -10,9 +10,9 @@ type RiskAssessmentProps = {
 }
 
 function level(score: number) {
-  if (score >= 70) return 'High'
-  if (score >= 40) return 'Medium'
-  return 'Low'
+  if (score >= 70) return 'สูง'
+  if (score >= 40) return 'ปานกลาง'
+  return 'ต่ำ'
 }
 
 function RiskAssessment({ items }: RiskAssessmentProps) {
@@ -20,7 +20,7 @@ function RiskAssessment({ items }: RiskAssessmentProps) {
 
   return (
     <section className="as-card">
-      <h2>Risk Assessment</h2>
+      <h2>ประเมินความเสี่ยง</h2>
       <div className="as-scoreline">
         <strong>{avg}</strong>
         <span>{level(avg)}</span>

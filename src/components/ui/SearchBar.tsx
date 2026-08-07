@@ -14,15 +14,15 @@ export function SearchBar(props: SearchBarProps) {
         {...props}
         style={{
           width: '100%',
-          minHeight: 48,
+          minHeight: 50,
           borderRadius: radius.large,
           border: `1px solid ${colors.border}`,
           background: colors.surface,
           color: colors.text,
-          padding: `${spacing[3]} ${spacing[4]} ${spacing[3]} ${spacing[7]}`,
+          padding: `${spacing[3]} ${spacing[5]} ${spacing[3]} ${spacing[7]}`,
           fontSize: typography.body.fontSize,
           outline: 'none',
-          boxShadow: '0 8px 24px rgba(17, 24, 39, 0.04)',
+          boxShadow: '0 8px 18px rgba(16, 24, 40, 0.06)',
           ...props.style,
         }}
       />

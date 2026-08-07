@@ -1,6 +1,7 @@
-import { apiClient } from '../lib/http/client'
 import { isDevelopmentMode } from '../config/env'
 import { enqueueOfflineItem } from '../lib/offline/queue'
+import { apiEndpoints } from '../services/api/endpoints'
+import { apiService } from '../services/api/apiService'
 
 export type AssessmentInput = {
   id?: string
@@ -21,11 +22,10 @@ export const assessmentRepository = {
     }
 
     if (typeof navigator !== 'undefined' && !navigator.onLine) {
-      enqueueOfflineItem({ method: 'post', url: '/assessments', data: payload, entity: 'assessment', conflictKey: payload.propertyId })
+      enqueueOfflineItem({ method: 'post', url: apiEndpoints.assessments.create, data: payload, entity: 'assessment', conflictKey: payload.propertyId })
       return { queued: true }
     }
 
-    const response = await apiClient.post('/assessments', payload)
-    return response.data
+    return apiService.post(apiEndpoints.assessments.create, payload)
   },
 }

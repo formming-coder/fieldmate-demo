@@ -18,10 +18,10 @@ function FloatingSearch({ value, onChange }: FloatingSearchProps) {
       <input
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        placeholder="ค้นหาทรัพย์ จังหวัด ถนน เจ้าของ เลข AID"
+        placeholder="ค้นหาทรัพย์ จังหวัด ถนน เจ้าของ รหัสทรัพย์"
         aria-label="ค้นหาทรัพย์"
       />
-      <button type="button" className="map-floating-search-mic" aria-label="voice search">🎤</button>
+      <button type="button" className="map-floating-search-mic" aria-label="ค้นหาด้วยเสียง">🎤</button>
     </motion.div>
   )
 }

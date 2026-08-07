@@ -8,18 +8,18 @@ import { Button } from '../components/ui'
 const features = [
   {
     icon: '🗺',
-    title: 'Smart Map',
-    description: 'Explore property context, layers, and nearby intelligence in one mobile map workflow.',
+    title: 'แผนที่อัจฉริยะ',
+    description: 'สำรวจบริบททรัพย์สิน ชั้นข้อมูล และข้อมูลใกล้เคียงได้ในเวิร์กโฟลว์แผนที่บนมือถือเดียวกัน',
   },
   {
     icon: '📷',
-    title: 'AI Camera',
-    description: 'Capture field evidence with structured overlays, OCR, and inspection-ready metadata.',
+    title: 'กล้อง AI',
+    description: 'บันทึกหลักฐานภาคสนามพร้อมโอเวอร์เลย์ OCR และข้อมูลประกอบที่พร้อมใช้งานในการตรวจสอบ',
   },
   {
     icon: '🧠',
-    title: 'Shared Intelligence',
-    description: 'Turn every field visit into reusable knowledge for every valuer across the organization.',
+    title: 'ข้อมูลส่วนกลาง',
+    description: 'เปลี่ยนทุกการลงพื้นที่ให้กลายเป็นองค์ความรู้ที่นำกลับมาใช้ซ้ำได้ทั้งองค์กร',
   },
 ] as const
 
@@ -37,9 +37,9 @@ export default function Welcome() {
         >
           <BrandMark size="large" animated />
           <div className="welcome-copy">
-            <div className="welcome-kicker">Fieldmate AI</div>
-            <h1>Premium field intelligence for modern property valuation</h1>
-            <p>Plan, capture, analyze, and share property evidence through one native mobile workflow.</p>
+            <div className="welcome-kicker">ฟีลด์เมต AI</div>
+            <h1>แพลตฟอร์มอัจฉริยะสำหรับงานสำรวจและประเมินทรัพย์สินยุคใหม่</h1>
+            <p>วางแผน ถ่ายภาพ วิเคราะห์ และแชร์ข้อมูลทรัพย์สินได้ครบในเวิร์กโฟลว์เดียวบนมือถือ</p>
           </div>
 
           <div className="welcome-illustration" aria-hidden="true">
@@ -85,8 +85,8 @@ export default function Welcome() {
         <footer className="welcome-footer">
           <div className="welcome-version">Version v0.0.0</div>
           <div className="welcome-links">
-            <button type="button">Privacy</button>
-            <button type="button">Terms</button>
+            <button type="button">ความเป็นส่วนตัว</button>
+            <button type="button">ข้อกำหนด</button>
           </div>
         </footer>
       </div>

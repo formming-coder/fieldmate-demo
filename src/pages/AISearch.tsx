@@ -51,13 +51,13 @@ type SearchEntity = SearchResult & {
   gallery: string[]
 }
 
-const CATEGORY_OPTIONS = ['Properties', 'Projects', 'Photos', 'Documents', 'AI Reports', 'Maps', 'Comparable'] as const
+const CATEGORY_OPTIONS = ['ทรัพย์สิน', 'โครงการ', 'ภาพถ่าย', 'เอกสาร', 'รายงาน AI', 'แผนที่', 'ทรัพย์เปรียบเทียบ'] as const
 const HISTORY_KEY = 'fieldmate:search:history'
-const projectPool = ['Amber Fields', 'Urban Crest', 'Sukhum Prime', 'Harbor View', 'Luma Residences']
-const districtPool = ['Bang Na', 'Phra Khanong', 'Suan Luang', 'Ratchada', 'Ladprao']
-const subdistrictPool = ['Bang Na Nuea', 'Bang Chak', 'On Nut', 'Huai Khwang', 'Jomphol']
-const roadPool = ['Sukhumvit', 'Bangna-Trad', 'Rama 9', 'Phetchaburi', 'Lat Phrao']
-const officerPool = ['Nina Rattanakul', 'Korn Sitthipong', 'Mali Chaturon', 'Pong Kiet', 'Aom Darin']
+const projectPool = ['แอมเบอร์ ฟิลด์ส', 'เออร์เบิน เครสต์', 'สุขุมวิท ไพรม์', 'ฮาร์เบอร์ วิว', 'ลูมา เรสซิเดนซ์']
+const districtPool = ['บางนา', 'พระโขนง', 'สวนหลวง', 'รัชดา', 'ลาดพร้าว']
+const subdistrictPool = ['บางนาเหนือ', 'บางจาก', 'อ่อนนุช', 'ห้วยขวาง', 'จอมพล']
+const roadPool = ['สุขุมวิท', 'บางนา-ตราด', 'พระราม 9', 'เพชรบุรี', 'ลาดพร้าว']
+const officerPool = ['นีนา รัตนกุล', 'กร สิทธิพงศ์', 'มะลิ จตุรนต์', 'พงศ์เกียรติ', 'อ้อม ดาริน']
 
 function readHistory() {
   try {
@@ -78,11 +78,11 @@ function writeHistory(items: SearchHistoryItem[]) {
 
 function typeLabel(type?: string) {
   const lower = (type || '').toLowerCase()
-  if (lower.includes('condo')) return 'Condominium'
-  if (lower.includes('commercial')) return 'Commercial'
-  if (lower.includes('town')) return 'Townhome'
-  if (lower.includes('land')) return 'Land'
-  return 'House'
+  if (lower.includes('condo')) return 'คอนโดมิเนียม'
+  if (lower.includes('commercial')) return 'พาณิชยกรรม'
+  if (lower.includes('town')) return 'ทาวน์โฮม'
+  if (lower.includes('land')) return 'ที่ดิน'
+  return 'บ้านเดี่ยว'
 }
 
 function enrichProperty(property: Property, index: number, all: Property[]): SearchEntity {
@@ -102,7 +102,7 @@ function enrichProperty(property: Property, index: number, all: Property[]): Sea
     image: property.images[0],
     price: property.marketPrice,
     inspectedAt: property.lastInspection,
-    distance: `${distanceKm} km`,
+    distance: `${distanceKm} กม.`,
     officer,
     aiConfidence: Math.min(97, 79 + (index % 5) * 4),
     bookmarked: index % 4 === 0,
@@ -115,18 +115,18 @@ function enrichProperty(property: Property, index: number, all: Property[]): Sea
     road,
     telephone: `08${(index + 2).toString()}${(761230 + index).toString().padStart(6, '0')}`,
     owner: property.owner,
-    officerRole: 'Senior Field Valuer',
-    ocrText: `For sale sign on ${road}, ${property.marketPrice.toLocaleString()} THB, contact ${property.owner}`,
-    aiSummary: `${district} listing with strong route access and clear signage evidence.`,
-    assessment: index % 2 === 0 ? 'Assessment ready' : 'Need verification',
-    photoLabel: index % 3 === 0 ? 'Sale Sign' : index % 3 === 1 ? 'Exterior Front' : 'Document',
+    officerRole: 'ผู้ประเมินภาคสนามอาวุโส',
+    ocrText: `พบป้ายขายบนถนน${road} ราคา ${property.marketPrice.toLocaleString('th-TH')} บาท ติดต่อ ${property.owner}`,
+    aiSummary: `โซน${district} มีทางเข้าออกดีและมีหลักฐานภาพถ่ายชัดเจน`,
+    assessment: index % 2 === 0 ? 'พร้อมประเมิน' : 'รอตรวจยืนยัน',
+    photoLabel: index % 3 === 0 ? 'ป้ายขาย' : index % 3 === 1 ? 'ภาพด้านหน้า' : 'เอกสาร',
     propertyId: property.id,
-    aid: `AID-${2400 + index}`,
-    categories: Array.from(new Set([category, 'Properties', index % 3 === 0 ? 'Photos' : 'AI Reports', propertyType === 'Condominium' ? 'Comparable' : 'Maps'])),
+    aid: `รหัส-${2400 + index}`,
+    categories: Array.from(new Set([category, 'ทรัพย์สิน', index % 3 === 0 ? 'ภาพถ่าย' : 'รายงาน AI', propertyType === 'คอนโดมิเนียม' ? 'ทรัพย์เปรียบเทียบ' : 'แผนที่'])),
     timeline: [
-      { id: `${property.id}-1`, title: 'Captured', meta: `${officer} • ${new Date(property.lastInspection).toLocaleDateString('th-TH')}` },
-      { id: `${property.id}-2`, title: 'Reviewed', meta: `${officerPool[(index + 1) % officerPool.length]} • OCR synced` },
-      { id: `${property.id}-3`, title: 'Assessment', meta: `${index % 2 === 0 ? 'Completed' : 'Draft pending'}` },
+      { id: `${property.id}-1`, title: 'บันทึกภาพ', meta: `${officer} • ${new Date(property.lastInspection).toLocaleDateString('th-TH')}` },
+      { id: `${property.id}-2`, title: 'ตรวจสอบ', meta: `${officerPool[(index + 1) % officerPool.length]} • ซิงก์ OCR แล้ว` },
+      { id: `${property.id}-3`, title: 'ประเมิน', meta: `${index % 2 === 0 ? 'เสร็จสิ้น' : 'รอจัดทำแบบร่าง'}` },
     ],
     comparable: all.filter((item) => item.id !== property.id).slice(0, 3).map((item, comparableIndex) => ({
       id: item.id,
@@ -151,7 +151,7 @@ export default function AISearch() {
   const [debouncedQuery, setDebouncedQuery] = useState('')
   const [history, setHistory] = useState<SearchHistoryItem[]>(() => readHistory())
   const [entities, setEntities] = useState<SearchEntity[]>([])
-  const [selectedCategory, setSelectedCategory] = useState<(typeof CATEGORY_OPTIONS)[number]>('Properties')
+  const [selectedCategory, setSelectedCategory] = useState<(typeof CATEGORY_OPTIONS)[number]>('ทรัพย์สิน')
   const [filters, setFilters] = useState<SearchFilters>({ province: '', district: '', propertyType: '', priceRange: '', area: '', officer: '', date: '' })
   const [filterOpen, setFilterOpen] = useState(false)
   const [voiceOpen, setVoiceOpen] = useState(false)
@@ -159,6 +159,7 @@ export default function AISearch() {
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [toast, setToast] = useState('')
   const { data: properties = [], isError, refetch } = usePropertiesQuery()
+  const favorites = useMemo(() => history.filter((item) => item.pinned), [history])
 
   useEffect(() => {
     setEntities(properties.map((item, index, all) => enrichProperty(item, index, all)))
@@ -174,12 +175,12 @@ export default function AISearch() {
     if (!trimmed) return []
     const pool = [
       'บ้านเดี่ยวแถวบางนา',
-      'คอนโดที่ผมถ่ายเมื่อวาน',
+      'คอนโดที่ฉันถ่ายเมื่อวาน',
       'บ้านราคาไม่เกิน 5 ล้าน',
       'รูปที่มีป้ายขาย',
       'ทรัพย์ของคุณสมชาย',
-      'OCR title deed bangna',
-      'AID-2404',
+      'OCR โฉนด บางนา',
+      'รหัส-2404',
     ]
     return pool.filter((item) => item.toLowerCase().includes(trimmed) || trimmed.split(' ').some((token) => item.toLowerCase().includes(token))).slice(0, 5)
   }, [query])
@@ -187,8 +188,8 @@ export default function AISearch() {
   const filteredResults = useMemo(() => {
     const trimmed = debouncedQuery.trim().toLowerCase()
     const priceCap = parsePriceCap(trimmed)
-    const wantsYesterday = trimmed.includes('เมื่อวาน') || trimmed.includes('yesterday')
-    const wantsSaleSign = trimmed.includes('ป้ายขาย') || trimmed.includes('sale sign')
+    const wantsYesterday = trimmed.includes('เมื่อวาน')
+    const wantsSaleSign = trimmed.includes('ป้ายขาย')
 
     return entities.filter((item) => {
       const haystack = [
@@ -214,7 +215,7 @@ export default function AISearch() {
       const matchesCategory = item.categories.includes(selectedCategory)
       const matchesPrice = priceCap === null || item.price <= priceCap
       const matchesYesterday = !wantsYesterday || Date.now() - new Date(item.inspectedAt).getTime() <= 2 * 24 * 60 * 60 * 1000
-      const matchesSign = !wantsSaleSign || item.photoLabel.toLowerCase().includes('sale') || item.ocrText.toLowerCase().includes('sale')
+      const matchesSign = !wantsSaleSign || item.photoLabel.includes('ป้ายขาย') || item.ocrText.includes('ป้ายขาย')
       const matchesFilters =
         (!filters.province || item.province.toLowerCase().includes(filters.province.toLowerCase())) &&
         (!filters.district || item.district.toLowerCase().includes(filters.district.toLowerCase())) &&
@@ -227,9 +228,9 @@ export default function AISearch() {
 
   const trending = useMemo(() => {
     return [
-      { title: 'Frequently viewed', subtitle: 'Most opened this week', value: entities[0]?.title || 'Amber Fields' },
-      { title: 'Recently updated', subtitle: 'Fresh OCR + AI edits', value: entities[1]?.title || 'Urban Crest' },
-      { title: 'Nearby', subtitle: 'Fast access around you', value: entities[2]?.title || 'Sukhum Prime' },
+      { title: 'เปิดบ่อย', subtitle: 'รายการที่เปิดมากที่สุดสัปดาห์นี้', value: entities[0]?.title || 'แอมเบอร์ ฟิลด์ส' },
+      { title: 'อัปเดตล่าสุด', subtitle: 'ข้อมูล OCR และ AI ใหม่ล่าสุด', value: entities[1]?.title || 'เออร์เบิน เครสต์' },
+      { title: 'ใกล้คุณ', subtitle: 'เข้าถึงรวดเร็วจากตำแหน่งปัจจุบัน', value: entities[2]?.title || 'สุขุมวิท ไพรม์' },
     ]
   }, [entities])
 
@@ -272,7 +273,7 @@ export default function AISearch() {
   }
 
   return (
-    <Layout title="AI Search & Knowledge Assistant" hideAssistant>
+    <Layout title="ค้นหาข้อมูลอัจฉริยะ" hideAssistant>
       <motion.div className="ais-page" variants={staggerList} initial="hidden" animate="visible">
         {isError ? (
           <motion.section className="ais-block" variants={staggerItem}>
@@ -283,7 +284,7 @@ export default function AISearch() {
         ) : null}
 
         <motion.section className="ais-hero" variants={staggerItem} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.28 }}>
-          <h1>AI Search</h1>
+          <h1>ค้นหาอัจฉริยะ</h1>
           <p>ค้นหาข้อมูลทรัพย์ รูปถ่าย OCR และสรุป AI ได้แบบเรียลไทม์บนมือถือ</p>
         </motion.section>
 
@@ -308,6 +309,19 @@ export default function AISearch() {
         </motion.section>
 
         <SearchHistory items={history} onSelect={useQuery} onDelete={deleteHistory} onPin={togglePin} />
+
+        {favorites.length ? (
+          <motion.section className="ais-block" variants={staggerItem}>
+            <div className="ais-block-title">ค้นหาที่บันทึกไว้</div>
+            <div className="ais-category-row">
+              {favorites.map((item) => (
+                <button key={item.id} type="button" className="is-active" onClick={() => useQuery(item.query)}>
+                  {item.query}
+                </button>
+              ))}
+            </div>
+          </motion.section>
+        ) : null}
 
         <motion.section className="ais-block" variants={staggerItem}>
           <div className="ais-block-title">รายการยอดนิยม</div>
@@ -381,16 +395,16 @@ export default function AISearch() {
             onOpenMap={() => navigate('/map')}
             onOpenCamera={() => navigate('/camera')}
             onOpenAssessment={() => navigate('/assessment')}
-            onShare={() => setToast('Share sheet prepared')}
+            onShare={() => setToast('เตรียมหน้าต่างแชร์แล้ว')}
             onCopy={async () => {
               if (!selectedResult) return
               await navigator.clipboard.writeText(`${selectedResult.title}\n${selectedResult.subtitle}\n${selectedResult.mapText}`)
-              setToast('Copied property summary')
+              setToast('คัดลอกสรุปทรัพย์สินแล้ว')
             }}
             onBookmark={() => {
               if (!selectedResult) return
               toggleBookmark(selectedResult.id)
-              setToast('Bookmark updated')
+              setToast('อัปเดตรายการบันทึกแล้ว')
             }}
           />
         </Suspense>

@@ -20,8 +20,8 @@ export default function Splash() {
         <div className="splash-card">
           <BrandMark size="large" animated />
           <div className="splash-copy">
-            <h1>Fieldmate AI</h1>
-            <p className="splash-subtitle">Smart Property Survey</p>
+            <h1>ฟีลด์เมต AI</h1>
+            <p className="splash-subtitle">แพลตฟอร์มสำรวจทรัพย์สินอัจฉริยะ</p>
             <div className="splash-loader" aria-hidden="true">
               <span />
               <span />

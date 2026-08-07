@@ -14,7 +14,7 @@ function OfficerCard({ name, role, updates }: OfficerCardProps) {
         <strong>{name}</strong>
         <p>{role}</p>
       </div>
-      <span>{updates} updates</span>
+      <span>{updates} รายการอัปเดต</span>
     </section>
   )
 }

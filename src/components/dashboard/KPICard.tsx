@@ -19,8 +19,8 @@ function KPICard({ total, completed, pending, review, rejected, target }: KPICar
     <section className="db-card db-kpi-card">
       <div className="db-kpi-head">
         <div>
-          <div className="db-eyebrow">Today's KPI</div>
-          <h2>Completion {Math.round(ratio * 100)}%</h2>
+          <div className="db-eyebrow">ตัวชี้วัดวันนี้</div>
+          <h2>ความคืบหน้า {Math.round(ratio * 100)}%</h2>
         </div>
         <div className="db-kpi-ring-wrap">
           <svg viewBox="0 0 120 120" width="120" height="120">
@@ -40,12 +40,12 @@ function KPICard({ total, completed, pending, review, rejected, target }: KPICar
         </div>
       </div>
       <div className="db-kpi-grid">
-        <div><span>Properties Today</span><strong>{total}</strong></div>
-        <div><span>Completed</span><strong>{completed}</strong></div>
-        <div><span>Pending</span><strong>{pending}</strong></div>
-        <div><span>In Review</span><strong>{review}</strong></div>
-        <div><span>Rejected</span><strong>{rejected}</strong></div>
-        <div><span>Target</span><strong>{target}</strong></div>
+        <div><span>รายการวันนี้</span><strong>{total}</strong></div>
+        <div><span>เสร็จแล้ว</span><strong>{completed}</strong></div>
+        <div><span>รอดำเนินการ</span><strong>{pending}</strong></div>
+        <div><span>รอทบทวน</span><strong>{review}</strong></div>
+        <div><span>ไม่ผ่าน</span><strong>{rejected}</strong></div>
+        <div><span>เป้าหมาย</span><strong>{target}</strong></div>
       </div>
     </section>
   )

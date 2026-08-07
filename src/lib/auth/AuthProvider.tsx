@@ -9,6 +9,8 @@ import { env, isProductionMode } from '../../config/env'
 import { AuthContext, AuthLoginInput } from './AuthContext'
 import { AuthStorage, AuthUser } from './AuthStorage'
 import { createDemoSession } from './DemoAuth'
+import { useSessionTimeout } from '../../hooks/useSessionTimeout'
+import { AppRole, normalizeRole } from '../../types/auth'
 
 const MICROSOFT_REMEMBER_KEY = 'fieldmate_microsoft_remember'
 
@@ -86,7 +88,7 @@ function buildMicrosoftUser(account: AccountInfo, result?: AuthenticationResult)
     id: account.homeAccountId,
     name: typeof rawClaims.name === 'string' ? rawClaims.name : account.name || 'Fieldmate User',
     email,
-    role: resolveRole(rawClaims),
+    role: normalizeRole(resolveRole(rawClaims)),
     department: resolveDepartment(rawClaims),
     avatar: null,
   }
@@ -128,11 +130,13 @@ async function acquireMicrosoftToken(instance: PublicClientApplication, account:
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true)
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(null)
+  const [currentRole, setCurrentRole] = useState<AppRole>('Officer')
   const refreshTimerRef = useRef<number | null>(null)
 
   const syncFromStorage = () => {
     const stored = AuthStorage.read()
     setCurrentUser(stored?.user || null)
+    setCurrentRole(normalizeRole(stored?.user?.role))
     return stored
   }
 
@@ -240,6 +244,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       const stored = await createDemoSession(rememberMe)
       setCurrentUser(stored.user)
+      setCurrentRole(normalizeRole(stored.user.role))
       return
     }
 
@@ -262,11 +267,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const clearLocalSession = () => {
       if (typeof window !== 'undefined') {
         clearRememberPreference()
-        window.localStorage.clear()
-        window.sessionStorage.clear()
+        window.sessionStorage.removeItem(MICROSOFT_REMEMBER_KEY)
       }
       AuthStorage.clear()
       setCurrentUser(null)
+      setCurrentRole('Officer')
     }
 
     if (isProductionMode) {
@@ -288,6 +293,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     clearLocalSession()
   }
 
+  useSessionTimeout({
+    enabled: Boolean(currentUser),
+    timeoutMs: 30 * 60 * 1000,
+    onTimeout: () => {
+      void logout()
+    },
+  })
+
   return (
     <AuthContext.Provider
       value={{
@@ -295,6 +308,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         isAuthenticated: Boolean(currentUser),
         loading,
         currentUser,
+        currentRole,
         login,
         logout,
       }}

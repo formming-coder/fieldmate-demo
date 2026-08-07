@@ -97,9 +97,9 @@ export default function Permission({ onComplete }: { onComplete: () => void }) {
           animate={{ opacity: 1, y: 0 }}
           transition={{ type: 'spring', stiffness: 220, damping: 26 }}
         >
-          <div className="entry-permission-kicker">Permissions</div>
+          <div className="entry-permission-kicker">สิทธิ์การใช้งาน</div>
           <div className="entry-title">อนุญาตการใช้งาน</div>
-          <div className="entry-subtitle">Fieldmate AI ต้องใช้สิทธิ์ต่อไปนี้เพื่อรองรับการสำรวจภาคสนามและการบันทึกทรัพย์สิน</div>
+          <div className="entry-subtitle">ฟีลด์เมต AI ต้องใช้สิทธิ์ต่อไปนี้เพื่อรองรับการสำรวจภาคสนามและการบันทึกทรัพย์สิน</div>
         </motion.div>
 
         <motion.div
@@ -112,22 +112,22 @@ export default function Permission({ onComplete }: { onComplete: () => void }) {
           }}
         >
           <motion.div variants={{ hidden: { opacity: 0, y: 8 }, visible: { opacity: 1, y: 0 } }}>
-            <PermissionCard icon={<PermissionGlyph kind="location" />} title="Location" description="Allow GPS. Required for map and property capture." status={permissions.location} onAllow={requestLocation} onSkip={() => setPermissionState('location', 'skipped')} />
+            <PermissionCard icon={<PermissionGlyph kind="location" />} title="ตำแหน่ง" description="อนุญาต GPS เพื่อใช้งานแผนที่และบันทึกทรัพย์สิน" status={permissions.location} onAllow={requestLocation} onSkip={() => setPermissionState('location', 'skipped')} />
           </motion.div>
           <motion.div variants={{ hidden: { opacity: 0, y: 8 }, visible: { opacity: 1, y: 0 } }}>
-            <PermissionCard icon={<PermissionGlyph kind="camera" />} title="Camera" description="Allow Camera. Required for property photos." status={permissions.camera} onAllow={requestCamera} onSkip={() => setPermissionState('camera', 'skipped')} />
+            <PermissionCard icon={<PermissionGlyph kind="camera" />} title="กล้อง" description="อนุญาตกล้อง เพื่อถ่ายภาพทรัพย์สิน" status={permissions.camera} onAllow={requestCamera} onSkip={() => setPermissionState('camera', 'skipped')} />
           </motion.div>
           <motion.div variants={{ hidden: { opacity: 0, y: 8 }, visible: { opacity: 1, y: 0 } }}>
-            <PermissionCard icon={<PermissionGlyph kind="notification" />} title="Notification" description="Allow notifications. Receive nearby property updates." status={permissions.notification} onAllow={requestNotification} onSkip={() => setPermissionState('notification', 'skipped')} />
+            <PermissionCard icon={<PermissionGlyph kind="notification" />} title="การแจ้งเตือน" description="อนุญาตการแจ้งเตือน เพื่อรับอัปเดตทรัพย์สินใกล้เคียง" status={permissions.notification} onAllow={requestNotification} onSkip={() => setPermissionState('notification', 'skipped')} />
           </motion.div>
         </motion.div>
 
         <div className="entry-permission-progress" role="status" aria-live="polite">
-          <span>{Object.values(permissions).filter((state) => state !== 'idle').length}/3 permissions handled</span>
+          <span>{Object.values(permissions).filter((state) => state !== 'idle').length}/3 รายการกำหนดแล้ว</span>
         </div>
 
         <div className="entry-permission-footer">
-          <Button fullWidth onClick={handleContinue} disabled={!allHandled}>เข้าสู่ Home Dashboard</Button>
+          <Button fullWidth onClick={handleContinue} disabled={!allHandled}>เข้าสู่หน้าหลัก</Button>
         </div>
       </div>
     </EntryShell>

@@ -34,7 +34,7 @@ function GISLayerPanel({ open, layers, onToggle, onOpacityChange }: GISLayerPane
       {Object.entries(layers).map(([key, value]) => (
         <LayerToggle
           key={key}
-          label={key === 'urban' ? 'City Plan (ผังเมือง)' : key === 'transit' ? 'BTS / MRT' : key === 'road' ? 'Road Network' : key.charAt(0).toUpperCase() + key.slice(1)}
+          label={key === 'forest' ? 'พื้นที่ป่า' : key === 'flood' ? 'พื้นที่น้ำท่วม' : key === 'urban' ? 'ผังเมือง' : key === 'expropriation' ? 'แนวเวนคืน' : key === 'landuse' ? 'การใช้ที่ดิน' : key === 'government' ? 'ที่ดินภาครัฐ' : key === 'satellite' ? 'ภาพดาวเทียม' : key === 'road' ? 'โครงข่ายถนน' : key === 'railway' ? 'แนวรถไฟ' : key === 'transit' ? 'แนวรถไฟฟ้า' : key === 'expressway' ? 'ทางด่วน' : key === 'river' ? 'แม่น้ำ' : key === 'canal' ? 'คลอง' : 'สาธารณูปโภค'}
           description={value.description}
           active={value.active}
           opacity={value.opacity}

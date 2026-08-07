@@ -6,16 +6,16 @@ type QuickActionsProps = {
 }
 
 const items = [
-  { icon: '🗺', title: 'Smart Map', subtitle: 'สำรวจพื้นที่', path: '/map' },
-  { icon: '📷', title: 'AI Camera', subtitle: 'ถ่ายภาพทรัพย์', path: '/camera' },
-  { icon: '🤖', title: 'AI Summary', subtitle: 'สรุปข้อมูล', path: '/ai-summary' },
+  { icon: '🗺', title: 'แผนที่อัจฉริยะ', subtitle: 'สำรวจพื้นที่', path: '/map' },
+  { icon: '📷', title: 'กล้อง AI', subtitle: 'ถ่ายภาพทรัพย์', path: '/camera' },
+  { icon: '🤖', title: 'สรุป AI', subtitle: 'สรุปข้อมูล', path: '/ai-summary' },
   { icon: '📚', title: 'ข้อมูลกลาง', subtitle: 'แชร์องค์ความรู้', path: '/shared-intelligence' },
 ]
 
 function QuickActions({ onSelect }: QuickActionsProps) {
   return (
     <section className="dashboard-section">
-      <h2 className="dashboard-section-title">Quick Actions</h2>
+      <h2 className="dashboard-section-title">เมนูด่วน</h2>
       <div className="quick-actions-grid">
         {items.map((item, index) => (
           <motion.button

@@ -36,16 +36,16 @@ function ResultBottomSheet({ open, result, onClose, onOpenMap, onOpenCamera, onO
             <h3>{result.title}</h3>
             <p>{result.subtitle}</p>
           </div>
-          <strong>THB {result.price.toLocaleString()}</strong>
+          <strong>{result.price.toLocaleString()} บาท</strong>
         </div>
         <div className="ais-detail-grid">
-          <div><span>Officer</span><strong>{result.officer}</strong></div>
-          <div><span>AI Confidence</span><strong>{result.aiConfidence}%</strong></div>
-          <div><span>Assessment</span><strong>{result.assessment}</strong></div>
-          <div><span>Map</span><strong>{result.mapText}</strong></div>
+          <div><span>ผู้รับผิดชอบ</span><strong>{result.officer}</strong></div>
+          <div><span>ความมั่นใจ AI</span><strong>{result.aiConfidence}%</strong></div>
+          <div><span>ผลประเมิน</span><strong>{result.assessment}</strong></div>
+          <div><span>แผนที่</span><strong>{result.mapText}</strong></div>
         </div>
         <div className="ais-subsection">
-          <div className="ais-block-title">Timeline</div>
+          <div className="ais-block-title">ไทม์ไลน์</div>
           <div className="ais-detail-list">
             {result.timeline.map((item) => (
               <div key={item.id} className="ais-detail-list-item">
@@ -56,18 +56,18 @@ function ResultBottomSheet({ open, result, onClose, onOpenMap, onOpenCamera, onO
           </div>
         </div>
         <div className="ais-subsection">
-          <div className="ais-block-title">Comparable</div>
+          <div className="ais-block-title">ทรัพย์เปรียบเทียบ</div>
           <div className="ais-inline-rail">
             {result.comparable.map((item) => (
               <div key={item.id} className="ais-inline-card">
                 <strong>{item.label}</strong>
-                <span>THB {item.price.toLocaleString()}</span>
+                <span>{item.price.toLocaleString()} บาท</span>
               </div>
             ))}
           </div>
         </div>
         <div className="ais-subsection">
-          <div className="ais-block-title">Gallery</div>
+          <div className="ais-block-title">แกลเลอรีภาพ</div>
           <div className="ais-inline-rail">
             {result.gallery.map((image, index) => <img key={`${image}-${index}`} src={image} alt={`gallery-${index + 1}`} className="ais-gallery-thumb" />)}
           </div>
@@ -80,12 +80,12 @@ function ResultBottomSheet({ open, result, onClose, onOpenMap, onOpenCamera, onO
           </div>
         </div>
         <div className="ais-inline-actions">
-          <button type="button" onClick={onOpenMap}>Smart Map</button>
-          <button type="button" onClick={onOpenCamera}>AI Camera</button>
-          <button type="button" onClick={onOpenAssessment}>Assessment</button>
-          <button type="button" onClick={onShare}>Share</button>
-          <button type="button" onClick={onCopy}>Copy</button>
-          <button type="button" className="is-primary" onClick={onBookmark}>Bookmark</button>
+          <button type="button" onClick={onOpenMap}>แผนที่อัจฉริยะ</button>
+          <button type="button" onClick={onOpenCamera}>กล้อง AI</button>
+          <button type="button" onClick={onOpenAssessment}>ประเมิน</button>
+          <button type="button" onClick={onShare}>แชร์</button>
+          <button type="button" onClick={onCopy}>คัดลอก</button>
+          <button type="button" className="is-primary" onClick={onBookmark}>บันทึก</button>
         </div>
       </div>
     </BottomSheet>

@@ -1,8 +1,11 @@
-import { apiClient } from '../lib/http/client'
 import { isDevelopmentMode } from '../config/env'
 import { enqueueOfflineItem } from '../lib/offline/queue'
 import mockProperties from '../mock/properties.json'
 import { Property } from '../types'
+import { apiEndpoints } from '../services/api/endpoints'
+import { apiService } from '../services/api/apiService'
+
+const PROPERTY_CACHE_KEY = 'fieldmate:cache:properties'
 
 type PropertyCreateInput = Partial<Property>
 
@@ -50,14 +53,39 @@ function toProperty(record: PropertyRecord): Property {
   }
 }
 
+function readPropertyCache() {
+  if (typeof window === 'undefined') return [] as Property[]
+  try {
+    const raw = window.localStorage.getItem(PROPERTY_CACHE_KEY)
+    return raw ? (JSON.parse(raw) as Property[]) : []
+  } catch {
+    return []
+  }
+}
+
+function writePropertyCache(items: Property[]) {
+  if (typeof window === 'undefined') return
+  try {
+    window.localStorage.setItem(PROPERTY_CACHE_KEY, JSON.stringify(items))
+  } catch {
+    // ignore storage errors
+  }
+}
+
 export const propertyRepository = {
   async list() {
     if (isDevelopmentMode) {
       return (mockProperties as PropertyRecord[]).map(toProperty)
     }
 
-    const response = await apiClient.get<PropertyRecord[]>('/properties')
-    return response.data.map(toProperty)
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      return readPropertyCache()
+    }
+
+    const response = await apiService.get<PropertyRecord[]>(apiEndpoints.properties.list)
+    const mapped = response.map(toProperty)
+    writePropertyCache(mapped)
+    return mapped
   },
   async getById(id: string) {
     if (isDevelopmentMode) {
@@ -68,8 +96,16 @@ export const propertyRepository = {
       return toProperty(record)
     }
 
-    const response = await apiClient.get<PropertyRecord>(`/properties/${id}`)
-    return toProperty(response.data)
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      const cached = readPropertyCache().find((item) => item.id === id)
+      if (cached) return cached
+    }
+
+    const response = await apiService.get<PropertyRecord>(apiEndpoints.properties.update(id))
+    const mapped = toProperty(response)
+    const current = readPropertyCache().filter((item) => item.id !== mapped.id)
+    writePropertyCache([mapped, ...current])
+    return mapped
   },
   async create(payload: PropertyCreateInput) {
     if (isDevelopmentMode) {
@@ -106,7 +142,7 @@ export const propertyRepository = {
       }
     }
 
-    const response = await apiClient.post<PropertyRecord>('/properties', payload)
-    return toProperty(response.data)
+    const response = await apiService.post<PropertyRecord>(apiEndpoints.properties.create, payload)
+    return toProperty(response)
   },
 }

@@ -10,7 +10,7 @@ function AISuggestion({ suggestions, onSelect }: AISuggestionProps) {
 
   return (
     <section className="ais-block">
-      <div className="ais-block-title">AI Suggestions</div>
+      <div className="ais-block-title">คำแนะนำ AI</div>
       <div className="ais-suggestion-list">
         {suggestions.map((suggestion) => (
           <button type="button" key={suggestion} className="ais-suggestion" onClick={() => onSelect(suggestion)}>

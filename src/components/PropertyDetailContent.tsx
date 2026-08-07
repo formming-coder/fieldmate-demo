@@ -1,14 +1,14 @@
-import React, { useMemo } from 'react'
+import React, { useMemo, useState } from 'react'
 import { MapContainer, Marker, TileLayer } from 'react-leaflet'
 import L from 'leaflet'
 import { Property } from '../types'
 import './PropertyDetailContent.css'
 
 const historySeed = [
-  { officer: 'Nina', date: '2026-08-05', time: '14:20', action: 'เพิ่มภาพถ่าย' },
-  { officer: 'Korn', date: '2026-08-02', time: '09:15', action: 'อัปเดตราคา' },
-  { officer: 'Mali', date: '2026-07-31', time: '16:50', action: 'ย้ายพิกัด GPS' },
-  { officer: 'Pong', date: '2026-07-28', time: '11:10', action: 'เพิ่มเบอร์โทร' },
+  { officer: 'นีนา', date: '2026-08-05', time: '14:20', action: 'เพิ่มภาพถ่าย' },
+  { officer: 'กร', date: '2026-08-02', time: '09:15', action: 'อัปเดตราคา' },
+  { officer: 'มะลิ', date: '2026-07-31', time: '16:50', action: 'ย้ายพิกัด GPS' },
+  { officer: 'พงศ์', date: '2026-07-28', time: '11:10', action: 'เพิ่มเบอร์โทร' },
 ]
 
 function getPropertyType(type?: string) {
@@ -32,18 +32,33 @@ export type PropertyDetailContentProps = {
 
 export default function PropertyDetailContent({ property, nearby = [], onSelectNearby, compact = false }: PropertyDetailContentProps) {
   const propertyType = useMemo(() => getPropertyType(property?.type), [property])
+  const [galleryIndex, setGalleryIndex] = useState(0)
+  const [zoom, setZoom] = useState(1)
+  const [fullscreen, setFullscreen] = useState(false)
+
+  const galleryImages = property.images.length ? property.images : ['https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80']
+  const activeImage = galleryImages[galleryIndex] || galleryImages[0]
+
+  const nextImage = () => setGalleryIndex((current) => (current + 1) % galleryImages.length)
+  const previousImage = () => setGalleryIndex((current) => (current - 1 + galleryImages.length) % galleryImages.length)
 
   return (
     <div className={`detail-shell ${compact ? 'detail-shell-compact' : ''}`}>
       <div className="detail-card hero-card">
-        <img className="hero-image" src={property.images[0]} alt={property.owner} />
+        <img className="hero-image" src={activeImage} alt={property.owner} style={{ transform: `scale(${zoom})` }} />
         <div className="hero-overlay">
           <span className="pill">{propertyType}</span>
-          <span className="pill accent">THB {property.marketPrice.toLocaleString()}</span>
+          <span className="pill accent">{property.marketPrice.toLocaleString()} บาท</span>
         </div>
         <div className="hero-meta">
           <div style={{ fontWeight: 800 }}>{property.owner}</div>
-          <div style={{ color: 'var(--muted)' }}>{property.province} • ความแม่นยำ GPS 4.8m</div>
+          <div style={{ color: 'var(--muted)' }}>{property.province} • ความแม่นยำ GPS 4.8 ม.</div>
+          <div className="gallery-row" style={{ marginTop: 8 }}>
+            <button type="button" className="chip" onClick={previousImage}>ก่อนหน้า</button>
+            <button type="button" className="chip" onClick={nextImage}>ถัดไป</button>
+            <button type="button" className="chip" onClick={() => setFullscreen(true)}>เต็มจอ</button>
+            <input type="range" min={1} max={2.5} step={0.1} value={zoom} onChange={(event) => setZoom(Number(event.target.value))} aria-label="ปรับการซูมภาพ" />
+          </div>
         </div>
       </div>
 
@@ -54,13 +69,14 @@ export default function PropertyDetailContent({ property, nearby = [], onSelectN
           <div><span>พื้นที่ดิน</span><strong>12 ไร่ / 3 งาน</strong></div>
           <div><span>พื้นที่ใช้สอย</span><strong>245 ตร.ม.</strong></div>
           <div><span>จำนวนชั้น</span><strong>2</strong></div>
-          <div><span>ชื่อโครงการ</span><strong>River Crest</strong></div>
+          <div><span>ชื่อโครงการ</span><strong>ริเวอร์ เครสต์</strong></div>
           <div><span>อาคาร</span><strong>อาคาร B</strong></div>
           <div><span>ชั้น</span><strong>3</strong></div>
           <div><span>ที่อยู่</span><strong>123/4 ซอย 6 ถนนพระราม 9</strong></div>
           <div><span>พิกัด GPS</span><strong>{property.latitude.toFixed(4)}, {property.longitude.toFixed(4)}</strong></div>
           <div><span>วันที่ตรวจสอบ</span><strong>{new Date(property.lastInspection).toLocaleDateString('th-TH')}</strong></div>
           <div><span>เจ้าหน้าที่</span><strong>นีนา</strong></div>
+          <div><span>เจ้าของ</span><strong>{property.owner}</strong></div>
         </div>
       </div>
 
@@ -86,9 +102,11 @@ export default function PropertyDetailContent({ property, nearby = [], onSelectN
       <div className="detail-card">
         <div className="section-title">สรุป AI</div>
         <div className="ai-summary-card">
+          <div><span>ความเสี่ยง</span><strong>ปานกลางด้านสภาพจราจรและเสียงรบกวน</strong></div>
+          <div><span>คำแนะนำ</span><strong>เก็บภาพด้านหลังเพิ่ม 2 มุม และตรวจเอกสารสิทธิ์ซ้ำ</strong></div>
+          <div><span>ทรัพย์เปรียบเทียบเด่น</span><strong>ช่วงราคาใกล้เคียง {(property.marketPrice - 160000).toLocaleString()} บาท</strong></div>
           <div><span>ความเชื่อมั่น</span><strong>92%</strong></div>
-          <div><span>สถานะโครงสร้าง</span><strong>สมบูรณ์พร้อมประเมิน</strong></div>
-          <div><span>ข้อเสนอแนะ</span><strong>ควรเก็บภาพด้านหลังเพิ่มอีก 2 มุม</strong></div>
+          <div><span>ราคาแนะนำโดย AI</span><strong>{(property.marketPrice * 0.97).toLocaleString()} บาท</strong></div>
         </div>
       </div>
 
@@ -101,7 +119,7 @@ export default function PropertyDetailContent({ property, nearby = [], onSelectN
                 <strong>โครงการใกล้เคียง {idx}</strong>
                 <span>ระยะ {idx + 0.8} กม.</span>
               </div>
-              <strong>THB {(property.marketPrice - idx * 180000).toLocaleString()}</strong>
+              <strong>{(property.marketPrice - idx * 180000).toLocaleString()} บาท</strong>
             </div>
           ))}
         </div>
@@ -118,8 +136,8 @@ export default function PropertyDetailContent({ property, nearby = [], onSelectN
                   <div style={{ color: 'var(--muted)', fontSize: 12 }}>{item.province}</div>
                 </div>
                 <div style={{ textAlign: 'right' }}>
-                  <div style={{ fontWeight: 700 }}>THB {item.marketPrice.toLocaleString()}</div>
-                  <div style={{ color: 'var(--muted)', fontSize: 12 }}>2.1 km</div>
+                  <div style={{ fontWeight: 700 }}>{item.marketPrice.toLocaleString()} บาท</div>
+                  <div style={{ color: 'var(--muted)', fontSize: 12 }}>2.1 กม.</div>
                 </div>
               </button>
             ))}
@@ -152,6 +170,22 @@ export default function PropertyDetailContent({ property, nearby = [], onSelectN
               <span className="chip">ชื่นชอบ</span>
               <span className="chip">คัดลอกลิงก์</span>
             </div>
+            <div className="timeline-list" style={{ marginTop: 10 }}>
+              <div className="timeline-item">
+                <div className="timeline-dot" />
+                <div>
+                  <div style={{ fontWeight: 700 }}>ความเห็นทีมประเมิน</div>
+                  <div style={{ color: 'var(--muted)', fontSize: 12 }}>แนะนำเก็บภาพแนวเขตด้านทิศตะวันตกเพิ่มเติม</div>
+                </div>
+              </div>
+              <div className="timeline-item">
+                <div className="timeline-dot" />
+                <div>
+                  <div style={{ fontWeight: 700 }}>หมายเหตุเจ้าหน้าที่พื้นที่</div>
+                  <div style={{ color: 'var(--muted)', fontSize: 12 }}>ทางเข้าออกใช้งานได้ดี แต่ช่วงเช้าการจราจรหนาแน่น</div>
+                </div>
+              </div>
+            </div>
           </div>
 
           <div className="detail-card">
@@ -164,6 +198,13 @@ export default function PropertyDetailContent({ property, nearby = [], onSelectN
             </div>
           </div>
         </>
+      ) : null}
+
+      {fullscreen ? (
+        <div className="detail-fullscreen" role="dialog" aria-modal="true">
+          <button type="button" className="chip" onClick={() => setFullscreen(false)}>ปิด</button>
+          <img className="detail-fullscreen-image" src={activeImage} alt={property.owner} style={{ transform: `scale(${zoom})` }} />
+        </div>
       ) : null}
     </div>
   )

@@ -16,8 +16,8 @@ function ImageSearch({ open, onClose, onUse }: ImageSearchProps) {
         <p>ค้นหาจากภาพ OCR วัตถุ หรือเอกสารได้จากชุดข้อมูลจริง</p>
         <div className="ais-inline-actions">
           <button type="button" onClick={() => onUse('รูปที่มีป้ายขาย')}>วัตถุ</button>
-          <button type="button" onClick={() => onUse('OCR title deed')}>OCR</button>
-          <button type="button" className="is-primary" onClick={() => onUse('document near bangna')}>เอกสาร</button>
+          <button type="button" onClick={() => onUse('OCR โฉนดที่ดิน')}>OCR</button>
+          <button type="button" className="is-primary" onClick={() => onUse('เอกสารใกล้บางนา')}>เอกสาร</button>
         </div>
       </div>
     </BottomSheet>

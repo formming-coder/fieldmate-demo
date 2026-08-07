@@ -16,8 +16,8 @@ function SearchBar({ value, onChange, onVoice, onCamera }: SearchBarProps) {
         <input
           value={value}
           onChange={(event) => onChange(event.target.value)}
-          placeholder="ค้นหาทรัพย์ โครงการ เจ้าของ เบอร์โทร ถนน OCR AID"
-          aria-label="AI search"
+          placeholder="ค้นหาทรัพย์ โครงการ เจ้าของ เบอร์โทร ถนน OCR รหัสทรัพย์"
+          aria-label="ค้นหาด้วย AI"
         />
         <AnimatePresence>
           {value ? (

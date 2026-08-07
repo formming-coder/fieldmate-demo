@@ -10,13 +10,13 @@ type KnowledgeCardProps = {
 function KnowledgeCard({ recentKnowledge, popularProperty, recentlyShared, bookmarks }: KnowledgeCardProps) {
   return (
     <section className="db-card">
-      <div className="db-eyebrow">Knowledge Center</div>
-      <h2>Shared intelligence</h2>
+      <div className="db-eyebrow">ศูนย์ความรู้</div>
+      <h2>ข้อมูลส่วนกลาง</h2>
       <div className="db-info-list">
-        <div><span>Recent knowledge</span><strong>{recentKnowledge}</strong></div>
-        <div><span>Popular property</span><strong>{popularProperty}</strong></div>
-        <div><span>Recently shared</span><strong>{recentlyShared}</strong></div>
-        <div><span>Bookmarks</span><strong>{bookmarks}</strong></div>
+        <div><span>ข้อมูลล่าสุด</span><strong>{recentKnowledge}</strong></div>
+        <div><span>ทรัพย์ยอดนิยม</span><strong>{popularProperty}</strong></div>
+        <div><span>แชร์ล่าสุด</span><strong>{recentlyShared}</strong></div>
+        <div><span>รายการที่บันทึก</span><strong>{bookmarks}</strong></div>
       </div>
     </section>
   )

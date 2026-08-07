@@ -14,7 +14,7 @@ type ImageAnalysisProps = {
 function ImageAnalysis({ image, detections }: ImageAnalysisProps) {
   return (
     <section className="as-card">
-      <h2>AI Image Analysis</h2>
+      <h2>วิเคราะห์ภาพด้วย AI</h2>
       <div className="as-analysis-frame">
         <img src={image} alt="analysis" />
         {detections.slice(0, 4).map((item, index) => (

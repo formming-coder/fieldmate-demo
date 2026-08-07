@@ -1,6 +1,7 @@
-import { apiClient } from '../lib/http/client'
 import { authSession } from '../lib/auth/session'
 import { env } from '../config/env'
+import { apiEndpoints } from '../services/api/endpoints'
+import { apiService } from '../services/api/apiService'
 
 type LoginResponse = {
   accessToken: string
@@ -20,19 +21,19 @@ function saveSession(payload: LoginResponse) {
 
 export const authRepository = {
   async loginWithPassword(email: string, password: string) {
-    const response = await apiClient.post<LoginResponse>('/auth/login', { email, password })
-    saveSession(response.data)
-    return response.data
+    const response = await apiService.post<LoginResponse>(apiEndpoints.auth.login, { email, password })
+    saveSession(response)
+    return response
   },
   async loginWithMicrosoft() {
-    const response = await apiClient.post<LoginResponse>('/auth/entra/login')
-    saveSession(response.data)
-    return response.data
+    const response = await apiService.post<LoginResponse>('/auth/entra/login')
+    saveSession(response)
+    return response
   },
   async exchangeEntraToken(idToken: string) {
-    const response = await apiClient.post<LoginResponse>('/auth/entra/exchange', { idToken })
-    saveSession(response.data)
-    return response.data
+    const response = await apiService.post<LoginResponse>('/auth/entra/exchange', { idToken })
+    saveSession(response)
+    return response
   },
   buildEntraAuthorizeUrl() {
     const params = new URLSearchParams({
@@ -46,7 +47,7 @@ export const authRepository = {
   },
   async logout() {
     try {
-      await apiClient.post('/auth/logout')
+      await apiService.post(apiEndpoints.auth.logout)
     } finally {
       authSession.clear()
     }

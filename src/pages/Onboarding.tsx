@@ -8,18 +8,18 @@ export const ONBOARDING_STORAGE_KEY = 'fieldmate-onboarding-complete'
 
 const slides = [
   {
-    title: 'Explore property context instantly',
-    description: 'Overlay smart map layers, GIS insight, and shared field evidence in one mobile workflow.',
+    title: 'ดูบริบททรัพย์สินได้ทันที',
+    description: 'ซ้อนชั้นข้อมูลแผนที่อัจฉริยะ ข้อมูล GIS และหลักฐานภาคสนามไว้ในเวิร์กโฟลว์เดียวบนมือถือ',
     icon: '🗺',
   },
   {
-    title: 'Capture evidence with AI assistance',
-    description: 'Use AI Camera for OCR, metadata, quality scoring, and structured inspection capture.',
+    title: 'บันทึกหลักฐานด้วยความช่วยเหลือจาก AI',
+    description: 'ใช้ AI Camera สำหรับ OCR ข้อมูลกำกับภาพ คะแนนคุณภาพ และการเก็บภาพอย่างเป็นระบบ',
     icon: '📷',
   },
   {
-    title: 'Turn every visit into shared intelligence',
-    description: 'Sync property knowledge, route plans, assessments, and team-ready field summaries.',
+    title: 'เปลี่ยนทุกการลงพื้นที่เป็นข้อมูลส่วนกลาง',
+    description: 'ซิงก์ข้อมูลทรัพย์สิน แผนเส้นทาง การประเมิน และสรุปภาคสนามที่พร้อมใช้ร่วมกันทั้งทีม',
     icon: '🧠',
   },
 ] as const
@@ -55,8 +55,8 @@ export default function Onboarding() {
     <EntryShell>
       <div className="onboarding-screen">
         <div className="onboarding-topline">
-          <div className="onboarding-progress-label">Onboarding {progress}</div>
-          <button type="button" className="onboarding-skip" onClick={skip}>Skip</button>
+          <div className="onboarding-progress-label">เริ่มต้นใช้งาน {progress}</div>
+          <button type="button" className="onboarding-skip" onClick={skip}>ข้าม</button>
         </div>
 
         <motion.section
@@ -79,21 +79,21 @@ export default function Onboarding() {
           </div>
 
           <div className="onboarding-copy">
-            <div className="onboarding-kicker">Fieldmate AI</div>
+            <div className="onboarding-kicker">ฟีลด์เมต AI</div>
             <h1>{slide.title}</h1>
             <p>{slide.description}</p>
           </div>
         </motion.section>
 
-        <div className="onboarding-dots" aria-label="Onboarding progress">
+        <div className="onboarding-dots" aria-label="ความคืบหน้าการเริ่มต้นใช้งาน">
           {slides.map((item, dotIndex) => (
             <span key={item.title} className={dotIndex === index ? 'is-active' : ''} />
           ))}
         </div>
 
         <div className="onboarding-actions">
-          <Button fullWidth variant="secondary" onClick={skip}>Skip</Button>
-          <Button fullWidth onClick={goNext}>{isLast ? 'Get Started' : 'Next'}</Button>
+          <Button fullWidth variant="secondary" onClick={skip}>ข้าม</Button>
+          <Button fullWidth onClick={goNext}>{isLast ? 'เริ่มต้นใช้งาน' : 'ถัดไป'}</Button>
         </div>
       </div>
     </EntryShell>

@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../lib/auth/useAuth'
 import FloatingAssistant from './FloatingAssistant'
 import { Avatar, BottomNavigation, IconButton, TopNavigation } from './ui'
+import { canAccessAnyRoute } from '../lib/auth/rbac'
 
 const titleMap: Record<string, string> = {
   '/home': 'หน้าหลัก',
@@ -10,14 +11,14 @@ const titleMap: Record<string, string> = {
   '/map': 'แผนที่',
   '/camera': 'ถ่ายภาพ',
   '/album': 'อัลบั้ม',
-  '/shared-intelligence': 'ข้อมูลกลาง',
+  '/shared-intelligence': 'ข้อมูลทรัพย์สินส่วนกลาง',
   '/search': 'ค้นหา',
   '/property': 'ทรัพย์สิน',
-  '/notifications': 'แจ้งเตือน',
+  '/notifications': 'การแจ้งเตือน',
   '/profile': 'โปรไฟล์',
-  '/settings': 'การตั้งค่า',
-  '/gis': 'GIS Intelligence',
-  '/route-planner': 'Route Planner',
+  '/settings': 'ตั้งค่า',
+  '/gis': 'GIS อัจฉริยะ',
+  '/route-planner': 'วางแผนเส้นทาง',
 }
 
 const navItems = [
@@ -31,11 +32,19 @@ const navItems = [
 export default function Layout({ children, title, immersive = false, hideAssistant = false, hideBottomNavigation = false }: { children: React.ReactNode; title?: string; immersive?: boolean; hideAssistant?: boolean; hideBottomNavigation?: boolean }) {
   const location = useLocation()
   const navigate = useNavigate()
-  const { currentUser } = useAuth()
+  const { currentUser, currentRole } = useAuth()
   const [offline, setOffline] = useState(() => typeof navigator !== 'undefined' ? !navigator.onLine : false)
-  const resolvedTitle = title ?? titleMap[location.pathname] ?? titleMap['/dashboard'] ?? 'Fieldmate AI'
+  const resolvedTitle = title ?? titleMap[location.pathname] ?? titleMap['/dashboard'] ?? 'ฟีลด์เมต AI'
   const resolvedSubtitle = location.pathname === '/map' ? 'กรุงเทพมหานคร, ไทย' : 'ตำแหน่งปัจจุบัน'
   const shouldHideBottomNavigation = hideBottomNavigation || location.pathname === '/home'
+  const filteredNavItems = navItems.filter((item) => {
+    if (item.to === '/map') return canAccessAnyRoute(currentRole, ['map'])
+    if (item.to === '/camera') return canAccessAnyRoute(currentRole, ['camera'])
+    if (item.to === '/album') return canAccessAnyRoute(currentRole, ['album'])
+    if (item.to === '/search') return canAccessAnyRoute(currentRole, ['search'])
+    if (item.to === '/profile') return canAccessAnyRoute(currentRole, ['profile'])
+    return true
+  })
 
   useEffect(() => {
     const sync = () => setOffline(!navigator.onLine)
@@ -48,10 +57,10 @@ export default function Layout({ children, title, immersive = false, hideAssista
   }, [])
 
   return (
-    <div className="app-shell">
+    <div className="app-shell" style={{ overflowX: 'clip' }}>
       <div className={`mobile-shell ${immersive ? 'mobile-shell-immersive' : ''}`}>
         <div className="container-safe">
-          {offline && !immersive ? <div className="global-offline-banner">Offline mode active • Cached data available • Sync queued</div> : null}
+          {offline && !immersive ? <div className="global-offline-banner">กำลังใช้งานแบบออฟไลน์ • มีข้อมูลแคชพร้อมใช้ • รอซิงก์ข้อมูล</div> : null}
           {!immersive ? (
             <TopNavigation
               title={resolvedTitle}
@@ -60,8 +69,8 @@ export default function Layout({ children, title, immersive = false, hideAssista
                 <>
                   <IconButton label="ค้นหา" onClick={() => navigate('/search')}><span className="material-symbols-rounded" aria-hidden="true">search</span></IconButton>
                   <IconButton label="การแจ้งเตือน" onClick={() => navigate('/notifications')}><span className="material-symbols-rounded" aria-hidden="true">notifications</span></IconButton>
-                  <button type="button" className="layout-avatar-button" onClick={() => navigate('/profile')} aria-label="Open profile">
-                    <Avatar name={currentUser?.name || 'Field Officer'} size={40} />
+                  <button type="button" className="layout-avatar-button" onClick={() => navigate('/profile')} aria-label="เปิดโปรไฟล์">
+                    <Avatar name={currentUser?.name || 'เจ้าหน้าที่ภาคสนาม'} size={40} />
                   </button>
                 </>
               )}
@@ -72,7 +81,7 @@ export default function Layout({ children, title, immersive = false, hideAssista
         </div>
 
         {!hideAssistant ? <FloatingAssistant /> : null}
-        {!shouldHideBottomNavigation ? <BottomNavigation items={navItems} /> : null}
+        {!shouldHideBottomNavigation ? <BottomNavigation items={filteredNavItems} /> : null}
       </div>
     </div>
   )

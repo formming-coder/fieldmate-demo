@@ -1,5 +1,7 @@
 import { authSession } from './session'
 import { User } from '../../types'
+import { secureStorage } from './secureStorage'
+import { normalizeRole } from '../../types/auth'
 
 const SESSION_KEY = 'fieldmate_session'
 const USER_KEY = 'fieldmate_user'
@@ -53,7 +55,7 @@ export const AuthStorage = {
     const session = readJson<StoredAuthSession>(SESSION_KEY)
     const user = readJson<AuthUser>(USER_KEY)
     const role = typeof window !== 'undefined' ? window.localStorage.getItem(ROLE_KEY) : null
-    const token = typeof window !== 'undefined' ? window.localStorage.getItem(TOKEN_KEY) : null
+    const token = secureStorage.get(TOKEN_KEY)
 
     if (!session || !user || !role || !token) {
       return null
@@ -66,7 +68,7 @@ export const AuthStorage = {
 
     return {
       session: { ...session, token },
-      user: { ...user, role },
+      user: { ...user, role: normalizeRole(role) },
     }
   },
 
@@ -81,8 +83,8 @@ export const AuthStorage = {
     writeJson(SESSION_KEY, session)
     writeJson(USER_KEY, input.user)
     if (typeof window !== 'undefined') {
-      window.localStorage.setItem(ROLE_KEY, input.user.role || 'Officer')
-      window.localStorage.setItem(TOKEN_KEY, input.token)
+      window.localStorage.setItem(ROLE_KEY, normalizeRole(input.user.role))
+      secureStorage.set(TOKEN_KEY, input.token)
     }
 
     authSession.write({
@@ -102,7 +104,7 @@ export const AuthStorage = {
     remove(SESSION_KEY)
     remove(USER_KEY)
     remove(ROLE_KEY)
-    remove(TOKEN_KEY)
+    secureStorage.remove(TOKEN_KEY)
     authSession.clear()
   },
 

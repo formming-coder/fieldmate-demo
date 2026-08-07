@@ -25,21 +25,21 @@
   z-index: 2;
   min-height: 100vh;
   display: grid;
-  grid-template-rows: auto auto minmax(0, 1fr) auto auto;
-  gap: 12px;
-  padding: calc(env(safe-area-inset-top) + 12px) 16px calc(env(safe-area-inset-bottom) + 12px);
+  align-content: space-between;
+  gap: 26px;
+  padding: calc(env(safe-area-inset-top) + 18px) 18px calc(env(safe-area-inset-bottom) + 18px);
   font-family: 'Sora', 'Noto Sans Thai', ui-sans-serif, system-ui, -apple-system, sans-serif;
 }
 
 .app-cover-hero {
   position: relative;
-  min-height: 232px;
-  border-radius: 34px;
+  min-height: 298px;
+  border-radius: 38px;
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.92);
-  background: rgba(255, 255, 255, 0.66);
-  box-shadow: 0 28px 56px rgba(15, 23, 42, 0.14);
-  backdrop-filter: blur(20px);
+  background: rgba(255, 255, 255, 0.7);
+  box-shadow: 0 34px 74px rgba(15, 23, 42, 0.12);
+  backdrop-filter: blur(24px);
 }
 
 .app-cover-hero-gradient {
@@ -58,8 +58,8 @@
 
 .app-cover-illustration {
   position: absolute;
-  inset: 14px;
-  border-radius: 24px;
+  inset: 16px;
+  border-radius: 28px;
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.88);
   background: linear-gradient(160deg, #edf4fb, #e9f1e4);
@@ -184,19 +184,20 @@
   position: relative;
   display: grid;
   justify-items: center;
-  gap: 10px;
+  gap: 14px;
   text-align: center;
+  margin-top: -8px;
 }
 
 .app-cover-logo-glow {
   position: absolute;
-  width: 178px;
-  height: 178px;
+  width: 210px;
+  height: 210px;
   border-radius: 999px;
   background: radial-gradient(circle, rgba(255, 208, 67, 0.28), rgba(255, 208, 67, 0));
-  top: -22px;
+  top: -34px;
   z-index: 0;
-  filter: blur(4px);
+  filter: blur(10px);
 }
 
 .app-cover-logo-mark {
@@ -208,136 +209,101 @@
   position: relative;
   z-index: 2;
   display: grid;
-  gap: 4px;
+  gap: 8px;
+  justify-items: center;
 }
 
 .app-cover-logo-copy h1 {
   margin: 0;
-  font-size: clamp(1.65rem, 5.6vw, 2rem);
-  line-height: 1.08;
-  letter-spacing: -0.03em;
+  font-size: clamp(2.05rem, 7vw, 2.45rem);
+  line-height: 1.02;
+  letter-spacing: -0.045em;
   color: #0f172a;
 }
 
 .app-cover-tagline {
   margin: 0;
-  font-size: clamp(0.86rem, 3.2vw, 0.95rem);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  font-weight: 700;
+  font-size: clamp(0.92rem, 3.5vw, 1rem);
+  letter-spacing: 0.04em;
+  font-weight: 600;
   color: #6f5209;
 }
 
 .app-cover-subtitle {
   margin: 0;
-  max-width: 350px;
+  max-width: 324px;
   font-family: 'Noto Sans Thai', ui-sans-serif, sans-serif;
-  font-size: clamp(0.76rem, 2.95vw, 0.83rem);
-  line-height: 1.56;
-  color: #344054;
+  font-size: clamp(0.88rem, 3.15vw, 0.97rem);
+  line-height: 1.7;
+  color: #475467;
 }
 
-.app-cover-feature-wrap {
-  min-height: 0;
-}
-
-.app-cover-feature-section {
+.app-cover-content {
   display: grid;
-  gap: 10px;
-}
-
-.app-cover-feature-card {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  align-items: start;
-  gap: 11px;
-  padding: 12px;
-  border-radius: 24px;
-  background: rgba(255, 255, 255, 0.7);
-  border: 1px solid rgba(255, 255, 255, 0.92);
-  box-shadow: 0 15px 30px rgba(17, 24, 39, 0.09);
-  backdrop-filter: blur(20px);
-}
-
-.app-cover-feature-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 14px;
-  display: grid;
-  place-items: center;
-  font-size: 20px;
-  background: linear-gradient(150deg, rgba(255, 225, 125, 0.56), rgba(255, 255, 255, 0.9));
-}
-
-.app-cover-feature-copy h2 {
-  margin: 0;
-  color: #111827;
-  font-size: 0.92rem;
-  line-height: 1.2;
-}
-
-.app-cover-feature-copy p {
-  margin: 4px 0 0;
-  color: #374151;
-  font-family: 'Noto Sans Thai', ui-sans-serif, sans-serif;
-  font-size: 0.78rem;
-  line-height: 1.52;
+  justify-items: center;
+  align-content: center;
+  gap: 28px;
+  min-height: minmax(0, 1fr);
 }
 
 .app-cover-actions {
   display: grid;
-  gap: 10px;
+  gap: 12px;
+  width: 100%;
+  max-width: 340px;
 }
 
 .app-cover-button-primary,
 .app-cover-button-secondary {
-  min-height: 54px;
+  min-height: 58px;
   border-radius: 999px;
 }
 
 .app-cover-button-primary {
   background: linear-gradient(132deg, #ffe89d 0%, #ffc31a 58%, #ffb400 100%);
   color: #3d2b00;
-  box-shadow: 0 16px 32px rgba(255, 191, 0, 0.35);
+  box-shadow: 0 18px 36px rgba(255, 191, 0, 0.28);
 }
 
 .app-cover-button-secondary {
-  border: 1.5px solid rgba(66, 76, 91, 0.24);
-  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(66, 76, 91, 0.16);
+  background: rgba(255, 255, 255, 0.78);
   color: #1f2937;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
 }
 
 .app-cover-footer {
   display: grid;
-  gap: 1px;
+  gap: 4px;
   justify-items: center;
   text-align: center;
-  color: #4b5563;
+  color: #667085;
   font-family: 'Noto Sans Thai', ui-sans-serif, sans-serif;
-  font-size: 0.68rem;
-  line-height: 1.4;
-  padding-bottom: 2px;
+  font-size: 0.75rem;
+  line-height: 1.45;
+  letter-spacing: 0.01em;
+  padding-bottom: 4px;
 }
 
 @media (max-width: 390px) {
   .app-cover-main {
     padding-left: 14px;
     padding-right: 14px;
-    gap: 10px;
+    gap: 22px;
   }
 
   .app-cover-hero {
-    min-height: 212px;
+    min-height: 264px;
   }
 }
 
 @media (min-width: 391px) and (max-width: 428px) {
   .app-cover-main {
-    gap: 12px;
+    gap: 24px;
   }
 
   .app-cover-hero {
-    min-height: 238px;
+    min-height: 306px;
   }
 }
 
@@ -348,27 +314,19 @@
   }
 
   .app-cover-hero {
-    min-height: 268px;
+    min-height: 340px;
   }
 }
 
 @media (max-height: 760px) {
   .app-cover-main {
-    gap: 9px;
-    padding-top: calc(env(safe-area-inset-top) + 8px);
-    padding-bottom: calc(env(safe-area-inset-bottom) + 8px);
+    gap: 18px;
+    padding-top: calc(env(safe-area-inset-top) + 10px);
+    padding-bottom: calc(env(safe-area-inset-bottom) + 10px);
   }
 
   .app-cover-hero {
-    min-height: 178px;
-  }
-
-  .app-cover-feature-card {
-    padding: 10px 11px;
-  }
-
-  .app-cover-feature-copy p {
-    line-height: 1.42;
+    min-height: 228px;
   }
 }
 
@@ -382,7 +340,6 @@
 @media (prefers-reduced-motion: reduce) {
   .app-cover-hero-gradient,
   .app-cover-logo-mark,
-  .app-cover-feature-card,
   .app-cover-button-primary,
   .app-cover-button-secondary,
   .app-cover-particle {

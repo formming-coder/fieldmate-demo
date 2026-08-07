@@ -21,23 +21,23 @@ type CaptureModesProps = {
 }
 
 const items: Array<{ key: CaptureMode; label: string }> = [
-  { key: 'exterior', label: 'Exterior' },
-  { key: 'interior', label: 'Interior' },
-  { key: 'front', label: 'Front' },
-  { key: 'side', label: 'Side' },
-  { key: 'back', label: 'Back' },
-  { key: 'road', label: 'Road' },
-  { key: 'land', label: 'Land' },
-  { key: 'document', label: 'Document' },
-  { key: 'title-deed', label: 'Title Deed' },
-  { key: 'house-registration', label: 'House Reg.' },
-  { key: 'utilities', label: 'Utilities' },
-  { key: 'custom', label: 'Custom' },
+  { key: 'exterior', label: 'ภายนอก' },
+  { key: 'interior', label: 'ภายใน' },
+  { key: 'front', label: 'ด้านหน้า' },
+  { key: 'side', label: 'ด้านข้าง' },
+  { key: 'back', label: 'ด้านหลัง' },
+  { key: 'road', label: 'ถนน' },
+  { key: 'land', label: 'ที่ดิน' },
+  { key: 'document', label: 'เอกสาร' },
+  { key: 'title-deed', label: 'โฉนด' },
+  { key: 'house-registration', label: 'ทะเบียนบ้าน' },
+  { key: 'utilities', label: 'สาธารณูปโภค' },
+  { key: 'custom', label: 'กำหนดเอง' },
 ]
 
 function CaptureModes({ active, onChange }: CaptureModesProps) {
   return (
-    <div className="cam-modes" role="tablist" aria-label="Capture modes">
+    <div className="cam-modes" role="tablist" aria-label="โหมดการถ่ายภาพ">
       {items.map((item) => {
         const selected = item.key === active
         return (

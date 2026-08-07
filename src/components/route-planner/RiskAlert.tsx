@@ -7,8 +7,8 @@ type RiskAlertProps = {
 function RiskAlert({ items }: RiskAlertProps) {
   return (
     <section className="rp-card">
-      <div className="rp-eyebrow">AI Risk Detection</div>
-      <h2>Route alerts</h2>
+      <div className="rp-eyebrow">การตรวจจับความเสี่ยงด้วย AI</div>
+      <h2>การแจ้งเตือนเส้นทาง</h2>
       <div className="rp-risk-list">
         {items.map((item) => (
           <div key={item.title} className={`rp-risk-item rp-risk-${item.tone}`}>

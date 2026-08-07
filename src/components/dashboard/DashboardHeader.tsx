@@ -20,8 +20,8 @@ function DashboardHeader({ userName, greeting, onNotifications, onAssistant }: D
         </div>
       </div>
       <div className="db-header-actions">
-        <IconButton label="Notifications" onClick={onNotifications}>🔔</IconButton>
-        <IconButton label="AI Assistant" onClick={onAssistant}>✨</IconButton>
+        <IconButton label="การแจ้งเตือน" onClick={onNotifications}>🔔</IconButton>
+        <IconButton label="ผู้ช่วย AI" onClick={onAssistant}>✨</IconButton>
         <Avatar name={userName} size={44} />
       </div>
     </header>

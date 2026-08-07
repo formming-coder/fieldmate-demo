@@ -21,7 +21,7 @@ const chips: Array<{ key: SmartFilter; label: string }> = [
 
 function FilterChips({ value, onChange }: FilterChipsProps) {
   return (
-    <div className="map-filter-rail" role="tablist" aria-label="map filters">
+    <div className="map-filter-rail" role="tablist" aria-label="ตัวกรองแผนที่">
       {chips.map((chip) => {
         const isActive = chip.key === value
         return (

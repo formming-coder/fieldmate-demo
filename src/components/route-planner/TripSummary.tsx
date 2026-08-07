@@ -12,14 +12,14 @@ function TripSummary({ properties, distanceKm, estimatedTime, fuelCost, efficien
   return (
     <section className="rp-card rp-summary-card">
       <div>
-        <div className="rp-eyebrow">Today's Inspection</div>
-        <h2>{properties} Properties</h2>
+        <div className="rp-eyebrow">งานตรวจสอบวันนี้</div>
+        <h2>{properties} รายการ</h2>
       </div>
       <div className="rp-summary-grid">
-        <div><span>Distance</span><strong>{distanceKm} km</strong></div>
-        <div><span>Estimated Time</span><strong>{estimatedTime}</strong></div>
-        <div><span>Fuel Cost</span><strong>{fuelCost} THB</strong></div>
-        <div><span>AI Efficiency</span><strong>{efficiency}%</strong></div>
+        <div><span>ระยะทาง</span><strong>{distanceKm} กม.</strong></div>
+        <div><span>เวลาโดยประมาณ</span><strong>{estimatedTime}</strong></div>
+        <div><span>ค่าน้ำมัน</span><strong>{fuelCost} บาท</strong></div>
+        <div><span>ประสิทธิภาพ AI</span><strong>{efficiency}%</strong></div>
       </div>
     </section>
   )

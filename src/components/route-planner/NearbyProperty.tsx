@@ -7,8 +7,8 @@ type NearbyPropertyProps = {
 function NearbyProperty({ items }: NearbyPropertyProps) {
   return (
     <section className="rp-card">
-      <div className="rp-eyebrow">Nearby Suggestions</div>
-      <h2>Useful context nearby</h2>
+      <div className="rp-eyebrow">คำแนะนำใกล้เคียง</div>
+      <h2>บริบทสำคัญรอบพื้นที่</h2>
       <div className="rp-nearby-list">
         {items.map((item) => (
           <div key={`${item.title}-${item.type}`} className="rp-nearby-item">

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
+import { getOfflineQueueCounts } from '../lib/offline/queue'
 
 type InstallPromptEvent = Event & {
   prompt: () => Promise<void>
@@ -10,6 +11,7 @@ export default function GlobalExperienceBanners() {
   const [installEvent, setInstallEvent] = useState<InstallPromptEvent | null>(null)
   const [updateAvailable, setUpdateAvailable] = useState(false)
   const [isOffline, setIsOffline] = useState(() => (typeof navigator !== 'undefined' ? !navigator.onLine : false))
+  const [queueTotal, setQueueTotal] = useState(() => getOfflineQueueCounts().total)
 
   useEffect(() => {
     const onBeforeInstallPrompt = (event: Event) => {
@@ -17,11 +19,15 @@ export default function GlobalExperienceBanners() {
       setInstallEvent(event as InstallPromptEvent)
     }
 
-    const syncConnection = () => setIsOffline(!navigator.onLine)
+    const syncConnection = () => {
+      setIsOffline(!navigator.onLine)
+      setQueueTotal(getOfflineQueueCounts().total)
+    }
 
     window.addEventListener('beforeinstallprompt', onBeforeInstallPrompt)
     window.addEventListener('online', syncConnection)
     window.addEventListener('offline', syncConnection)
+    window.addEventListener('fieldmate:offline-queue-updated', syncConnection)
 
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.getRegistration().then((registration) => {
@@ -38,6 +44,7 @@ export default function GlobalExperienceBanners() {
       window.removeEventListener('beforeinstallprompt', onBeforeInstallPrompt)
       window.removeEventListener('online', syncConnection)
       window.removeEventListener('offline', syncConnection)
+      window.removeEventListener('fieldmate:offline-queue-updated', syncConnection)
     }
   }, [])
 
@@ -57,8 +64,8 @@ export default function GlobalExperienceBanners() {
           {installEvent ? (
             <div className="global-banner">
               <div>
-                <strong>ติดตั้งแอป Fieldmate AI</strong>
-                <span>ใช้งานแบบแอปเต็มหน้าจอ พร้อมประสบการณ์เหมือน Native</span>
+                <strong>ติดตั้งแอป ฟีลด์เมต AI</strong>
+                <span>ใช้งานแบบแอปเต็มหน้าจอ พร้อมประสบการณ์เหมือนแอปบนอุปกรณ์</span>
               </div>
               <button type="button" onClick={triggerInstall}>ติดตั้ง</button>
             </div>
@@ -78,7 +85,7 @@ export default function GlobalExperienceBanners() {
             <div className="global-banner">
               <div>
                 <strong>ออฟไลน์ชั่วคราว</strong>
-                <span>ระบบจะซิงก์ข้อมูลอัตโนมัติเมื่อกลับมาออนไลน์</span>
+                <span>ระบบจะซิงก์ข้อมูลอัตโนมัติเมื่อกลับมาออนไลน์ ({queueTotal} รายการรอซิงก์)</span>
               </div>
               <button type="button" onClick={() => window.location.reload()}>ลองเชื่อมต่อใหม่</button>
             </div>

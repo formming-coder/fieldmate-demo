@@ -52,10 +52,10 @@ function AnimatedRoutes({
     <AnimatePresence mode="wait">
       <motion.div
         key={location.pathname}
-        initial={{ opacity: 0, x: 18, scale: 0.985 }}
+        initial={{ opacity: 0, x: 10, scale: 0.996 }}
         animate={{ opacity: 1, x: 0, scale: 1 }}
-        exit={{ opacity: 0, x: -18, scale: 0.985 }}
-        transition={{ type: 'spring', stiffness: 240, damping: 28 }}
+        exit={{ opacity: 0, x: -10, scale: 0.996 }}
+        transition={{ type: 'spring', stiffness: 260, damping: 32, mass: 0.86 }}
         style={{ minHeight: '100vh' }}
       >
         <Suspense fallback={<Splash />}>
@@ -69,21 +69,21 @@ function AnimatedRoutes({
               window.localStorage.setItem('fieldmate-permissions-complete', 'true')
             }
           }} />} />
-          <Route path="/home" element={<ProtectedRoute><Home /></ProtectedRoute>} />
-          <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-          <Route path="/map" element={<ProtectedRoute><SmartMap /></ProtectedRoute>} />
-          <Route path="/gis" element={<ProtectedRoute><GISHome /></ProtectedRoute>} />
-          <Route path="/route-planner" element={<ProtectedRoute><RoutePlanner /></ProtectedRoute>} />
-          <Route path="/camera" element={<ProtectedRoute><AICamera /></ProtectedRoute>} />
-          <Route path="/album" element={<ProtectedRoute><PropertyAlbum /></ProtectedRoute>} />
-          <Route path="/shared-intelligence" element={<ProtectedRoute><SharedPropertyIntelligence /></ProtectedRoute>} />
-          <Route path="/search" element={<ProtectedRoute><AISearch /></ProtectedRoute>} />
-          <Route path="/property/:id" element={<ProtectedRoute><PropertyDetail /></ProtectedRoute>} />
-          <Route path="/ai-summary" element={<ProtectedRoute><AISummary /></ProtectedRoute>} />
-          <Route path="/assessment" element={<ProtectedRoute><PropertyAssessment /></ProtectedRoute>} />
-          <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
-          <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-          <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+          <Route path="/home" element={<ProtectedRoute route="home"><Home /></ProtectedRoute>} />
+          <Route path="/dashboard" element={<ProtectedRoute route="dashboard"><Dashboard /></ProtectedRoute>} />
+          <Route path="/map" element={<ProtectedRoute route="map"><SmartMap /></ProtectedRoute>} />
+          <Route path="/gis" element={<ProtectedRoute route="gis"><GISHome /></ProtectedRoute>} />
+          <Route path="/route-planner" element={<ProtectedRoute route="routePlanner"><RoutePlanner /></ProtectedRoute>} />
+          <Route path="/camera" element={<ProtectedRoute route="camera"><AICamera /></ProtectedRoute>} />
+          <Route path="/album" element={<ProtectedRoute route="album"><PropertyAlbum /></ProtectedRoute>} />
+          <Route path="/shared-intelligence" element={<ProtectedRoute route="sharedIntelligence"><SharedPropertyIntelligence /></ProtectedRoute>} />
+          <Route path="/search" element={<ProtectedRoute route="search"><AISearch /></ProtectedRoute>} />
+          <Route path="/property/:id" element={<ProtectedRoute route="propertyDetail"><PropertyDetail /></ProtectedRoute>} />
+          <Route path="/ai-summary" element={<ProtectedRoute route="aiSummary"><AISummary /></ProtectedRoute>} />
+          <Route path="/assessment" element={<ProtectedRoute route="assessment"><PropertyAssessment /></ProtectedRoute>} />
+          <Route path="/notifications" element={<ProtectedRoute route="notifications"><Notifications /></ProtectedRoute>} />
+          <Route path="/profile" element={<ProtectedRoute route="profile"><Profile /></ProtectedRoute>} />
+          <Route path="/settings" element={<ProtectedRoute route="settings"><Settings /></ProtectedRoute>} />
         </Routes>
         </Suspense>
       </motion.div>

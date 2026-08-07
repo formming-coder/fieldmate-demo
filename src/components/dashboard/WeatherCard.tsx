@@ -11,11 +11,11 @@ function WeatherCard({ temperature, rainChance, summary }: WeatherCardProps) {
   return (
     <motion.section className="dashboard-card weather-card" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
       <div>
-        <div className="dashboard-eyebrow">Weather</div>
-        <div className="weather-temp">{temperature}°C</div>
+        <div className="dashboard-eyebrow">สภาพอากาศ</div>
+        <div className="weather-temp">{temperature} องศา</div>
         <div className="weather-summary">{summary}</div>
       </div>
-      <div className="weather-pill">Rain {rainChance}%</div>
+      <div className="weather-pill">โอกาสฝน {rainChance}%</div>
     </motion.section>
   )
 }

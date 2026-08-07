@@ -1,4 +1,5 @@
 const SESSION_KEY = 'fieldmate:auth:session'
+import { secureStorage } from './secureStorage'
 
 export type AuthSession = {
   accessToken: string
@@ -10,7 +11,7 @@ export type AuthSession = {
 function readSession(): AuthSession | null {
   if (typeof window === 'undefined') return null
   try {
-    const raw = window.localStorage.getItem(SESSION_KEY)
+    const raw = secureStorage.get(SESSION_KEY)
     return raw ? (JSON.parse(raw) as AuthSession) : null
   } catch {
     return null
@@ -20,10 +21,10 @@ function readSession(): AuthSession | null {
 function writeSession(session: AuthSession | null) {
   if (typeof window === 'undefined') return
   if (!session) {
-    window.localStorage.removeItem(SESSION_KEY)
+    secureStorage.remove(SESSION_KEY)
     return
   }
-  window.localStorage.setItem(SESSION_KEY, JSON.stringify(session))
+  secureStorage.set(SESSION_KEY, JSON.stringify(session))
 }
 
 export const authSession = {

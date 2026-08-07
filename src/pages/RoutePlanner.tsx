@@ -25,6 +25,21 @@ const itemHeight = 168
 type OptimizeMode = 'Shortest Distance' | 'Fastest Time' | 'Lowest Fuel' | 'Highest Priority' | 'Balanced'
 type RouteMode = 'Driving' | 'Walking' | 'Motorcycle' | 'Public Transport'
 
+function optimizeModeLabel(mode: OptimizeMode) {
+  if (mode === 'Shortest Distance') return 'ระยะทางสั้นที่สุด'
+  if (mode === 'Fastest Time') return 'เร็วที่สุด'
+  if (mode === 'Lowest Fuel') return 'ประหยัดน้ำมันที่สุด'
+  if (mode === 'Highest Priority') return 'ลำดับความสำคัญสูงสุด'
+  return 'สมดุล'
+}
+
+function routeModeLabel(mode: RouteMode) {
+  if (mode === 'Driving') return 'รถยนต์'
+  if (mode === 'Walking') return 'เดินเท้า'
+  if (mode === 'Motorcycle') return 'รถจักรยานยนต์'
+  return 'ขนส่งสาธารณะ'
+}
+
 function MapFlyTo({ center, zoom }: { center: [number, number] | null; zoom: number }) {
   const map = useMap()
 
@@ -64,8 +79,8 @@ function stopIcon(status: RouteStop['status'], index: number) {
 }
 
 function buildStops(properties: Property[]): RouteStop[] {
-  const owners = ['Somchai', 'Nina', 'Korn', 'Mali', 'Aom', 'Pong', 'Suda', 'Anan', 'Preecha', 'May']
-  const roads = ['Sukhumvit', 'Bangna-Trad', 'Rama 9', 'Phetchaburi', 'Silom', 'On Nut']
+  const owners = ['สมชาย', 'นีนา', 'กร', 'มะลิ', 'อ้อม', 'พงศ์', 'สุดา', 'อนันต์', 'ปรีชา', 'เมย์']
+  const roads = ['สุขุมวิท', 'บางนา-ตราด', 'พระราม 9', 'เพชรบุรี', 'สีลม', 'อ่อนนุช']
   return properties.slice(0, 30).map((property, index) => ({
     id: property.id,
     title: `${index + 1}. ${property.owner}`,
@@ -74,7 +89,7 @@ function buildStops(properties: Property[]): RouteStop[] {
     phone: `08${(772300 + index).toString()}`,
     priority: index % 4 === 0 ? 'High' : index % 3 === 0 ? 'Medium' : 'Low',
     arrivalTime: `${String(9 + Math.floor(index / 2)).padStart(2, '0')}:${index % 2 === 0 ? '05' : '40'}`,
-    inspectionTime: `${25 + (index % 4) * 5} min`,
+    inspectionTime: `${25 + (index % 4) * 5} นาที`,
     status: index < 2 ? 'completed' : index < 4 ? 'visited' : 'pending',
     image: property.images[0],
   }))
@@ -127,21 +142,21 @@ export default function RoutePlanner() {
   const totalHeight = optimizedStops.length * itemHeight
 
   const nearbySuggestions = useMemo(() => [
-    { title: 'Nearby Properties', type: 'Field records', distance: '0.7 km' },
-    { title: 'Nearby Market Data', type: 'Comparable pricing', distance: '1.1 km' },
-    { title: 'Nearby Shared Intelligence', type: 'Recent uploads', distance: '0.9 km' },
-    { title: 'Nearby Comparables', type: 'Appraisal references', distance: '1.4 km' },
-    { title: 'Nearby Amenities', type: 'School / Market', distance: '0.5 km' },
+      { title: 'ทรัพย์สินใกล้เคียง', type: 'ข้อมูลภาคสนาม', distance: '0.7 กม.' },
+      { title: 'ข้อมูลตลาดใกล้เคียง', type: 'ราคาทรัพย์เปรียบเทียบ', distance: '1.1 กม.' },
+      { title: 'ข้อมูลส่วนกลางใกล้เคียง', type: 'อัปโหลดล่าสุด', distance: '0.9 กม.' },
+      { title: 'ทรัพย์เปรียบเทียบใกล้เคียง', type: 'อ้างอิงการประเมิน', distance: '1.4 กม.' },
+      { title: 'สถานที่สำคัญใกล้เคียง', type: 'โรงเรียน / ตลาด', distance: '0.5 กม.' },
   ], [])
 
   const timelineItems = useMemo(() => [
-    { time: '08:30', title: 'Leave Office' },
-    { time: '09:05', title: 'Property 1' },
-    { time: '09:45', title: 'Property 2' },
-    { time: '10:40', title: 'Property 3' },
-    { time: '12:00', title: 'Lunch' },
-    { time: '13:10', title: 'Continue' },
-    { time: '17:20', title: 'Finish' },
+    { time: '08:30', title: 'ออกจากสำนักงาน' },
+    { time: '09:05', title: 'ทรัพย์จุดที่ 1' },
+    { time: '09:45', title: 'ทรัพย์จุดที่ 2' },
+    { time: '10:40', title: 'ทรัพย์จุดที่ 3' },
+    { time: '12:00', title: 'พักกลางวัน' },
+    { time: '13:10', title: 'เดินทางต่อ' },
+    { time: '17:20', title: 'สิ้นสุดภารกิจ' },
   ], [])
 
   const onLocate = (lat: number, lon: number) => {
@@ -150,7 +165,7 @@ export default function RoutePlanner() {
   }
 
   return (
-    <Layout title="Route Planner" immersive hideAssistant>
+    <Layout title="วางแผนเส้นทาง" immersive hideAssistant>
       <div className="rp-page">
         <div className="rp-map-shell">
           <MapContainer center={center || DEFAULT_CENTER} zoom={zoom} zoomControl={false} style={{ height: '100%', width: '100%' }}>
@@ -182,8 +197,8 @@ export default function RoutePlanner() {
           </MapContainer>
 
           <div className="rp-floating-top">
-            <RouteCard title="Today's Schedule" startLocation="Fieldmate HQ" currentGps="13.7367, 100.5232" finishTime="17:20" stopCount={optimizedStops.length} />
-            <TripSummary properties={12} distanceKm={42} estimatedTime="5h 40m" fuelCost={320} efficiency={94} />
+            <RouteCard title="ตารางงานวันนี้" startLocation="ศูนย์ปฏิบัติการหลัก" currentGps="13.7367, 100.5232" finishTime="17:20" stopCount={optimizedStops.length} />
+            <TripSummary properties={12} distanceKm={42} estimatedTime="5 ชม. 40 นาที" fuelCost={320} efficiency={94} />
           </div>
 
           <div className="rp-floating-controls">
@@ -193,41 +208,41 @@ export default function RoutePlanner() {
           </div>
 
           <div className="rp-ai-float">
-            <strong>AI Assistant</strong>
-            <span>Alternative route available via Rama 9 to avoid 10 AM congestion.</span>
+            <strong>ผู้ช่วย AI</strong>
+            <span>มีเส้นทางสำรองผ่านพระราม 9 เพื่อหลีกเลี่ยงการจราจรหนาแน่นช่วง 10:00 น.</span>
           </div>
         </div>
 
         <div className="rp-content">
           <section className="rp-card">
-            <div className="rp-eyebrow">Optimize Route</div>
-            <h2>AI route strategy</h2>
+            <div className="rp-eyebrow">ปรับเส้นทาง</div>
+            <h2>กลยุทธ์เส้นทางด้วย AI</h2>
             <div className="rp-chip-row">
               {(['Shortest Distance', 'Fastest Time', 'Lowest Fuel', 'Highest Priority', 'Balanced'] as OptimizeMode[]).map((mode) => (
-                <button key={mode} type="button" className={optimizeMode === mode ? 'is-active' : ''} onClick={() => setOptimizeMode(mode)}>{mode}</button>
+                <button key={mode} type="button" className={optimizeMode === mode ? 'is-active' : ''} onClick={() => setOptimizeMode(mode)}>{optimizeModeLabel(mode)}</button>
               ))}
             </div>
             <div className="rp-chip-row">
               {(['Driving', 'Walking', 'Motorcycle', 'Public Transport'] as RouteMode[]).map((mode) => (
-                <button key={mode} type="button" className={routeMode === mode ? 'is-active' : ''} onClick={() => setRouteMode(mode)}>{mode}</button>
+                <button key={mode} type="button" className={routeMode === mode ? 'is-active' : ''} onClick={() => setRouteMode(mode)}>{routeModeLabel(mode)}</button>
               ))}
             </div>
-            <button type="button" className="rp-primary-btn">Optimize by {optimizeMode}</button>
+            <button type="button" className="rp-primary-btn">ปรับเส้นทางแบบ {optimizeModeLabel(optimizeMode)}</button>
           </section>
 
-          <Suspense fallback={<div className="rp-card">Loading AI suggestions...</div>}>
+          <Suspense fallback={<div className="rp-card">กำลังโหลดคำแนะนำจาก AI...</div>}>
             <AIRecommendation items={[
-              'Visit Property 4 first. Owner available until 14:00.',
-              'Heavy traffic expected after 10 AM near Sukhumvit corridor.',
-              'Rain expected after lunch. Prioritize exterior inspections before noon.',
-              'Forest road warning on the northern branch. Keep current sequence for safety.',
-              'Flood risk near canal segment adds 12 minutes if delayed to afternoon.',
+              'ควรเข้าทรัพย์จุดที่ 4 ก่อน เนื่องจากเจ้าของอยู่ถึงเวลา 14:00 น.',
+              'คาดว่าการจราจรจะหนาแน่นหลัง 10:00 น. แถวแนวสุขุมวิท',
+              'มีโอกาสฝนหลังเที่ยง ควรเร่งงานภายนอกให้เสร็จก่อนช่วงบ่าย',
+              'มีคำเตือนเส้นทางใกล้พื้นที่ป่าทางตอนเหนือ ควรคงลำดับปัจจุบันเพื่อความปลอดภัย',
+              'ความเสี่ยงน้ำท่วมใกล้แนวคลองอาจเพิ่มเวลาอีก 12 นาที หากเลื่อนไปช่วงบ่าย',
             ]} />
           </Suspense>
 
           <section className="rp-card">
-            <div className="rp-eyebrow">Smart Timeline</div>
-            <h2>Field trip flow</h2>
+            <div className="rp-eyebrow">ไทม์ไลน์อัจฉริยะ</div>
+            <h2>ลำดับการลงพื้นที่</h2>
             <div className="rp-timeline-list">
               {timelineItems.map((item) => (
                 <div key={`${item.time}-${item.title}`} className="rp-timeline-item">
@@ -239,8 +254,8 @@ export default function RoutePlanner() {
           </section>
 
           <section className="rp-card">
-            <div className="rp-eyebrow">Property Stops</div>
-            <h2>Inspection queue</h2>
+            <div className="rp-eyebrow">จุดหมายทรัพย์สิน</div>
+            <h2>คิวงานตรวจสอบ</h2>
             <div className="rp-virtual-list" onScroll={(event) => setScrollTop(event.currentTarget.scrollTop)}>
               <div style={{ height: totalHeight, position: 'relative' }}>
                 {visibleStops.map((stop, index) => {
@@ -255,18 +270,18 @@ export default function RoutePlanner() {
             </div>
           </section>
 
-          <TravelAnalytics distance="42 km" drivingTime="3h 05m" idleTime="22 min" inspectionTime="2h 13m" fuelEstimate="320 THB" carbonSaving="11%" />
+          <TravelAnalytics distance="42 กม." drivingTime="3 ชม. 05 นาที" idleTime="22 นาที" inspectionTime="2 ชม. 13 นาที" fuelEstimate="320 บาท" carbonSaving="11%" />
 
-          <Suspense fallback={<div className="rp-card">Loading nearby suggestions...</div>}>
+          <Suspense fallback={<div className="rp-card">กำลังโหลดคำแนะนำใกล้เคียง...</div>}>
             <NearbyProperty items={nearbySuggestions} />
           </Suspense>
 
           <RiskAlert items={[
-            { title: 'Flood Area', detail: 'Moderate water accumulation near canal route.', tone: 'flood' },
-            { title: 'Forest Area', detail: 'Protected roadside buffer around stop 9.', tone: 'forest' },
-            { title: 'Road Closure', detail: 'Construction lane reduction after 15:00.', tone: 'road' },
-            { title: 'Danger Zone', detail: 'Low-light access road after sunset.', tone: 'danger' },
-            { title: 'Construction', detail: 'Future widening may delay expressway exit.', tone: 'construction' },
+            { title: 'พื้นที่เสี่ยงน้ำท่วม', detail: 'มีน้ำขังปานกลางใกล้เส้นทางแนวคลอง', tone: 'flood' },
+            { title: 'พื้นที่ป่า', detail: 'มีแนวกันชนริมถนนใกล้จุดหมายเลข 9', tone: 'forest' },
+            { title: 'ปิดการจราจร', detail: 'มีการก่อสร้างและลดช่องทางหลังเวลา 15:00 น.', tone: 'road' },
+            { title: 'จุดเสี่ยง', detail: 'ทางเข้ามีแสงน้อยหลังพระอาทิตย์ตก', tone: 'danger' },
+            { title: 'งานก่อสร้าง', detail: 'การขยายเส้นทางในอนาคตอาจทำให้การลงทางด่วนล่าช้า', tone: 'construction' },
           ]} />
 
           <OfflineDownload downloaded={downloaded} pendingUpload={4} cachedRecords={optimizedStops.length} onDownload={() => setDownloaded(true)} />

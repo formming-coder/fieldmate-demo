@@ -1,3 +1,4 @@
+import { formatThaiCurrency } from '../../lib/locale'
 import React, { memo } from 'react'
 
 export type SharedPropertyCardData = {
@@ -38,7 +39,7 @@ function SharedPropertyCard({ property, onOpen, onBookmark, onShare }: SharedPro
             <h3>{property.id}</h3>
             <p>{property.province} • {property.landArea}</p>
           </div>
-          <strong>THB {property.salePrice.toLocaleString()}</strong>
+          <strong>{formatThaiCurrency(property.salePrice)}</strong>
         </div>
         <div className="spi-card-meta">
           <span>{property.captureDate}</span>
@@ -47,9 +48,9 @@ function SharedPropertyCard({ property, onOpen, onBookmark, onShare }: SharedPro
           <span>{property.distance}</span>
         </div>
         <div className="spi-card-actions">
-          <button type="button" onClick={onBookmark}>{property.bookmarked ? 'Bookmarked' : 'Bookmark'}</button>
-          <button type="button" onClick={onShare}>Share</button>
-          <button type="button" className="is-primary" onClick={onOpen}>Open</button>
+          <button type="button" onClick={onBookmark}>{property.bookmarked ? 'บันทึกแล้ว' : 'บันทึก'}</button>
+          <button type="button" onClick={onShare}>แชร์</button>
+          <button type="button" className="is-primary" onClick={onOpen}>เปิดดู</button>
         </div>
       </div>
     </article>

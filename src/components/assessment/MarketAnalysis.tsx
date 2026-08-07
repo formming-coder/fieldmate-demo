@@ -11,13 +11,13 @@ type MarketAnalysisProps = {
 function MarketAnalysis({ average, median, growth, demand, supply }: MarketAnalysisProps) {
   return (
     <section className="as-card">
-      <h2>Market Analysis</h2>
+      <h2>วิเคราะห์ตลาด</h2>
       <div className="as-grid">
-        <div><span>Average</span><strong>THB {average.toLocaleString()}</strong></div>
-        <div><span>Median</span><strong>THB {median.toLocaleString()}</strong></div>
-        <div><span>Trend</span><strong>{growth > 0 ? '+' : ''}{growth.toFixed(1)}%</strong></div>
-        <div><span>Demand</span><strong>{demand}%</strong></div>
-        <div><span>Supply</span><strong>{supply}%</strong></div>
+        <div><span>ราคาเฉลี่ย</span><strong>{average.toLocaleString()} บาท</strong></div>
+        <div><span>ราคากลาง</span><strong>{median.toLocaleString()} บาท</strong></div>
+        <div><span>แนวโน้ม</span><strong>{growth > 0 ? '+' : ''}{growth.toFixed(1)}%</strong></div>
+        <div><span>อุปสงค์</span><strong>{demand}%</strong></div>
+        <div><span>อุปทาน</span><strong>{supply}%</strong></div>
       </div>
       <div className="as-chart">
         <i style={{ height: `${40 + demand * 0.4}%` }} />

@@ -14,6 +14,7 @@ import FloodOverlay from '../components/gis/FloodOverlay'
 import UrbanOverlay from '../components/gis/UrbanOverlay'
 import ExpropriationOverlay from '../components/gis/ExpropriationOverlay'
 import LegendCard from '../components/gis/LegendCard'
+import { formatThaiCurrency } from '../lib/locale'
 import 'leaflet/dist/leaflet.css'
 import '../styles/gis.css'
 
@@ -62,11 +63,11 @@ function UserPulseMarker({ onLocate }: { onLocate: (lat: number, lon: number) =>
 
 function mapTypeLabel(type?: string) {
   const lower = (type || '').toLowerCase()
-  if (lower.includes('land')) return 'Land'
-  if (lower.includes('condo')) return 'Condominium'
-  if (lower.includes('commercial')) return 'Commercial'
-  if (lower.includes('town')) return 'Townhome'
-  return 'House'
+  if (lower.includes('land')) return 'ที่ดิน'
+  if (lower.includes('condo')) return 'คอนโดมิเนียม'
+  if (lower.includes('commercial')) return 'พาณิชยกรรม'
+  if (lower.includes('town')) return 'ทาวน์โฮม'
+  return 'บ้านเดี่ยว'
 }
 
 function poiIcon(label: string) {
@@ -89,20 +90,20 @@ export default function GISHome() {
   const [radius, setRadius] = useState('1km')
   const [offline, setOffline] = useState(() => !navigator.onLine)
   const [layers, setLayers] = useState<GISLayerState>({
-    forest: { active: true, opacity: 0.78, description: 'Protected area, reserved forest and buffer zone.' },
-    flood: { active: true, opacity: 0.7, description: 'Flood risk, drainage and historical water level.' },
-    urban: { active: true, opacity: 0.75, description: 'Residential, commercial, industrial and mixed city plan.' },
-    expropriation: { active: true, opacity: 0.72, description: 'Road expansion, railway and future infrastructure lines.' },
-    landuse: { active: true, opacity: 0.66, description: 'Land use zoning and mixed-use indicators.' },
-    government: { active: false, opacity: 0.6, description: 'Government land and restricted parcels.' },
-    satellite: { active: true, opacity: 1, description: 'High-resolution satellite imagery.' },
-    road: { active: true, opacity: 0.82, description: 'Road network accessibility and classification.' },
-    railway: { active: true, opacity: 0.7, description: 'Railway alignment and station influence.' },
-    transit: { active: true, opacity: 0.74, description: 'BTS / MRT corridors and station catchments.' },
-    expressway: { active: true, opacity: 0.76, description: 'Expressway access and future ramps.' },
-    river: { active: true, opacity: 0.58, description: 'Main river influence and setback context.' },
-    canal: { active: true, opacity: 0.55, description: 'Canal network and drainage corridors.' },
-    utility: { active: false, opacity: 0.68, description: 'Power, water and utility corridors.' },
+    forest: { active: true, opacity: 0.78, description: 'เขตคุ้มครอง ป่าสงวน และแนวกันชน' },
+    flood: { active: true, opacity: 0.7, description: 'ความเสี่ยงน้ำท่วม ทางระบายน้ำ และระดับน้ำย้อนหลัง' },
+    urban: { active: true, opacity: 0.75, description: 'ที่อยู่อาศัย พาณิชยกรรม อุตสาหกรรม และผังเมืองแบบผสม' },
+    expropriation: { active: true, opacity: 0.72, description: 'แนวขยายถนน แนวรถไฟ และโครงสร้างพื้นฐานในอนาคต' },
+    landuse: { active: true, opacity: 0.66, description: 'เขตการใช้ที่ดินและตัวชี้วัดการใช้ประโยชน์แบบผสม' },
+    government: { active: false, opacity: 0.6, description: 'ที่ดินภาครัฐและแปลงจำกัดการใช้' },
+    satellite: { active: true, opacity: 1, description: 'ภาพถ่ายดาวเทียมความละเอียดสูง' },
+    road: { active: true, opacity: 0.82, description: 'การเข้าถึงโครงข่ายถนนและการจัดประเภทถนน' },
+    railway: { active: true, opacity: 0.7, description: 'แนวเส้นทางรถไฟและอิทธิพลสถานี' },
+    transit: { active: true, opacity: 0.74, description: 'แนว BTS / MRT และพื้นที่อิทธิพลของสถานี' },
+    expressway: { active: true, opacity: 0.76, description: 'การเข้าถึงทางด่วนและทางขึ้นลงในอนาคต' },
+    river: { active: true, opacity: 0.58, description: 'อิทธิพลของแม่น้ำสายหลักและบริบทระยะร่น' },
+    canal: { active: true, opacity: 0.55, description: 'โครงข่ายคลองและแนวทางระบายน้ำ' },
+    utility: { active: false, opacity: 0.68, description: 'แนวสาธารณูปโภคไฟฟ้า น้ำประปา และโครงข่ายบริการ' },
   })
 
   useEffect(() => {
@@ -139,13 +140,13 @@ export default function GISHome() {
   const nearbyPlaces = useMemo(() => {
     const scale = radius === '500m' ? 0.5 : radius === '1km' ? 1 : radius === '3km' ? 3 : 5
     return [
-      { label: 'Bangna General Hospital', distance: `${(0.6 * scale).toFixed(1)} km`, type: 'Hospital' },
-      { label: 'Sukhumvit School', distance: `${(0.8 * scale).toFixed(1)} km`, type: 'School' },
-      { label: 'District Police', distance: `${(0.9 * scale).toFixed(1)} km`, type: 'Police' },
-      { label: 'Land Office', distance: `${(1.2 * scale).toFixed(1)} km`, type: 'Government' },
-      { label: 'Mega Plaza', distance: `${(1.4 * scale).toFixed(1)} km`, type: 'Shopping Mall' },
-      { label: 'PTT Station', distance: `${(0.7 * scale).toFixed(1)} km`, type: 'Fuel Station' },
-      { label: 'Community Market', distance: `${(0.5 * scale).toFixed(1)} km`, type: 'Market' },
+      { label: 'โรงพยาบาลบางนาเจเนอรัล', distance: `${(0.6 * scale).toFixed(1)} กม.`, type: 'โรงพยาบาล' },
+      { label: 'โรงเรียนสุขุมวิท', distance: `${(0.8 * scale).toFixed(1)} กม.`, type: 'โรงเรียน' },
+      { label: 'สถานีตำรวจเขต', distance: `${(0.9 * scale).toFixed(1)} กม.`, type: 'ตำรวจ' },
+      { label: 'สำนักงานที่ดิน', distance: `${(1.2 * scale).toFixed(1)} กม.`, type: 'หน่วยงานรัฐ' },
+      { label: 'เมก้าพลาซ่า', distance: `${(1.4 * scale).toFixed(1)} กม.`, type: 'ศูนย์การค้า' },
+      { label: 'สถานีบริการน้ำมัน', distance: `${(0.7 * scale).toFixed(1)} กม.`, type: 'ปั๊มน้ำมัน' },
+      { label: 'ตลาดชุมชน', distance: `${(0.5 * scale).toFixed(1)} กม.`, type: 'ตลาด' },
     ]
   }, [radius])
 
@@ -159,12 +160,12 @@ export default function GISHome() {
   }, [nearbyPlaces, selectedProperty])
 
   const riskItems = useMemo(() => [
-    { key: 'Flood', score: 42 },
-    { key: 'Forest', score: 18 },
-    { key: 'Legal', score: 56 },
-    { key: 'Environment', score: 38 },
-    { key: 'Access', score: 27 },
-    { key: 'Utilities', score: 35 },
+    { key: 'น้ำท่วม', score: 42 },
+    { key: 'พื้นที่ป่า', score: 18 },
+    { key: 'กฎหมาย', score: 56 },
+    { key: 'สิ่งแวดล้อม', score: 38 },
+    { key: 'การเข้าถึง', score: 27 },
+    { key: 'สาธารณูปโภค', score: 35 },
   ], [])
 
   const onLocate = (lat: number, lon: number) => {
@@ -189,16 +190,16 @@ export default function GISHome() {
   }
 
   return (
-    <Layout title="GIS Intelligence" immersive hideAssistant>
+    <Layout title="GIS อัจฉริยะ" immersive hideAssistant>
       <div className="gis-page">
         <header className="gis-header">
           <div>
-            <div className="gis-title">GIS Intelligence</div>
-            <div className="gis-subtitle">{selectedProperty ? `${selectedProperty.owner} • ${selectedProperty.province}` : 'Current Property'}</div>
+            <div className="gis-title">GIS อัจฉริยะ</div>
+            <div className="gis-subtitle">{selectedProperty ? `${selectedProperty.owner} • ${selectedProperty.province}` : 'ทรัพย์สินปัจจุบัน'}</div>
           </div>
           <div className="gis-header-actions">
-            <button type="button" onClick={refreshMap}>Refresh</button>
-            <button type="button" onClick={() => setShowLayers((current) => !current)}>Layers</button>
+            <button type="button" onClick={refreshMap}>รีเฟรช</button>
+            <button type="button" onClick={() => setShowLayers((current) => !current)}>ชั้นข้อมูล</button>
           </div>
         </header>
 
@@ -267,8 +268,8 @@ export default function GISHome() {
           </div>
 
           <div className="gis-status-pills">
-            <span>{offline ? 'Offline cache' : 'Live layers'}</span>
-            <span>{properties.length} parcels</span>
+            <span>{offline ? 'ข้อมูลแคชออฟไลน์' : 'ชั้นข้อมูลสด'}</span>
+            <span>{properties.length} แปลง</span>
           </div>
         </div>
       </div>
@@ -282,60 +283,60 @@ export default function GISHome() {
                 <h2>{selectedProperty.owner}</h2>
                 <p>{selectedProperty.province} • {selectedProperty.latitude.toFixed(4)}, {selectedProperty.longitude.toFixed(4)}</p>
               </div>
-              <strong>THB {selectedProperty.marketPrice.toLocaleString()}</strong>
+              <strong>{formatThaiCurrency(selectedProperty.marketPrice)}</strong>
             </section>
 
-            <LegendCard title="Forest Layer" items={[{ label: 'Protected Area', color: '#39b86a' }, { label: 'Reserved Forest', color: '#0f8a46' }, { label: 'Buffer Zone', color: '#83d27d' }]} />
-            <LegendCard title="Flood Layer" items={[{ label: 'Low', color: '#8ec2ff' }, { label: 'Medium', color: '#5f9cff' }, { label: 'High', color: '#3d7dff' }]} />
-            <LegendCard title="Urban Planning" items={[{ label: 'Residential', color: '#ffd35a' }, { label: 'Commercial', color: '#ef9b5f' }, { label: 'Agriculture', color: '#8bc16e' }]} />
+            <LegendCard title="ชั้นข้อมูลป่า" items={[{ label: 'พื้นที่คุ้มครอง', color: '#39b86a' }, { label: 'ป่าสงวน', color: '#0f8a46' }, { label: 'แนวกันชน', color: '#83d27d' }]} />
+            <LegendCard title="ชั้นข้อมูลน้ำท่วม" items={[{ label: 'ต่ำ', color: '#8ec2ff' }, { label: 'ปานกลาง', color: '#5f9cff' }, { label: 'สูง', color: '#3d7dff' }]} />
+            <LegendCard title="ผังเมือง" items={[{ label: 'ที่อยู่อาศัย', color: '#ffd35a' }, { label: 'พาณิชย์', color: '#ef9b5f' }, { label: 'เกษตรกรรม', color: '#8bc16e' }]} />
 
-            <Suspense fallback={<div className="gis-panel-card">Loading nearby analysis...</div>}>
+            <Suspense fallback={<div className="gis-panel-card">กำลังโหลดการวิเคราะห์ใกล้เคียง...</div>}>
               <NearbyAnalysis radius={radius} onRadiusChange={setRadius} items={nearbyPlaces} />
               <SpatialInsight
                 riskScore={44}
                 text={[
-                  'Historical flood traces exist within the eastern drainage corridor but parcel center remains outside the highest-risk pocket.',
-                  'Future expressway and railway expansion could improve access while increasing legal review complexity.',
-                  'Forest constraint is low, but canal proximity may affect setback and water management discussions.',
+                  'มีประวัติน้ำท่วมในแนวระบายน้ำฝั่งตะวันออก แต่จุดศูนย์กลางของแปลงยังอยู่นอกพื้นที่เสี่ยงสูงสุด',
+                  'การขยายทางด่วนและรถไฟในอนาคตอาจช่วยเพิ่มการเข้าถึง แต่ทำให้การตรวจสอบด้านกฎหมายซับซ้อนขึ้น',
+                  'ข้อจำกัดด้านพื้นที่ป่าอยู่ในระดับต่ำ แต่ความใกล้คลองอาจมีผลต่อระยะร่นและการจัดการน้ำ',
                 ]}
               />
               <RiskDashboard items={riskItems} />
               <GISSummary
                 findings={[
-                  'Property sits in a mixed residential-transport growth corridor.',
-                  'Main road and transit access are strong within 1 km radius.',
-                  'Flood exposure is moderate and should be priced into review comments.',
+                  'ทรัพย์สินตั้งอยู่ในแนวเติบโตแบบผสมระหว่างที่อยู่อาศัยและคมนาคม',
+                  'การเข้าถึงถนนหลักและระบบขนส่งอยู่ในเกณฑ์ดีภายในรัศมี 1 กิโลเมตร',
+                  'ความเสี่ยงน้ำท่วมอยู่ในระดับปานกลางและควรสะท้อนในข้อคิดเห็นการประเมิน',
                 ]}
                 warnings={[
-                  'Expropriation alignment intersects future road expansion corridor.',
-                  'Drainage corridor requires legal and infrastructure verification before final valuation.',
+                  'แนวเวนคืนตัดผ่านพื้นที่ขยายถนนในอนาคต',
+                  'แนวระบายน้ำต้องได้รับการตรวจสอบด้านกฎหมายและโครงสร้างพื้นฐานก่อนสรุปมูลค่า',
                 ]}
-                recommendation="Proceed with valuation using moderate-risk assumption and request legal map confirmation for the expansion corridor."
+                recommendation="สามารถดำเนินการประเมินต่อได้โดยใช้สมมติฐานความเสี่ยงระดับปานกลาง และควรขอแผนที่ทางกฎหมายยืนยันแนวขยายถนนเพิ่มเติม"
               />
             </Suspense>
 
             <section className="gis-panel-card">
-              <div className="gis-section-title">Property Comparison</div>
+              <div className="gis-section-title">เปรียบเทียบทรัพย์สิน</div>
               <div className="gis-compare-row">
-                <div><span>Current</span><strong>{selectedProperty.owner}</strong><em>Flood 42 • Access 27</em></div>
-                <div><span>Comparable A</span><strong>Bangna Prime A</strong><em>Flood 35 • Access 31</em></div>
-                <div><span>Comparable B</span><strong>Sukhum Growth B</strong><em>Flood 48 • Access 22</em></div>
+                <div><span>รายการปัจจุบัน</span><strong>{selectedProperty.owner}</strong><em>น้ำท่วม 42 • การเข้าถึง 27</em></div>
+                <div><span>ทรัพย์เปรียบเทียบ A</span><strong>บางนา ไพรม์ A</strong><em>น้ำท่วม 35 • การเข้าถึง 31</em></div>
+                <div><span>ทรัพย์เปรียบเทียบ B</span><strong>สุขุมวิท โกรท B</strong><em>น้ำท่วม 48 • การเข้าถึง 22</em></div>
               </div>
             </section>
 
             <section className="gis-panel-card">
-              <div className="gis-section-title">Timeline</div>
+              <div className="gis-section-title">ไทม์ไลน์</div>
               <div className="gis-timeline-list">
-                <div><strong>Historical map</strong><span>Flood traces reduced after drainage upgrade in 2023.</span></div>
-                <div><strong>Future plan</strong><span>Urban plan update indicates mixed-use uplift corridor by 2028.</span></div>
-                <div><strong>Infrastructure development</strong><span>Future railway and expressway interchange may improve accessibility score.</span></div>
+                <div><strong>ข้อมูลย้อนหลัง</strong><span>ร่องรอยน้ำท่วมลดลงหลังการปรับปรุงระบบระบายน้ำในปี 2566</span></div>
+                <div><strong>แผนในอนาคต</strong><span>การปรับปรุงผังเมืองชี้ว่าพื้นที่นี้จะเป็นแนวเติบโตแบบผสมภายในปี 2571</span></div>
+                <div><strong>โครงสร้างพื้นฐาน</strong><span>รถไฟและทางด่วนในอนาคตอาจช่วยเพิ่มคะแนนการเข้าถึง</span></div>
               </div>
             </section>
 
             <div className="gis-inline-actions">
-              <button type="button" onClick={() => navigate(`/property/${selectedProperty.id}`)}>Property Detail</button>
-              <button type="button" onClick={() => navigate('/map')}>Open Smart Map</button>
-              <button type="button" onClick={() => navigate('/assessment')}>Open Assessment</button>
+              <button type="button" onClick={() => navigate(`/property/${selectedProperty.id}`)}>รายละเอียดทรัพย์</button>
+              <button type="button" onClick={() => navigate('/map')}>เปิดแผนที่อัจฉริยะ</button>
+              <button type="button" onClick={() => navigate('/assessment')}>เปิดหน้าประเมิน</button>
             </div>
           </div>
         ) : null}

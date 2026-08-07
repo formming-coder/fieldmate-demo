@@ -10,6 +10,9 @@ type NavigationBottomSheetProps = {
 }
 
 function NavigationBottomSheet({ open, stop, onClose, onAssessment }: NavigationBottomSheetProps) {
+  const priorityLabel = stop?.priority === 'High' ? 'สูง' : stop?.priority === 'Medium' ? 'กลาง' : 'ต่ำ'
+  const statusLabel = stop?.status === 'completed' ? 'เสร็จสิ้น' : stop?.status === 'visited' ? 'เข้าพื้นที่แล้ว' : 'รอดำเนินการ'
+
   return (
     <BottomSheet open={open} onClose={onClose}>
       {stop ? (
@@ -20,15 +23,15 @@ function NavigationBottomSheet({ open, stop, onClose, onAssessment }: Navigation
               <strong>{stop.title}</strong>
               <p>{stop.address}</p>
             </div>
-            <span className={`rp-priority rp-priority-${stop.priority.toLowerCase()}`}>{stop.priority}</span>
+            <span className={`rp-priority rp-priority-${stop.priority.toLowerCase()}`}>{priorityLabel}</span>
           </div>
           <div className="rp-info-grid">
-            <div><span>Distance</span><strong>{stop.arrivalTime}</strong></div>
-            <div><span>Type</span><strong>{stop.status}</strong></div>
-            <div><span>Owner</span><strong>{stop.owner}</strong></div>
-            <div><span>Phone</span><strong>{stop.phone}</strong></div>
+            <div><span>เวลาไปถึง</span><strong>{stop.arrivalTime}</strong></div>
+            <div><span>สถานะ</span><strong>{statusLabel}</strong></div>
+            <div><span>เจ้าของ</span><strong>{stop.owner}</strong></div>
+            <div><span>เบอร์โทร</span><strong>{stop.phone}</strong></div>
           </div>
-          <button type="button" className="rp-primary-btn" onClick={onAssessment}>Open Assessment</button>
+          <button type="button" className="rp-primary-btn" onClick={onAssessment}>เปิดงานประเมิน</button>
         </div>
       ) : null}
     </BottomSheet>

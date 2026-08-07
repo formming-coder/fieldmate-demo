@@ -6,7 +6,7 @@ type CopyActionSheetProps = {
   onAction: (action: string) => void
 }
 
-const actions = ['Copy Telephone', 'Copy Price', 'Copy Address', 'Copy Coordinates', 'Copy OCR', 'Copy All']
+const actions = ['คัดลอกเบอร์โทร', 'คัดลอกราคา', 'คัดลอกที่อยู่', 'คัดลอกพิกัด', 'คัดลอก OCR', 'คัดลอกทั้งหมด']
 
 function CopyActionSheet({ open, onClose, onAction }: CopyActionSheetProps) {
   if (!open) return null
@@ -14,7 +14,7 @@ function CopyActionSheet({ open, onClose, onAction }: CopyActionSheetProps) {
   return (
     <div className="spi-copy-sheet-backdrop" onClick={onClose}>
       <div className="spi-copy-sheet" onClick={(event) => event.stopPropagation()}>
-        <div className="spi-copy-sheet-title">Copy Information</div>
+        <div className="spi-copy-sheet-title">คัดลอกข้อมูล</div>
         {actions.map((action) => (
           <button type="button" key={action} onClick={() => onAction(action)}>{action}</button>
         ))}

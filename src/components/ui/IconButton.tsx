@@ -15,8 +15,8 @@ export function IconButton({ label, style, children, ...props }: React.PropsWith
       whileTap={{ scale: 0.95 }}
       aria-label={label}
       style={{
-        width: 48,
-        height: 48,
+        width: 46,
+        height: 46,
         borderRadius: radius.large,
         border: `1px solid ${colors.border}`,
         background: colors.surface,
@@ -24,7 +24,7 @@ export function IconButton({ label, style, children, ...props }: React.PropsWith
         display: 'inline-flex',
         alignItems: 'center',
         justifyContent: 'center',
-        boxShadow: '0 8px 20px rgba(17, 24, 39, 0.06)',
+        boxShadow: '0 8px 18px rgba(16, 24, 40, 0.08)',
         padding: 0,
         ...style,
       }}

@@ -25,12 +25,12 @@ function PropertyInfo({ property, aiConfidence, distanceKm, statusLabel }: Prope
   const [startIndex, setStartIndex] = useState(0)
 
   const timeline = useMemo<TimelineEvent[]>(() => [
-    { id: 'event-1', title: 'Inspection history', detail: 'On-site check completed', time: '2026-08-07 09:20' },
-    { id: 'event-2', title: 'Review history', detail: 'Supervisor review completed', time: '2026-08-07 10:45' },
-    { id: 'event-3', title: 'Photo uploads', detail: '4 photos synced to cloud', time: '2026-08-07 11:10' },
-    { id: 'event-4', title: 'AI analysis', detail: 'Value confidence improved', time: '2026-08-07 11:40' },
-    { id: 'event-5', title: 'Inspection history', detail: 'Historic baseline linked', time: '2026-08-05 14:20' },
-    { id: 'event-6', title: 'AI analysis', detail: 'Flood risk recalculated', time: '2026-08-04 18:30' },
+    { id: 'event-1', title: 'ประวัติตรวจสอบ', detail: 'ตรวจสอบภาคสนามเสร็จสิ้น', time: '2026-08-07 09:20' },
+    { id: 'event-2', title: 'ประวัติทบทวน', detail: 'ผู้ตรวจอาวุโสทบทวนแล้ว', time: '2026-08-07 10:45' },
+    { id: 'event-3', title: 'อัปโหลดภาพ', detail: 'ซิงก์รูปภาพขึ้นคลาวด์แล้ว 4 ภาพ', time: '2026-08-07 11:10' },
+    { id: 'event-4', title: 'การวิเคราะห์ AI', detail: 'ความมั่นใจมูลค่าปรับเพิ่มแล้ว', time: '2026-08-07 11:40' },
+    { id: 'event-5', title: 'ประวัติตรวจสอบ', detail: 'เชื่อมโยงข้อมูลอ้างอิงย้อนหลังแล้ว', time: '2026-08-05 14:20' },
+    { id: 'event-6', title: 'การวิเคราะห์ AI', detail: 'คำนวณความเสี่ยงน้ำท่วมใหม่แล้ว', time: '2026-08-04 18:30' },
   ], [])
 
   const visible = timeline.slice(startIndex, startIndex + maxRows)
@@ -45,28 +45,28 @@ function PropertyInfo({ property, aiConfidence, distanceKm, statusLabel }: Prope
     <section className="smart-info">
       <div className="smart-info-head">
         <h2>{property.owner}</h2>
-        <span className="smart-info-type">{property.type || 'Property'}</span>
+        <span className="smart-info-type">{property.type || 'ทรัพย์สิน'}</span>
       </div>
       <div className="smart-info-grid">
-        <div><span>Owner</span><strong>{property.owner}</strong></div>
-        <div><span>AI confidence</span><strong>{aiConfidence}%</strong></div>
-        <div><span>Estimated price</span><strong>THB {property.marketPrice.toLocaleString()}</strong></div>
-        <div><span>Distance</span><strong>{distanceKm.toFixed(1)} km</strong></div>
-        <div><span>Address</span><strong>{property.province}</strong></div>
-        <div><span>Status</span><strong>{statusLabel}</strong></div>
-        <div><span>Appointment</span><strong>{new Date(property.lastInspection).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })}</strong></div>
+        <div><span>เจ้าของ</span><strong>{property.owner}</strong></div>
+        <div><span>ความมั่นใจ AI</span><strong>{aiConfidence}%</strong></div>
+        <div><span>ราคาประเมิน</span><strong>{property.marketPrice.toLocaleString()} บาท</strong></div>
+        <div><span>ระยะทาง</span><strong>{distanceKm.toFixed(1)} กม.</strong></div>
+        <div><span>ที่ตั้ง</span><strong>{property.province}</strong></div>
+        <div><span>สถานะ</span><strong>{statusLabel}</strong></div>
+        <div><span>เวลานัดหมาย</span><strong>{new Date(property.lastInspection).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })}</strong></div>
       </div>
 
       <div className="smart-info-actions">
-        <button type="button" onClick={() => window.open(`https://www.google.com/maps?q=${property.latitude},${property.longitude}`, '_blank', 'noopener,noreferrer')}>Start Navigation</button>
-        <button type="button" onClick={() => navigate('/camera')}>Open Camera</button>
-        <button type="button" onClick={() => navigate('/ai-summary')}>AI Summary</button>
-        <button type="button">Save</button>
-        <button type="button">Share</button>
+        <button type="button" onClick={() => window.open(`https://www.google.com/maps?q=${property.latitude},${property.longitude}`, '_blank', 'noopener,noreferrer')}>เริ่มนำทาง</button>
+        <button type="button" onClick={() => navigate('/camera')}>เปิดกล้อง</button>
+        <button type="button" onClick={() => navigate('/ai-summary')}>สรุป AI</button>
+        <button type="button">บันทึก</button>
+        <button type="button">แชร์</button>
       </div>
 
       <div className="smart-timeline-wrap">
-        <h3>Timeline</h3>
+        <h3>ไทม์ไลน์</h3>
         <div className="smart-timeline" ref={timelineRef} onScroll={onScrollTimeline}>
           <div style={{ height: timeline.length * rowHeight, position: 'relative' }}>
             {visible.map((event, idx) => {

@@ -13,6 +13,7 @@
 .info-grid span, .stats-grid span { font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.04em; }
 .mini-map { height:180px; border-radius:12px; overflow:hidden; }
 .gallery-row { display:flex; gap:8px; overflow:auto; padding-bottom:2px; }
+.gallery-row input[type='range'] { min-width: 120px; }
 .thumb { width:112px; height:112px; object-fit:cover; border-radius:12px; flex-shrink:0; }
 .nearby-list { display:grid; gap:8px; }
 .nearby-item { display:flex; justify-content:space-between; align-items:center; border:1px solid #eef2f7; background:#fcfdff; padding:10px 12px; border-radius:12px; text-align:left; }
@@ -61,4 +62,23 @@
 .bottom-actions {
 	backdrop-filter: blur(14px);
 	padding-bottom: 4px;
+}
+
+.detail-fullscreen {
+	position: fixed;
+	inset: 0;
+	background: rgba(8, 11, 16, 0.94);
+	z-index: 999;
+	display: grid;
+	place-items: center;
+	gap: 12px;
+	padding: 18px;
+}
+
+.detail-fullscreen-image {
+	width: 100%;
+	max-width: 720px;
+	max-height: 82dvh;
+	object-fit: contain;
+	border-radius: 16px;
 }

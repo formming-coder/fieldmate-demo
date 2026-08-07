@@ -7,8 +7,8 @@ type NearbyPropertyProps = {
 function NearbyProperty({ items }: NearbyPropertyProps) {
   return (
     <section className="db-card">
-      <div className="db-eyebrow">Nearby Properties</div>
-      <h2>Around current GPS</h2>
+      <div className="db-eyebrow">ทรัพย์สินใกล้เคียง</div>
+      <h2>รอบพิกัด GPS ปัจจุบัน</h2>
       <div className="db-nearby-list">
         {items.map((item) => (
           <div key={`${item.title}-${item.distance}`} className="db-nearby-item">

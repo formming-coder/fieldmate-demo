@@ -7,7 +7,7 @@ type RiskDashboardProps = {
 function RiskDashboard({ items }: RiskDashboardProps) {
   return (
     <section className="gis-panel-card">
-      <div className="gis-section-title">Risk Dashboard</div>
+      <div className="gis-section-title">แผงความเสี่ยง</div>
       <div className="gis-risk-list">
         {items.map((item) => (
           <div key={item.key} className="gis-risk-item">

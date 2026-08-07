@@ -13,15 +13,15 @@ type PropertyOverviewProps = {
 function PropertyOverview({ type, buildingSize, landArea, floor, age, condition, occupancy }: PropertyOverviewProps) {
   return (
     <section className="as-card">
-      <h2>Property Overview</h2>
+      <h2>ภาพรวมทรัพย์สิน</h2>
       <div className="as-grid">
-        <div><span>Property Type</span><strong>{type}</strong></div>
-        <div><span>Building Size</span><strong>{buildingSize}</strong></div>
-        <div><span>Land Area</span><strong>{landArea}</strong></div>
-        <div><span>Floor</span><strong>{floor}</strong></div>
-        <div><span>Age</span><strong>{age}</strong></div>
-        <div><span>Condition</span><strong>{condition}</strong></div>
-        <div><span>Occupancy</span><strong>{occupancy}</strong></div>
+        <div><span>ประเภททรัพย์</span><strong>{type}</strong></div>
+        <div><span>พื้นที่อาคาร</span><strong>{buildingSize}</strong></div>
+        <div><span>ขนาดที่ดิน</span><strong>{landArea}</strong></div>
+        <div><span>จำนวนชั้น</span><strong>{floor}</strong></div>
+        <div><span>อายุอาคาร</span><strong>{age}</strong></div>
+        <div><span>สภาพโดยรวม</span><strong>{condition}</strong></div>
+        <div><span>การครอบครอง</span><strong>{occupancy}</strong></div>
       </div>
     </section>
   )

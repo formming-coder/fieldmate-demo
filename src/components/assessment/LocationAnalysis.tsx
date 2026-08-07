@@ -16,11 +16,11 @@ type LocationAnalysisProps = {
 function LocationAnalysis({ province, district, subdistrict, gps, distances }: LocationAnalysisProps) {
   return (
     <section className="as-card">
-      <h2>Location Analysis</h2>
+      <h2>วิเคราะห์ทำเล</h2>
       <div className="as-grid">
-        <div><span>Province</span><strong>{province}</strong></div>
-        <div><span>District</span><strong>{district}</strong></div>
-        <div><span>Subdistrict</span><strong>{subdistrict}</strong></div>
+        <div><span>จังหวัด</span><strong>{province}</strong></div>
+        <div><span>เขต/อำเภอ</span><strong>{district}</strong></div>
+        <div><span>แขวง/ตำบล</span><strong>{subdistrict}</strong></div>
         <div><span>GPS</span><strong>{gps}</strong></div>
       </div>
       <div className="as-distance-row">

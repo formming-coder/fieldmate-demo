@@ -11,20 +11,20 @@ type ReportPreviewProps = {
 function ReportPreview({ propertyId, owner, recommendation, score, reasoning }: ReportPreviewProps) {
   return (
     <section className="as-card as-report">
-      <h2>Report Preview</h2>
+      <h2>ตัวอย่างรายงาน</h2>
       <div className="as-report-paper">
         <header>
-          <strong>Fieldmate AI Assessment Report</strong>
+          <strong>รายงานประเมินทรัพย์สินด้วย AI</strong>
           <span>{new Date().toLocaleDateString('th-TH')}</span>
         </header>
         <div className="as-report-grid">
-          <div><span>Property ID</span><strong>{propertyId}</strong></div>
-          <div><span>Owner</span><strong>{owner}</strong></div>
-          <div><span>AI Appraisal</span><strong>THB {recommendation.toLocaleString()}</strong></div>
-          <div><span>Overall Score</span><strong>{score}</strong></div>
+          <div><span>รหัสทรัพย์</span><strong>{propertyId}</strong></div>
+          <div><span>เจ้าของ</span><strong>{owner}</strong></div>
+          <div><span>ราคาประเมิน AI</span><strong>{recommendation.toLocaleString()} บาท</strong></div>
+          <div><span>คะแนนรวม</span><strong>{score}</strong></div>
         </div>
         <p>{reasoning}</p>
-        <footer>Signature: ____________________</footer>
+        <footer>ลายเซ็นผู้ประเมิน: ____________________</footer>
       </div>
     </section>
   )

@@ -1,10 +1,12 @@
-import React, { Suspense, lazy, useEffect, useMemo, useState } from 'react'
+import { formatThaiCurrency } from '../lib/locale'
+import React, { Suspense, lazy, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
 import { usePropertiesQuery } from '../hooks/useBackendQueries'
 import { usePullToRefresh } from '../hooks/usePullToRefresh'
+import { useLiveLocation } from '../hooks/useLiveLocation'
 import { Property } from '../types'
-import { Circle, MapContainer, Marker, TileLayer, useMap, useMapEvents } from 'react-leaflet'
+import { Circle, MapContainer, Marker, Polyline, TileLayer, useMap, useMapEvents } from 'react-leaflet'
 import L from 'leaflet'
 import MapHeader from '../components/map/MapHeader'
 import FloatingSearch from '../components/map/FloatingSearch'
@@ -13,6 +15,8 @@ import MapFAB from '../components/map/MapFAB'
 import BottomSheet from '../components/map/BottomSheet'
 import { createClusterIcon } from '../components/map/Cluster'
 import { createPropertyMarkerIcon } from '../components/map/Marker'
+import { getOfflineQueueCounts } from '../lib/offline/queue'
+import { hasGoogleMapsApiKey } from '../config/env'
 import 'leaflet/dist/leaflet.css'
 import '../styles/smartmap.css'
 
@@ -24,6 +28,10 @@ const AITips = lazy(() => import('../components/map/AITips'))
 const DEFAULT_CENTER: [number, number] = [13.736717, 100.523186]
 const SATELLITE_TILES = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
 const STREET_TILES = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
+const TERRAIN_TILES = 'https://tiles.stadiamaps.com/tiles/stamen_terrain/{z}/{x}/{y}.jpg'
+
+type MapMode = 'street' | 'satellite' | 'terrain'
+type MapLoadState = 'initializing' | 'loading' | 'ready' | 'error'
 
 type ClusterNode = {
   lat: number
@@ -41,9 +49,6 @@ function UserPulseMarker({ onLocate }: { onLocate: (lat: number, lon: number) =>
   const [position, setPosition] = useState<[number, number] | null>(null)
 
   useMapEvents({
-    click(event) {
-      onLocate(event.latlng.lat, event.latlng.lng)
-    },
     locationfound(event) {
       const next: [number, number] = [event.latlng.lat, event.latlng.lng]
       setPosition(next)
@@ -52,6 +57,30 @@ function UserPulseMarker({ onLocate }: { onLocate: (lat: number, lon: number) =>
   })
 
   return position ? <Marker position={position} icon={L.divIcon({ className: 'smart-user-pulse' })} /> : null
+}
+
+function MapInteraction({ onLocate, measureMode, onMeasurePoint }: { onLocate: (lat: number, lon: number) => void; measureMode: boolean; onMeasurePoint: (lat: number, lon: number) => void }) {
+  useMapEvents({
+    click(event) {
+      if (measureMode) {
+        onMeasurePoint(event.latlng.lat, event.latlng.lng)
+        return
+      }
+      onLocate(event.latlng.lat, event.latlng.lng)
+    },
+  })
+
+  return null
+}
+
+function distanceKm(from: [number, number], to: [number, number]) {
+  const toRad = (value: number) => (value * Math.PI) / 180
+  const earthRadiusKm = 6371
+  const lat = toRad(to[0] - from[0])
+  const lon = toRad(to[1] - from[1])
+  const a = Math.sin(lat / 2) ** 2 + Math.cos(toRad(from[0])) * Math.cos(toRad(to[0])) * Math.sin(lon / 2) ** 2
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+  return earthRadiusKm * c
 }
 
 function MapFlyTo({ center, zoom }: { center: [number, number] | null; zoom: number }) {
@@ -65,11 +94,23 @@ function MapFlyTo({ center, zoom }: { center: [number, number] | null; zoom: num
   return null
 }
 
+function MapReadyWatcher({ onReady }: { onReady: () => void }) {
+  const map = useMap()
+
+  useEffect(() => {
+    map.whenReady(() => {
+      onReady()
+    })
+  }, [map, onReady])
+
+  return null
+}
+
 function statusLabel(status: string) {
-  if (status === 'verified') return 'Verified'
-  if (status === 'pending') return 'Pending'
-  if (status === 'historical') return 'Historical'
-  return 'Inspected'
+  if (status === 'verified') return 'ตรวจสอบแล้ว'
+  if (status === 'pending') return 'รอตรวจสอบ'
+  if (status === 'historical') return 'ข้อมูลย้อนหลัง'
+  return 'ตรวจภาคสนามแล้ว'
 }
 
 function confidenceFromProperty(property: Property) {
@@ -85,10 +126,22 @@ export default function SmartMap() {
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [activeFilter, setActiveFilter] = useState<SmartFilter>('all')
-  const [satelliteOn, setSatelliteOn] = useState(false)
+  const [mapMode, setMapMode] = useState<MapMode>('street')
   const [showLayers, setShowLayers] = useState(false)
   const [showAITips, setShowAITips] = useState(true)
   const [isOffline, setIsOffline] = useState(() => (typeof navigator !== 'undefined' ? !navigator.onLine : false))
+  const [queueCount, setQueueCount] = useState(() => getOfflineQueueCounts().total)
+  const [measureMode, setMeasureMode] = useState(false)
+  const [measurePoints, setMeasurePoints] = useState<Array<[number, number]>>([])
+  const [mapLoadState, setMapLoadState] = useState<MapLoadState>('initializing')
+  const [mapError, setMapError] = useState('')
+  const [tileErrorCount, setTileErrorCount] = useState(0)
+  const [mapRetrySeed, setMapRetrySeed] = useState(0)
+  const [isMapBusy, setIsMapBusy] = useState(true)
+  const mapFrameRef = useRef<HTMLDivElement | null>(null)
+  const hasAutoCenteredRef = useRef(false)
+  const { location, accuracyLevel, permission, error: gpsError, requestCurrentPosition } = useLiveLocation({ highAccuracy: true, watch: true, timeoutMs: 12000 })
+  const googleKeyReady = hasGoogleMapsApiKey()
 
   useEffect(() => {
     const onNetwork = () => {
@@ -97,11 +150,34 @@ export default function SmartMap() {
 
     window.addEventListener('online', onNetwork)
     window.addEventListener('offline', onNetwork)
+    window.addEventListener('fieldmate:offline-queue-updated', onNetwork)
 
     return () => {
       window.removeEventListener('online', onNetwork)
       window.removeEventListener('offline', onNetwork)
+      window.removeEventListener('fieldmate:offline-queue-updated', onNetwork)
     }
+  }, [])
+
+  useEffect(() => {
+    setQueueCount(getOfflineQueueCounts().total)
+  }, [isOffline])
+
+  useEffect(() => {
+    if (!mapFrameRef.current || typeof ResizeObserver === 'undefined') return
+
+    const target = mapFrameRef.current
+    const observer = new ResizeObserver((entries) => {
+      const entry = entries[0]
+      if (!entry) return
+      if (entry.contentRect.height < 280) {
+        setMapLoadState('error')
+        setMapError('ความสูงพื้นที่แผนที่ไม่ถูกต้อง กรุณารีโหลดหน้าจอ')
+      }
+    })
+    observer.observe(target)
+
+    return () => observer.disconnect()
   }, [])
 
   const refreshProperties = async () => {
@@ -184,10 +260,13 @@ export default function SmartMap() {
   }
 
   const requestCurrentLocation = () => {
-    navigator.geolocation?.getCurrentPosition((position) => {
-      setCenter([position.coords.latitude, position.coords.longitude])
-      setZoom(15)
-    })
+    setIsMapBusy(true)
+    requestCurrentPosition()
+    if (location) {
+      setCenter([location.latitude, location.longitude])
+      setZoom(16)
+      setIsMapBusy(false)
+    }
   }
 
   const centerOnProperty = (property: Property) => {
@@ -201,21 +280,109 @@ export default function SmartMap() {
     []
   )
 
+  useEffect(() => {
+    if (!location) return
+    if (!hasAutoCenteredRef.current) {
+      setCenter([location.latitude, location.longitude])
+      setZoom(16)
+      hasAutoCenteredRef.current = true
+    }
+    setIsMapBusy(false)
+  }, [location?.latitude, location?.longitude])
+
+  const livePosition = location ? ([location.latitude, location.longitude] as [number, number]) : null
+
+  const gpsLabel = useMemo(() => {
+    if (!location) return 'GPS กำลังค้นหา'
+    if (accuracyLevel === 'high') return `GPS แม่นยำ ${location.accuracy} ม.`
+    if (accuracyLevel === 'medium') return `GPS ปานกลาง ${location.accuracy} ม.`
+    return `GPS ต่ำ ${location.accuracy} ม.`
+  }, [accuracyLevel, location])
+
+  const addMeasurePoint = (lat: number, lon: number) => {
+    setMeasurePoints((current) => {
+      if (current.length >= 2) return [[lat, lon]]
+      return [...current, [lat, lon]]
+    })
+  }
+
+  const measureDistance = measurePoints.length === 2 ? distanceKm(measurePoints[0], measurePoints[1]) : 0
+
+  const findNearbyProperty = () => {
+    if (!location || !properties.length) return
+    const nearest = [...properties].sort((a, b) => {
+      const aDistance = Math.abs(a.latitude - location.latitude) + Math.abs(a.longitude - location.longitude)
+      const bDistance = Math.abs(b.latitude - location.latitude) + Math.abs(b.longitude - location.longitude)
+      return aDistance - bDistance
+    })[0]
+    if (!nearest) return
+    centerOnProperty(nearest)
+  }
+
+  const openNavigation = () => {
+    if (!selectedProperty || typeof window === 'undefined') return
+    const url = `https://www.google.com/maps/dir/?api=1&destination=${selectedProperty.latitude},${selectedProperty.longitude}&travelmode=driving`
+    window.open(url, '_blank', 'noopener,noreferrer')
+  }
+
+  const tileUrl = mapMode === 'satellite' ? SATELLITE_TILES : mapMode === 'terrain' ? TERRAIN_TILES : STREET_TILES
+  const attribution = mapMode === 'satellite' ? '&copy; Esri' : mapMode === 'terrain' ? '&copy; Stadia Maps & OpenMapTiles & OpenStreetMap contributors' : '&copy; OpenStreetMap contributors'
+
+  const retryMap = () => {
+    setMapError('')
+    setTileErrorCount(0)
+    setMapLoadState('initializing')
+    setIsMapBusy(true)
+    setMapRetrySeed((current) => current + 1)
+    requestCurrentPosition()
+    void refetch()
+  }
+
+  const showMapSkeleton = loading || mapLoadState === 'initializing' || mapLoadState === 'loading'
+  const showMapError = mapLoadState === 'error'
+
   return (
     <Layout title="แผนที่อัจฉริยะ" immersive hideAssistant>
       <div className="smart-map-page" {...pullToRefresh.bind}>
-        <MapHeader todayLabel={todayLabel} offline={isOffline} />
+        <MapHeader todayLabel={todayLabel} offline={isOffline} gpsLabel={gpsLabel} queuedCount={queueCount} />
 
         <div className={`smart-pull-indicator ${pullToRefresh.isRefreshing ? 'visible' : ''}`} style={{ height: `${pullToRefresh.pullDistance}px` }}>
-          {pullToRefresh.isRefreshing ? 'Refreshing...' : 'Pull to refresh'}
+          {pullToRefresh.isRefreshing ? 'กำลังโหลด...' : 'ดึงลงเพื่อรีเฟรช'}
         </div>
 
-        <div className="smart-map-frame">
-          <MapContainer center={center || DEFAULT_CENTER} zoom={zoom} zoomControl={false} style={{ height: '100%', width: '100%' }}>
-            <TileLayer attribution={satelliteOn ? '&copy; Esri' : '&copy; OpenStreetMap contributors'} url={satelliteOn ? SATELLITE_TILES : STREET_TILES} />
+        <div className="smart-map-frame" ref={mapFrameRef}>
+          <MapContainer key={`${mapRetrySeed}-${mapMode}`} center={center || DEFAULT_CENTER} zoom={zoom} zoomControl={false} style={{ height: '100%', width: '100%' }}>
+            <TileLayer
+              attribution={attribution}
+              url={tileUrl}
+              eventHandlers={{
+                loading: () => {
+                  setMapLoadState('loading')
+                },
+                load: () => {
+                  setMapLoadState('ready')
+                  setMapError('')
+                  setTileErrorCount(0)
+                },
+                tileerror: () => {
+                  setTileErrorCount((current) => {
+                    const next = current + 1
+                    if (next >= 4) {
+                      setMapLoadState('error')
+                      setMapError('ไม่สามารถโหลดแผนที่ได้ในขณะนี้ กรุณาตรวจสอบอินเทอร์เน็ตหรือคีย์แผนที่')
+                    }
+                    return next
+                  })
+                },
+              }}
+            />
+            <MapReadyWatcher onReady={() => setMapLoadState((current) => (current === 'error' ? current : 'ready'))} />
             <MapFlyTo center={center} zoom={zoom} />
+            <MapInteraction onLocate={onLocate} measureMode={measureMode} onMeasurePoint={addMeasurePoint} />
             <UserPulseMarker onLocate={onLocate} />
             <Circle center={center || DEFAULT_CENTER} radius={1200} pathOptions={{ color: '#FFC107', fillColor: '#FFE28A', fillOpacity: 0.14 }} />
+            {livePosition ? <Marker position={livePosition} icon={L.divIcon({ className: 'smart-live-location-marker' })} /> : null}
+            {measurePoints.length ? <Polyline positions={measurePoints} pathOptions={{ color: '#1d5eff', weight: 4, dashArray: '8 8' }} /> : null}
 
             {clusters.map((node, index) => {
               if (node.items.length > 1) {
@@ -248,23 +415,69 @@ export default function SmartMap() {
             })}
           </MapContainer>
 
+          {showMapSkeleton ? (
+            <div className="smart-map-state-overlay" role="status" aria-live="polite">
+              <div className="smart-map-skeleton" />
+              <div className="smart-map-skeleton smart-map-skeleton-line" />
+              <div className="smart-map-state-message">กำลังโหลดแผนที่...</div>
+            </div>
+          ) : null}
+
+          {showMapError ? (
+            <div className="smart-map-state-overlay is-error" role="alert">
+              <div className="smart-map-error-card">
+                <strong>ไม่สามารถแสดงแผนที่ได้</strong>
+                <span>{mapError}</span>
+                <button type="button" onClick={retryMap}>ลองใหม่อีกครั้ง</button>
+              </div>
+            </div>
+          ) : null}
+
+          {isMapBusy && !showMapSkeleton && !showMapError ? (
+            <div className="smart-map-loading-chip" role="status" aria-live="polite">
+              <span className="smart-map-spinner" aria-hidden="true" />
+              <span>กำลังระบุตำแหน่ง...</span>
+            </div>
+          ) : null}
+
+          {!googleKeyReady ? (
+            <div className="smart-map-health-warning">ไม่พบคีย์แผนที่ในตัวแปรแวดล้อม ระบบจะใช้แผนที่สำรองเพื่อป้องกันหน้าจอว่าง</div>
+          ) : null}
+
+          {(permission === 'denied' || permission === 'unsupported' || gpsError) ? (
+            <div className="smart-map-gps-warning">
+              <strong>การเข้าถึง GPS มีปัญหา</strong>
+              <span>{gpsError || (permission === 'unsupported' ? 'อุปกรณ์นี้ไม่รองรับ GPS' : 'กรุณาอนุญาตตำแหน่งเพื่อจัดศูนย์แผนที่อัตโนมัติ')}</span>
+              <button type="button" onClick={requestCurrentPosition}>ลองขอสิทธิ์อีกครั้ง</button>
+            </div>
+          ) : null}
+
           <div className="smart-map-floating-top">
             <FloatingSearch value={searchQuery} onChange={setSearchQuery} />
             <FilterChips value={activeFilter} onChange={setActiveFilter} />
           </div>
 
           <div className="smart-map-fabs">
-            <MapFAB label="Current Location" icon="my_location" onClick={requestCurrentLocation} />
-            <MapFAB label="Compass" icon="explore" onClick={() => setZoom(13)} />
-            <MapFAB label="Layer" icon="layers" onClick={() => setShowLayers((current) => !current)} />
-            <MapFAB label="AI Suggest" icon="auto_awesome" onClick={() => setShowAITips((current) => !current)} />
-            <MapFAB label="GIS Intelligence" icon="public" onClick={() => navigate('/gis')} />
-            <MapFAB label="Route Planner" icon="route" onClick={() => navigate('/route-planner')} />
+            <MapFAB label="ตำแหน่งปัจจุบัน" icon="my_location" onClick={requestCurrentLocation} />
+            <MapFAB label="ซูมเข้า" icon="add" onClick={() => setZoom((current) => Math.min(current + 1, 20))} />
+            <MapFAB label="ซูมออก" icon="remove" onClick={() => setZoom((current) => Math.max(current - 1, 5))} />
+            <MapFAB label="เข็มทิศ" icon="explore" onClick={() => setZoom(13)} />
+            <MapFAB label="หาใกล้ฉัน" icon="near_me" onClick={findNearbyProperty} />
+            <MapFAB label="วัดระยะ" icon={measureMode ? 'straighten' : 'route'} onClick={() => {
+              setMeasureMode((current) => !current)
+              setMeasurePoints([])
+            }} />
+            <MapFAB label="ชั้นข้อมูล" icon="layers" onClick={() => setShowLayers((current) => !current)} />
+            <MapFAB label="คำแนะนำ AI" icon="auto_awesome" onClick={() => setShowAITips((current) => !current)} />
+            {selectedProperty ? <MapFAB label="นำทาง" icon="navigation" onClick={openNavigation} /> : null}
+            <MapFAB label="GIS อัจฉริยะ" icon="public" onClick={() => navigate('/gis')} />
+            <MapFAB label="วางแผนเส้นทาง" icon="route" onClick={() => navigate('/route-planner')} />
           </div>
 
           <div className={`smart-layer-panel ${showLayers ? 'open' : ''}`}>
-            <button type="button" className={!satelliteOn ? 'active' : ''} onClick={() => setSatelliteOn(false)}>Street</button>
-            <button type="button" className={satelliteOn ? 'active' : ''} onClick={() => setSatelliteOn(true)}>Satellite</button>
+            <button type="button" className={mapMode === 'street' ? 'active' : ''} onClick={() => setMapMode('street')}>ถนน</button>
+            <button type="button" className={mapMode === 'satellite' ? 'active' : ''} onClick={() => setMapMode('satellite')}>ดาวเทียม</button>
+            <button type="button" className={mapMode === 'terrain' ? 'active' : ''} onClick={() => setMapMode('terrain')}>ภูมิประเทศ</button>
           </div>
 
           {showAITips && selectedProperty ? (
@@ -274,15 +487,17 @@ export default function SmartMap() {
           ) : null}
 
           <div className="smart-map-meta-pills">
-            <span>{filteredProperties.length} results</span>
-            <span>{satelliteOn ? 'Satellite' : 'Street'}</span>
-            <button type="button" className="smart-map-gis-pill" onClick={() => navigate('/gis')}>GIS Intelligence</button>
-            <button type="button" className="smart-map-gis-pill" onClick={() => navigate('/route-planner')}>Route Planner</button>
+            <span>{filteredProperties.length} รายการ</span>
+            <span>{mapMode === 'satellite' ? 'ดาวเทียม' : mapMode === 'terrain' ? 'ภูมิประเทศ' : 'ถนน'}</span>
+            <span>{googleKeyReady ? 'คีย์แผนที่พร้อมใช้' : 'คีย์แผนที่ยังไม่พร้อม'}</span>
+            {measurePoints.length === 2 ? <span>{measureDistance.toFixed(2)} กม.</span> : null}
+            <button type="button" className="smart-map-gis-pill" onClick={() => navigate('/gis')}>GIS อัจฉริยะ</button>
+            <button type="button" className="smart-map-gis-pill" onClick={() => navigate('/route-planner')}>วางแผนเส้นทาง</button>
           </div>
         </div>
 
         {!selectedProperty && !loading ? (
-          <button type="button" className="smart-open-camera" onClick={() => navigate('/camera')}>Open AI Camera</button>
+          <button type="button" className="smart-open-camera" onClick={() => navigate('/camera')}>เปิดกล้อง AI</button>
         ) : null}
       </div>
 

@@ -13,7 +13,7 @@ type ConditionChecklistProps = {
 function ConditionChecklist({ items, onToggle }: ConditionChecklistProps) {
   return (
     <section className="as-card">
-      <h2>Condition Checklist</h2>
+      <h2>รายการตรวจสภาพ</h2>
       <div className="as-check-list">
         {items.map((item) => (
           <label key={item.key}>

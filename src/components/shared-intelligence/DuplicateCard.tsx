@@ -15,12 +15,12 @@ function DuplicateCard({ visible, similarity, officer, captureDate, onOpenExisti
   return (
     <section className="spi-duplicate-card">
       <div>
-        <strong>Possible Duplicate</strong>
-        <p>{similarity}% similarity • {officer} • {captureDate}</p>
+        <strong>พบรายการที่อาจซ้ำกัน</strong>
+        <p>ความคล้าย {similarity}% • {officer} • {captureDate}</p>
       </div>
       <div className="spi-inline-actions">
-        <button type="button" onClick={onOpenExisting}>Open Existing</button>
-        <button type="button" className="is-primary" onClick={onCreateNew}>Create New</button>
+        <button type="button" onClick={onOpenExisting}>เปิดรายการเดิม</button>
+        <button type="button" className="is-primary" onClick={onCreateNew}>สร้างรายการใหม่</button>
       </div>
     </section>
   )

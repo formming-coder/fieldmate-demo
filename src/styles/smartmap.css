@@ -99,13 +99,155 @@
 .smart-map-frame {
   position: relative;
   height: 100dvh;
+  min-height: 100dvh;
   width: 100%;
 }
 
 .smart-map-frame .leaflet-container {
   height: 100%;
+  min-height: 100dvh;
   width: 100%;
   background: #efe3ca;
+}
+
+.smart-map-state-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 780;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 10px;
+  background: rgba(247, 236, 215, 0.82);
+  backdrop-filter: blur(6px);
+  padding: 18px;
+}
+
+.smart-map-state-overlay.is-error {
+  background: rgba(39, 26, 17, 0.48);
+  backdrop-filter: blur(10px);
+}
+
+.smart-map-skeleton {
+  width: min(88%, 360px);
+  height: 180px;
+  border-radius: 16px;
+  background: linear-gradient(110deg, #f0dcc0 8%, #fff4e3 18%, #f0dcc0 33%);
+  background-size: 220% 100%;
+  animation: smart-shimmer 1.2s linear infinite;
+}
+
+.smart-map-skeleton-line {
+  height: 14px;
+  width: min(62%, 220px);
+}
+
+.smart-map-state-message {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #6b4c1d;
+}
+
+.smart-map-error-card {
+  width: min(100%, 340px);
+  border-radius: 16px;
+  padding: 16px;
+  background: rgba(255, 252, 246, 0.96);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 14px 34px rgba(22, 13, 3, 0.26);
+  display: grid;
+  gap: 8px;
+  text-align: center;
+}
+
+.smart-map-error-card strong {
+  font-size: 0.95rem;
+  color: #3f1f13;
+}
+
+.smart-map-error-card span {
+  font-size: 0.8rem;
+  color: #5b4133;
+  line-height: 1.45;
+}
+
+.smart-map-error-card button {
+  border: 0;
+  min-height: 44px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: #3e2700;
+  background: linear-gradient(125deg, #ffe08a 0%, #ffb400 65%);
+}
+
+.smart-map-loading-chip {
+  position: absolute;
+  z-index: 775;
+  right: 14px;
+  top: calc(var(--smart-safe-top) + 130px);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.86);
+  background: rgba(255, 252, 247, 0.92);
+  box-shadow: 0 10px 24px rgba(33, 21, 7, 0.18);
+  padding: 8px 12px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #6d4d1f;
+}
+
+.smart-map-spinner {
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  border: 2px solid rgba(255, 177, 0, 0.3);
+  border-top-color: #ffb100;
+  animation: smart-spin 0.8s linear infinite;
+}
+
+.smart-map-health-warning,
+.smart-map-gps-warning {
+  position: absolute;
+  z-index: 770;
+  left: 14px;
+  right: 14px;
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-size: 0.74rem;
+  line-height: 1.45;
+  border: 1px solid rgba(82, 57, 26, 0.16);
+  background: rgba(255, 250, 242, 0.92);
+  box-shadow: 0 10px 24px rgba(43, 28, 9, 0.16);
+  color: #5f4318;
+}
+
+.smart-map-health-warning {
+  bottom: calc(var(--smart-safe-bottom) + 238px);
+}
+
+.smart-map-gps-warning {
+  bottom: calc(var(--smart-safe-bottom) + 172px);
+  display: grid;
+  gap: 6px;
+}
+
+.smart-map-gps-warning strong {
+  font-size: 0.79rem;
+}
+
+.smart-map-gps-warning button {
+  border: 0;
+  min-height: 38px;
+  border-radius: 10px;
+  padding: 0 10px;
+  width: fit-content;
+  background: rgba(255, 177, 0, 0.18);
+  color: #523200;
+  font-size: 0.72rem;
+  font-weight: 800;
 }
 
 .smart-map-floating-top {
@@ -314,6 +456,16 @@
   background: rgba(255, 250, 241, 0.82);
   border: 1px solid rgba(37, 28, 19, 0.12);
   color: #5b4834;
+}
+
+.smart-map-gis-pill {
+  border: 1px solid rgba(37, 28, 19, 0.12);
+  background: rgba(255, 250, 241, 0.86);
+  color: #5b4834;
+  border-radius: 999px;
+  font-size: 0.69rem;
+  font-weight: 700;
+  padding: 6px 10px;
 }
 
 .smart-open-camera {
@@ -666,9 +818,24 @@
   box-shadow: 0 0 0 7px rgba(15, 166, 218, 0.18), 0 8px 18px rgba(9, 51, 68, 0.32);
 }
 
+.smart-live-location-marker {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  background: radial-gradient(circle at 30% 30%, #91f0ff, #0088ff 70%);
+  box-shadow: 0 0 0 6px rgba(0, 136, 255, 0.2), 0 10px 18px rgba(3, 44, 84, 0.28);
+}
+
 @keyframes smart-shimmer {
   to {
     background-position-x: -200%;
+  }
+}
+
+@keyframes smart-spin {
+  to {
+    transform: rotate(360deg);
   }
 }
 

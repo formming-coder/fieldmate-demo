@@ -12,15 +12,15 @@ type TaskSummaryProps = {
 function TaskSummary({ today, week, month, completed, pending, cancelled }: TaskSummaryProps) {
   return (
     <section className="db-card">
-      <div className="db-eyebrow">Task Summary</div>
-      <h2>Workload overview</h2>
+      <div className="db-eyebrow">สรุปงาน</div>
+      <h2>ภาพรวมภาระงาน</h2>
       <div className="db-stat-grid">
-        <div><span>Today's Jobs</span><strong>{today}</strong></div>
-        <div><span>This Week</span><strong>{week}</strong></div>
-        <div><span>This Month</span><strong>{month}</strong></div>
-        <div><span>Completed</span><strong>{completed}</strong></div>
-        <div><span>Pending</span><strong>{pending}</strong></div>
-        <div><span>Cancelled</span><strong>{cancelled}</strong></div>
+        <div><span>งานวันนี้</span><strong>{today}</strong></div>
+        <div><span>สัปดาห์นี้</span><strong>{week}</strong></div>
+        <div><span>เดือนนี้</span><strong>{month}</strong></div>
+        <div><span>เสร็จแล้ว</span><strong>{completed}</strong></div>
+        <div><span>รอดำเนินการ</span><strong>{pending}</strong></div>
+        <div><span>ยกเลิก</span><strong>{cancelled}</strong></div>
       </div>
     </section>
   )

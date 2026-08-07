@@ -20,13 +20,13 @@ function VoiceRecorder({ recording, seconds, hasClip, onRecord, onStop, onPlay, 
   return (
     <section className="cam-voice">
       <div className="cam-section-title-row">
-        <h3>Voice Note</h3>
+        <h3>บันทึกเสียง</h3>
         <span className={`cam-score ${recording ? 'is-warn' : ''}`}>{formatSeconds(seconds)}</span>
       </div>
       <div className="cam-voice-actions">
-        {!recording ? <button type="button" onClick={onRecord}>Record</button> : <button type="button" onClick={onStop}>Stop</button>}
-        <button type="button" onClick={onPlay} disabled={!hasClip}>Playback</button>
-        <button type="button" onClick={onAttach} disabled={!hasClip}>Attach to Image</button>
+        {!recording ? <button type="button" onClick={onRecord}>เริ่มอัด</button> : <button type="button" onClick={onStop}>หยุดอัด</button>}
+        <button type="button" onClick={onPlay} disabled={!hasClip}>เล่นเสียง</button>
+        <button type="button" onClick={onAttach} disabled={!hasClip}>แนบกับภาพ</button>
       </div>
     </section>
   )

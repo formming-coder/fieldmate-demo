@@ -12,7 +12,7 @@ function PropertyGallery({ images, onDownload, onCopy }: PropertyGalleryProps) {
 
   return (
     <section className="spi-section">
-      <div className="spi-section-title">Photo Gallery</div>
+      <div className="spi-section-title">แกลเลอรีภาพ</div>
       <div className="spi-gallery-hero">
         <img src={active} alt={`property-${activeIndex + 1}`} />
       </div>
@@ -24,8 +24,8 @@ function PropertyGallery({ images, onDownload, onCopy }: PropertyGalleryProps) {
         ))}
       </div>
       <div className="spi-inline-actions">
-        <button type="button" onClick={onDownload}>Download</button>
-        <button type="button" onClick={onCopy}>Copy</button>
+        <button type="button" onClick={onDownload}>ดาวน์โหลด</button>
+        <button type="button" onClick={onCopy}>คัดลอก</button>
       </div>
     </section>
   )

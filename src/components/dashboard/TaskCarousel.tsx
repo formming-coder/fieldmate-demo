@@ -19,15 +19,15 @@ type TaskCarouselProps = {
 }
 
 function statusLabel(status: string) {
-  if (status === 'completed') return 'Completed'
-  if (status === 'pending') return 'Pending'
-  return 'Open'
+  if (status === 'completed') return 'เสร็จแล้ว'
+  if (status === 'pending') return 'รอดำเนินการ'
+  return 'เปิดอยู่'
 }
 
 function TaskCarousel({ tasks, onOpenTask }: TaskCarouselProps) {
   return (
     <section className="dashboard-section">
-      <h2 className="dashboard-section-title">Today's Tasks</h2>
+      <h2 className="dashboard-section-title">งานของวันนี้</h2>
       <div className="task-carousel" role="list">
         {tasks.map((task, index) => (
           <motion.button
@@ -48,7 +48,7 @@ function TaskCarousel({ tasks, onOpenTask }: TaskCarouselProps) {
               </div>
               <div className="task-meta">{task.province} • {task.propertyType}</div>
               <div className="task-meta">นัดหมาย {task.appointmentTime}</div>
-              <div className="task-distance">{task.distanceKm} km</div>
+              <div className="task-distance">{task.distanceKm} กม.</div>
             </div>
           </motion.button>
         ))}

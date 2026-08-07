@@ -8,18 +8,18 @@ type InspectionNotesProps = {
 }
 
 const quickItems = [
-  'Need legal verification',
-  'Add rooftop close-up',
-  'Confirm nearby sales data',
-  'Request senior review',
+  'ควรยืนยันข้อมูลทางกฎหมายเพิ่มเติม',
+  'ควรถ่ายภาพระยะใกล้บริเวณหลังคาเพิ่ม',
+  'ควรยืนยันข้อมูลราคาซื้อขายใกล้เคียง',
+  'ควรส่งให้ผู้ประเมินอาวุโสตรวจทาน',
 ]
 
 function InspectionNotes({ transcript, note, onNoteChange, onInsert }: InspectionNotesProps) {
   return (
     <section className="as-card">
-      <h2>Inspection Notes</h2>
+      <h2>บันทึกการตรวจสอบ</h2>
       <div className="as-note-box">
-        <span>Voice transcript</span>
+        <span>ถอดเสียงบันทึก</span>
         <p>{transcript}</p>
       </div>
       <textarea value={note} onChange={(event) => onNoteChange(event.target.value)} placeholder="เพิ่มบันทึกการตรวจสอบเพิ่มเติม" />

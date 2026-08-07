@@ -4,21 +4,24 @@ import BrandMark from '../BrandMark'
 type MapHeaderProps = {
   todayLabel: string
   offline: boolean
+  gpsLabel: string
+  queuedCount: number
 }
 
-function MapHeader({ todayLabel, offline }: MapHeaderProps) {
+function MapHeader({ todayLabel, offline, gpsLabel, queuedCount }: MapHeaderProps) {
   return (
     <div className="map-header">
       <div className="map-header-leading">
         <BrandMark size="small" />
         <div>
-          <div className="map-header-title">Smart Map Pro</div>
+          <div className="map-header-title">แผนที่อัจฉริยะ</div>
           <div className="map-header-subtitle">{todayLabel}</div>
         </div>
       </div>
       <div className="map-header-statuses">
-        {offline ? <span className="map-pill map-pill-offline">Offline mode</span> : null}
-        <span className="map-pill">Cached map</span>
+        <span className="map-pill">{gpsLabel}</span>
+        {offline ? <span className="map-pill map-pill-offline">โหมดออฟไลน์</span> : null}
+        <span className="map-pill">รอซิงก์ {queuedCount}</span>
       </div>
     </div>
   )

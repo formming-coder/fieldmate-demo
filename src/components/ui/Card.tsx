@@ -20,7 +20,7 @@ export function Card({ elevated = false, glass = false, style, children, ...prop
       style={{
         background: glass ? 'rgba(255,255,255,0.75)' : colors.surface,
         borderRadius: radius.medium,
-        padding: spacing[4],
+        padding: spacing[5],
         boxShadow: elevated ? shadow.elevated : shadow.soft,
         border: `1px solid ${colors.border}`,
         backdropFilter: glass ? 'blur(18px)' : undefined,

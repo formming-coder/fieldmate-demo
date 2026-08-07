@@ -3,7 +3,7 @@ import React, { memo, useMemo, useState } from 'react'
 type GalleryImage = {
   id: string
   url: string
-  category: 'Exterior' | 'Interior' | 'Document' | 'Road' | 'Land'
+  category: 'ภายนอก' | 'ภายใน' | 'เอกสาร' | 'ถนน' | 'ที่ดิน'
 }
 
 type AssessmentGalleryProps = {
@@ -11,15 +11,15 @@ type AssessmentGalleryProps = {
 }
 
 function AssessmentGallery({ images }: AssessmentGalleryProps) {
-  const [category, setCategory] = useState<GalleryImage['category']>('Exterior')
+  const [category, setCategory] = useState<GalleryImage['category']>('ภายนอก')
   const [zoom, setZoom] = useState(1)
   const filtered = useMemo(() => images.filter((item) => item.category === category), [category, images])
 
   return (
     <section className="as-card">
-      <h2>Photo Gallery</h2>
+      <h2>แกลเลอรีภาพ</h2>
       <div className="as-chip-row">
-        {(['Exterior', 'Interior', 'Document', 'Road', 'Land'] as const).map((item) => (
+        {(['ภายนอก', 'ภายใน', 'เอกสาร', 'ถนน', 'ที่ดิน'] as const).map((item) => (
           <button type="button" key={item} className="as-chip-btn" onClick={() => setCategory(item)}>{item}</button>
         ))}
       </div>

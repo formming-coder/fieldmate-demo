@@ -12,14 +12,14 @@ function RouteCard({ title, startLocation, currentGps, finishTime, stopCount }: 
   return (
     <section className="rp-card rp-route-card">
       <div>
-        <div className="rp-eyebrow">Route Planner</div>
+        <div className="rp-eyebrow">วางแผนเส้นทาง</div>
         <h2>{title}</h2>
       </div>
       <div className="rp-info-list">
-        <div><span>Start Location</span><strong>{startLocation}</strong></div>
-        <div><span>Current GPS</span><strong>{currentGps}</strong></div>
-        <div><span>Destination List</span><strong>{stopCount} stops</strong></div>
-        <div><span>Estimated Finish</span><strong>{finishTime}</strong></div>
+        <div><span>จุดเริ่มต้น</span><strong>{startLocation}</strong></div>
+        <div><span>พิกัด GPS ปัจจุบัน</span><strong>{currentGps}</strong></div>
+        <div><span>รายการจุดหมาย</span><strong>{stopCount} จุด</strong></div>
+        <div><span>เวลาเสร็จโดยประมาณ</span><strong>{finishTime}</strong></div>
       </div>
     </section>
   )
