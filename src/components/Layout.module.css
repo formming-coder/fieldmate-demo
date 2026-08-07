@@ -1,0 +1,8 @@
+.container { max-width:980px; margin:0 auto; padding:0 1rem; }
+.header { display:flex; align-items:center; justify-content:space-between; gap:1rem; padding:0.5rem 0; }
+.title { display:flex; align-items:center; gap:0.75rem; }
+.logo { width:40px; height:40px; border-radius:10px; background:var(--krungsri); display:grid; place-items:center; font-weight:800; color:#111; }
+.page { padding:1rem; padding-bottom:84px; flex:1; overflow:auto; }
+.card { background:var(--card); border-radius:12px; padding:1rem; box-shadow:0 6px 18px var(--glass); }
+.actions { display:flex; gap:8px; align-items:center }
+.iconBtn { background:transparent; border:none; font-size:18px; color:var(--muted); }

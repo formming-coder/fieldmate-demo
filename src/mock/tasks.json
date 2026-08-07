@@ -1,0 +1,23 @@
+[
+  {
+    "id": "task-001",
+    "title": "Inspect rooftop - Site A",
+    "propertyId": "prop-001",
+    "scheduledAt": "2026-08-06T10:30:00.000Z",
+    "status": "open"
+  },
+  {
+    "id": "task-002",
+    "title": "Property assessment - B",
+    "propertyId": "prop-002",
+    "scheduledAt": "2026-08-06T13:00:00.000Z",
+    "status": "open"
+  },
+  {
+    "id": "task-003",
+    "title": "Follow-up photos - Site C",
+    "propertyId": "prop-003",
+    "scheduledAt": "2026-08-07T09:00:00.000Z",
+    "status": "pending"
+  }
+]

@@ -1,0 +1,3 @@
+.root { position:fixed; right:18px; bottom:92px; width:64px; height:64px; border-radius:999px; background:var(--krungsri); display:grid; place-items:center; box-shadow:0 14px 40px rgba(31,41,55,0.12); font-weight:800; color:#111; cursor:pointer; transition:transform .18s ease, box-shadow .18s ease; z-index:60 }
+.root:hover { transform:translateY(-6px); box-shadow:0 26px 60px rgba(31,41,55,0.14); }
+.badge { background:#fff; color:var(--krungsri); padding:6px 8px; border-radius:999px; font-weight:700 }

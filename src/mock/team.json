@@ -1,0 +1,5 @@
+[
+  {"id":"team-001","name":"Jane Doe","latitude":13.7378,"longitude":100.5230,"avatar":"https://placehold.co/64x64?text=J"},
+  {"id":"team-002","name":"Somchai","latitude":13.7420,"longitude":100.5300,"avatar":"https://placehold.co/64x64?text=S"},
+  {"id":"team-003","name":"Araya","latitude":13.7500,"longitude":100.5200,"avatar":"https://placehold.co/64x64?text=A"}
+]

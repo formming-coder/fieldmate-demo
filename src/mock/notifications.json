@@ -1,0 +1,16 @@
+[
+  {
+    "id": "note-001",
+    "title": "New AI suggestions available",
+    "body": "3 new suggestions for Site A",
+    "createdAt": "2026-08-05T08:12:00.000Z",
+    "read": false
+  },
+  {
+    "id": "note-002",
+    "title": "Task reminder",
+    "body": "Inspect rooftop - Site A at 10:30",
+    "createdAt": "2026-08-06T07:00:00.000Z",
+    "read": false
+  }
+]
