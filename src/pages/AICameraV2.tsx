@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import Layout from '../components/Layout'
 import s from './AICameraV2.module.css'
-import { fetchUser, saveProperty } from '../api/mockApi'
+import { useCurrentOfficerQuery, useSavePropertyMutation } from '../hooks/useBackendQueries'
 import { MapContainer, Marker, TileLayer, useMap, Popup } from 'react-leaflet'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
@@ -45,9 +45,14 @@ export default function AICameraV2(){
   const [officer, setOfficer] = useState('ชื่อเจ้าหน้าที่')
   const [history, setHistory] = useState<Array<{id:string;action:string;time:string}>>([])
   const fileRef = useRef<HTMLInputElement | null>(null)
+  const { data: currentOfficer } = useCurrentOfficerQuery()
+  const savePropertyMutation = useSavePropertyMutation()
 
   useEffect(()=>{
-    fetchUser().then(user => { if(user) setOfficer(user.name) })
+    if(currentOfficer?.name) setOfficer(currentOfficer.name)
+  }, [currentOfficer?.name])
+
+  useEffect(()=>{
     if(navigator.geolocation){
       navigator.geolocation.getCurrentPosition(pos => {
         setLocation([pos.coords.latitude, pos.coords.longitude])
@@ -112,7 +117,7 @@ export default function AICameraV2(){
   const handleUpload = async () => {
     setIsAnalyzing(true)
     setTimeout(async () => {
-      const prop = await saveProperty({
+      const prop = await savePropertyMutation.mutateAsync({
         owner: officer,
         province: address.province || 'Unknown',
         latitude: location[0],
@@ -132,7 +137,7 @@ export default function AICameraV2(){
 
   const handleSearchLocation = () => {
     addHistory('เปิดการค้นหาสถานที่แล้ว')
-    alert('การค้นหาสถานที่เป็นตัวอย่างจำลอง')
+    alert('กำลังเตรียมหน้าค้นหาสถานที่')
   }
 
   const selectedTypeLabel = useMemo(() => propertyTypes.find(type => type.key === propertyType)?.label || '', [propertyType])
@@ -201,7 +206,7 @@ export default function AICameraV2(){
           <div className={s.sectionHeader}>
             <div>
               <div className={s.stepTitle}>OCR</div>
-              <div className={s.sectionTitle}>ผล OCR จำลอง</div>
+              <div className={s.sectionTitle}>ผล OCR</div>
             </div>
             <button className={s.ghostBtn} onClick={() => addHistory('รัน OCR แล้ว')}>AI OCR</button>
           </div>

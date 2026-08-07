@@ -1,0 +1,327 @@
+.gis-page {
+  min-height: 100dvh;
+  background:
+    radial-gradient(92% 56% at 12% 2%, rgba(255, 213, 128, 0.34), transparent 74%),
+    radial-gradient(88% 54% at 88% 0%, rgba(133, 191, 255, 0.22), transparent 76%),
+    #eff2e8;
+  color: #211c16;
+}
+
+.gis-header {
+  position: absolute;
+  inset: calc(env(safe-area-inset-top) + 8px) 14px auto 14px;
+  z-index: 650;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 20px;
+  border: 1px solid rgba(54, 43, 24, 0.12);
+  background: rgba(255, 251, 243, 0.84);
+  backdrop-filter: blur(16px);
+  box-shadow: 0 14px 36px rgba(65, 37, 1, 0.14);
+}
+
+.gis-title {
+  font-size: 0.95rem;
+  font-weight: 800;
+}
+
+.gis-subtitle {
+  font-size: 0.7rem;
+  color: #6b6156;
+}
+
+.gis-header-actions,
+.gis-inline-actions,
+.gis-chip-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.gis-header-actions button,
+.gis-floating-actions button,
+.gis-chip-row button,
+.gis-inline-actions button,
+.gis-layer-top button {
+  border: 1px solid rgba(65, 49, 24, 0.12);
+  background: rgba(255, 254, 250, 0.86);
+  color: #433422;
+  border-radius: 12px;
+  min-height: 34px;
+  padding: 0 11px;
+  font-size: 0.68rem;
+  font-weight: 700;
+}
+
+.gis-map-frame {
+  position: relative;
+  height: 100dvh;
+}
+
+.gis-map-frame .leaflet-container {
+  width: 100%;
+  height: 100%;
+  background: #dde5d3;
+}
+
+.gis-layer-panel {
+  position: absolute;
+  z-index: 645;
+  top: calc(env(safe-area-inset-top) + 82px);
+  left: 14px;
+  right: 14px;
+  max-height: 44dvh;
+  overflow-y: auto;
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  border-radius: 18px;
+  border: 1px solid rgba(58, 44, 25, 0.12);
+  background: rgba(255, 251, 243, 0.88);
+  backdrop-filter: blur(16px);
+  box-shadow: 0 16px 38px rgba(70, 36, 3, 0.16);
+}
+
+.gis-layer-toggle,
+.gis-panel-card,
+.gis-legend-card,
+.gis-hero-card {
+  padding: 12px;
+  border-radius: 16px;
+  border: 1px solid rgba(69, 54, 29, 0.1);
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.gis-layer-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: start;
+}
+
+.gis-layer-top strong,
+.gis-section-title,
+.gis-hero-card h2 {
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.gis-layer-top p,
+.gis-summary-block li,
+.gis-panel-card li,
+.gis-hero-card p,
+.gis-nearby-item span,
+.gis-timeline-list span {
+  margin: 4px 0 0;
+  font-size: 0.66rem;
+  line-height: 1.45;
+  color: #746858;
+}
+
+.gis-layer-top button.is-active,
+.gis-chip-row button.is-active {
+  background: linear-gradient(120deg, #dff6b8, #8fd47c 72%, #5ca75e);
+  color: #14330f;
+}
+
+.gis-layer-toggle label {
+  display: grid;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.gis-layer-toggle label span {
+  font-size: 0.64rem;
+  color: #6b6258;
+}
+
+.gis-floating-actions {
+  position: absolute;
+  right: 14px;
+  bottom: calc(env(safe-area-inset-bottom) + 186px);
+  z-index: 640;
+  display: grid;
+  gap: 10px;
+}
+
+.gis-floating-actions button {
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border-radius: 14px;
+  box-shadow: 0 10px 24px rgba(57, 35, 4, 0.18);
+}
+
+.gis-status-pills {
+  position: absolute;
+  left: 14px;
+  bottom: calc(env(safe-area-inset-bottom) + 96px);
+  z-index: 635;
+  display: flex;
+  gap: 8px;
+}
+
+.gis-status-pills span,
+.gis-property-type,
+.gis-insight-score {
+  display: inline-flex;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(255, 250, 240, 0.82);
+  border: 1px solid rgba(63, 48, 21, 0.11);
+  font-size: 0.66rem;
+  font-weight: 700;
+  color: #5a430b;
+}
+
+.gis-user-pulse {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  background: radial-gradient(circle at 30% 30%, #a8f0ff, #2fa6dc 72%);
+  box-shadow: 0 0 0 7px rgba(47, 166, 220, 0.16), 0 10px 20px rgba(9, 45, 61, 0.28);
+}
+
+.gis-sheet-content {
+  display: grid;
+  gap: 12px;
+}
+
+.gis-hero-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  gap: 10px;
+  background: linear-gradient(135deg, rgba(255, 246, 220, 0.95), rgba(255, 255, 255, 0.82));
+}
+
+.gis-hero-card h2 {
+  margin: 6px 0 4px;
+}
+
+.gis-hero-card strong {
+  font-size: 0.8rem;
+  color: #6c4600;
+}
+
+.gis-legend-list,
+.gis-risk-list,
+.gis-nearby-list,
+.gis-timeline-list {
+  display: grid;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.gis-legend-item,
+.gis-nearby-item,
+.gis-risk-item,
+.gis-compare-row > div,
+.gis-timeline-list > div {
+  display: grid;
+  gap: 4px;
+  padding: 8px;
+  border-radius: 12px;
+  border: 1px solid rgba(69, 53, 29, 0.08);
+  background: rgba(255, 253, 247, 0.92);
+}
+
+.gis-legend-item {
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 8px;
+}
+
+.gis-legend-item span {
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+}
+
+.gis-nearby-item {
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+}
+
+.gis-nearby-item strong,
+.gis-compare-row strong,
+.gis-timeline-list strong {
+  font-size: 0.7rem;
+}
+
+.gis-nearby-item em,
+.gis-compare-row em {
+  font-style: normal;
+  font-size: 0.64rem;
+  color: #796954;
+}
+
+.gis-insight-list,
+.gis-summary-block ul {
+  margin: 8px 0 0;
+  padding-left: 16px;
+  display: grid;
+  gap: 6px;
+}
+
+.gis-risk-item {
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+}
+
+.gis-risk-item span,
+.gis-risk-item strong {
+  font-size: 0.66rem;
+}
+
+.gis-risk-bar {
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(66, 53, 30, 0.12);
+  overflow: hidden;
+}
+
+.gis-risk-bar i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #91cf7e, #f1bf2d 68%, #d45d47);
+}
+
+.gis-summary-block strong,
+.gis-summary-reco,
+.gis-compare-row span {
+  font-size: 0.68rem;
+  font-weight: 800;
+}
+
+.gis-summary-reco {
+  padding: 10px;
+  border-radius: 12px;
+  background: linear-gradient(120deg, rgba(255, 226, 143, 0.58), rgba(255, 252, 247, 0.88));
+  color: #624100;
+}
+
+.gis-compare-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 8px;
+}
+
+@media (min-width: 768px) {
+  .gis-header,
+  .gis-layer-panel,
+  .gis-status-pills {
+    left: max(14px, calc((100vw - 520px) / 2));
+    right: max(14px, calc((100vw - 520px) / 2));
+  }
+
+  .gis-floating-actions {
+    right: max(14px, calc((100vw - 520px) / 2));
+  }
+}

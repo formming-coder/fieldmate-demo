@@ -1,12 +1,10 @@
-import React, { useEffect, useState } from 'react'
+import React from 'react'
 import Layout from '../components/Layout'
-import { fetchProperties } from '../api/mockApi'
-import { Property } from '../types'
+import { usePropertiesQuery } from '../hooks/useBackendQueries'
 import s from './Dashboard.module.css'
 
 export default function PropertyAlbum(){
-  const [items, setItems] = useState<Property[]>([])
-  useEffect(() => { fetchProperties().then(setItems) }, [])
+  const { data: items = [] } = usePropertiesQuery()
 
   return (
     <Layout title="อัลบั้มทรัพย์สิน">

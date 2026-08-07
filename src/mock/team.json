@@ -1,5 +1,5 @@
 [
-  {"id":"team-001","name":"Jane Doe","latitude":13.7378,"longitude":100.5230,"avatar":"https://placehold.co/64x64?text=J"},
-  {"id":"team-002","name":"Somchai","latitude":13.7420,"longitude":100.5300,"avatar":"https://placehold.co/64x64?text=S"},
-  {"id":"team-003","name":"Araya","latitude":13.7500,"longitude":100.5200,"avatar":"https://placehold.co/64x64?text=A"}
+  {"id":"team-001","name":"นีนา รัตนกุล","latitude":13.7378,"longitude":100.5230,"avatar":"https://ui-avatars.com/api/?name=%E0%B8%99%E0%B8%B5%E0%B8%99%E0%B8%B2+%E0%B8%A3%E0%B8%B1%E0%B8%95%E0%B8%99%E0%B8%81%E0%B8%B8%E0%B8%A5&background=ffd400&color=1f2937"},
+  {"id":"team-002","name":"สมชาย ประดิษฐ์","latitude":13.7420,"longitude":100.5300,"avatar":"https://ui-avatars.com/api/?name=%E0%B8%AA%E0%B8%A1%E0%B8%8A%E0%B8%B2%E0%B8%A2+%E0%B8%9B%E0%B8%A3%E0%B8%B0%E0%B8%94%E0%B8%B4%E0%B8%A9%E0%B8%90%E0%B9%8C&background=ffd400&color=1f2937"},
+  {"id":"team-003","name":"อารยา ศรีวงศ์","latitude":13.7500,"longitude":100.5200,"avatar":"https://ui-avatars.com/api/?name=%E0%B8%AD%E0%B8%B2%E0%B8%A3%E0%B8%A2%E0%B8%B2+%E0%B8%A8%E0%B8%A3%E0%B8%B5%E0%B8%A7%E0%B8%87%E0%B8%A8%E0%B9%8C&background=ffd400&color=1f2937"}
 ]

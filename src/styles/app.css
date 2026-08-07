@@ -1,0 +1,217 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+:root {
+  color-scheme: light;
+  font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --primary: #FFD400;
+  --secondary: #2F3542;
+  --background: #F8F9FB;
+  --surface: #FFFFFF;
+  --success: #27AE60;
+  --warning: #F39C12;
+  --danger: #E74C3C;
+  --text: #111827;
+  --muted: #6B7280;
+  --border: #E5E7EB;
+  --shadow-soft: 0 10px 30px rgba(17, 24, 39, 0.08);
+  --shadow-elevated: 0 18px 44px rgba(17, 24, 39, 0.12);
+  --radius-small: 12px;
+  --radius-medium: 20px;
+  --radius-large: 28px;
+  --radius-extra: 36px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-7: 32px;
+  --space-8: 40px;
+}
+
+* { box-sizing: border-box; }
+html, body, #root { margin: 0; min-height: 100%; }
+body {
+  background: var(--background);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  overscroll-behavior-y: none;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+a, button, input, textarea, select { font: inherit; }
+button { cursor: pointer; }
+
+.material-symbols-rounded {
+  font-variation-settings: 'FILL' 1, 'wght' 600, 'GRAD' 0, 'opsz' 24;
+  font-size: 22px;
+  line-height: 1;
+}
+
+button,
+[role='button'],
+input,
+select,
+textarea {
+  min-height: 48px;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(255,212,0,0.04), transparent 24%);
+}
+
+.app-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--background);
+}
+
+.mobile-shell {
+  max-width: 430px;
+  margin: 0 auto;
+  min-height: 100vh;
+  position: relative;
+  background: var(--background);
+  box-shadow: var(--shadow-elevated);
+  overflow: clip;
+}
+
+.mobile-shell-immersive {
+  background: #dfe7ef;
+}
+
+.page-shell {
+  padding: var(--space-4);
+  padding-bottom: calc(110px + env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-height: calc(100vh - 56px);
+}
+
+.page-shell-immersive {
+  padding: 0;
+  padding-bottom: 110px;
+  gap: 0;
+  min-height: 100vh;
+}
+
+.container-safe {
+  width: 100%;
+  max-width: 430px;
+  margin: 0 auto;
+}
+
+.surface-card {
+  background: var(--surface);
+  border: 1px solid rgba(229, 231, 235, 0.8);
+  border-radius: var(--radius-medium);
+  box-shadow: var(--shadow-soft);
+  backdrop-filter: blur(20px);
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.btn-ripple {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.55);
+  left: calc(50% - 7px);
+  top: calc(50% - 7px);
+  pointer-events: none;
+}
+
+.btn-loading-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  border: 2px solid rgba(255, 255, 255, 0.55);
+  border-top-color: rgba(255, 255, 255, 0.95);
+  animation: btn-spin 0.7s linear infinite;
+  position: absolute;
+  left: 12px;
+  top: calc(50% - 6px);
+}
+
+.global-banner-stack {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(430px, calc(100vw - 20px));
+  top: calc(env(safe-area-inset-top) + 8px);
+  z-index: 100;
+  display: grid;
+  gap: 8px;
+}
+
+.global-banner {
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  box-shadow: 0 10px 26px rgba(17, 24, 39, 0.14);
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(16px);
+  padding: 10px 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
+.global-banner strong {
+  font-size: 13px;
+}
+
+.global-banner span {
+  display: block;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.global-banner button {
+  border: 0;
+  min-height: 38px;
+  border-radius: 999px;
+  padding: 0 12px;
+  font-size: 12px;
+  font-weight: 700;
+  background: linear-gradient(125deg, #ffe089 0%, #ffb400 65%);
+  color: #3f2a00;
+}
+
+@keyframes btn-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.global-skeleton-line {
+  background: linear-gradient(100deg, rgba(228, 232, 239, 0.9), rgba(245, 247, 250, 1), rgba(228, 232, 239, 0.9));
+  background-size: 220% 100%;
+  animation: global-shimmer 1.15s linear infinite;
+}
+
+@keyframes global-shimmer {
+  from {
+    background-position-x: 200%;
+  }
+  to {
+    background-position-x: -200%;
+  }
+}

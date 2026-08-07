@@ -1,0 +1,20 @@
+name = "fieldmate-api"
+main = "src/index.ts"
+compatibility_date = "2026-08-07"
+workers_dev = true
+
+[[d1_databases]]
+binding = "DB"
+database_name = "fieldmate"
+database_id = "replace-with-d1-id"
+
+[[r2_buckets]]
+binding = "ASSETS"
+bucket_name = "fieldmate-assets"
+
+[vars]
+ENVIRONMENT = "development"
+ENTRA_TENANT_ID = "common"
+ENTRA_CLIENT_ID = ""
+ENTRA_CLIENT_SECRET = ""
+ENTRA_REDIRECT_URI = "http://localhost:5173/auth/callback"

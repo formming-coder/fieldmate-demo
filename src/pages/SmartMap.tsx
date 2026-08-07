@@ -1,212 +1,313 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import React, { Suspense, lazy, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
-import { fetchProperties, subscribeProperties, saveProperty } from '../api/mockApi'
+import { usePropertiesQuery } from '../hooks/useBackendQueries'
+import { usePullToRefresh } from '../hooks/usePullToRefresh'
 import { Property } from '../types'
-import teamMock from '../mock/team.json'
-import { MapContainer, TileLayer, Marker, Popup, useMapEvents, Circle } from 'react-leaflet'
+import { Circle, MapContainer, Marker, TileLayer, useMap, useMapEvents } from 'react-leaflet'
 import L from 'leaflet'
+import MapHeader from '../components/map/MapHeader'
+import FloatingSearch from '../components/map/FloatingSearch'
+import FilterChips, { SmartFilter } from '../components/map/FilterChips'
+import MapFAB from '../components/map/MapFAB'
+import BottomSheet from '../components/map/BottomSheet'
+import { createClusterIcon } from '../components/map/Cluster'
+import { createPropertyMarkerIcon } from '../components/map/Marker'
 import 'leaflet/dist/leaflet.css'
-import './smartmap.css'
+import '../styles/smartmap.css'
+
+const PropertyGallery = lazy(() => import('../components/map/PropertyGallery'))
+const PropertyInfo = lazy(() => import('../components/map/PropertyInfo'))
+const NearbyCarousel = lazy(() => import('../components/map/NearbyCarousel'))
+const AITips = lazy(() => import('../components/map/AITips'))
 
 const DEFAULT_CENTER: [number, number] = [13.736717, 100.523186]
+const SATELLITE_TILES = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
+const STREET_TILES = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
 
-type FilterState = {
-  propertyType: string
-  surveyDate: string
-  priceRange: string
-  surveyOfficer: string
-  onlyMine: boolean
-  team: boolean
-  radius: number
-  sort: 'newest' | 'oldest'
+type ClusterNode = {
+  lat: number
+  lon: number
+  items: Property[]
 }
 
-function LocationMarker({ onLocate }: { onLocate?: (lat: number, lon: number) => void }) {
-  const [pos, setPos] = useState<[number, number] | null>(null)
+type NearbyItem = {
+  property: Property
+  distanceKm: number
+  similarity: number
+}
+
+function UserPulseMarker({ onLocate }: { onLocate: (lat: number, lon: number) => void }) {
+  const [position, setPosition] = useState<[number, number] | null>(null)
+
   useMapEvents({
-    locationfound(e) { setPos([e.latlng.lat, e.latlng.lng]); onLocate?.(e.latlng.lat, e.latlng.lng) },
+    click(event) {
+      onLocate(event.latlng.lat, event.latlng.lng)
+    },
+    locationfound(event) {
+      const next: [number, number] = [event.latlng.lat, event.latlng.lng]
+      setPosition(next)
+      onLocate(event.latlng.lat, event.latlng.lng)
+    },
   })
-  return pos ? <Marker position={pos} icon={L.divIcon({ className: 'user-marker' })}><Popup>You are here</Popup></Marker> : null
+
+  return position ? <Marker position={position} icon={L.divIcon({ className: 'smart-user-pulse' })} /> : null
+}
+
+function MapFlyTo({ center, zoom }: { center: [number, number] | null; zoom: number }) {
+  const map = useMap()
+
+  useEffect(() => {
+    if (!center) return
+    map.flyTo(center, zoom, { duration: 0.75 })
+  }, [center, zoom, map])
+
+  return null
+}
+
+function statusLabel(status: string) {
+  if (status === 'verified') return 'Verified'
+  if (status === 'pending') return 'Pending'
+  if (status === 'historical') return 'Historical'
+  return 'Inspected'
+}
+
+function confidenceFromProperty(property: Property) {
+  const base = Math.round((property.marketPrice % 10000000) / 180000)
+  return Math.min(97, Math.max(72, base))
 }
 
 export default function SmartMap() {
   const navigate = useNavigate()
-  const [propsList, setPropsList] = useState<Property[]>([])
-  const [center, setCenter] = useState<[number, number] | null>(null)
-  const [selected, setSelected] = useState<Property | null>(null)
-  const fileRef = useRef<HTMLInputElement | null>(null)
+  const { data: properties = [], isLoading: loading, refetch } = usePropertiesQuery()
+  const [center, setCenter] = useState<[number, number] | null>(DEFAULT_CENTER)
+  const [zoom, setZoom] = useState(13)
+  const [selectedId, setSelectedId] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
-  const [filters, setFilters] = useState<FilterState>({
-    propertyType: 'All',
-    surveyDate: 'All',
-    priceRange: 'All',
-    surveyOfficer: 'All',
-    onlyMine: false,
-    team: true,
-    radius: 3,
-    sort: 'newest',
-  })
-
-  function cluster(list: Property[]) {
-    const map = new Map<string, { lat: number; lon: number; count: number; items: Property[] }>()
-    list.forEach((p) => {
-      const key = `${p.latitude.toFixed(3)}|${p.longitude.toFixed(3)}`
-      const entry = map.get(key)
-      if (entry) {
-        entry.count += 1
-        entry.items.push(p)
-      } else {
-        map.set(key, { lat: p.latitude, lon: p.longitude, count: 1, items: [p] })
-      }
-    })
-    return Array.from(map.values())
-  }
-
-  function typeColor(t?: string) {
-    if (!t) return '#f59e0b'
-    const lower = t.toLowerCase()
-    if (lower.includes('land')) return '#16a34a'
-    if (lower.includes('house')) return '#3b82f6'
-    if (lower.includes('twin') || lower.includes('semi')) return '#8b5cf6'
-    if (lower.includes('town')) return '#f59e0b'
-    if (lower.includes('commercial')) return '#ef4444'
-    if (lower.includes('condo') || lower.includes('condominium')) return '#eab308'
-    return '#f59e0b'
-  }
+  const [activeFilter, setActiveFilter] = useState<SmartFilter>('all')
+  const [satelliteOn, setSatelliteOn] = useState(false)
+  const [showLayers, setShowLayers] = useState(false)
+  const [showAITips, setShowAITips] = useState(true)
+  const [isOffline, setIsOffline] = useState(() => (typeof navigator !== 'undefined' ? !navigator.onLine : false))
 
   useEffect(() => {
-    let mounted = true
-    fetchProperties().then((list) => { if (mounted) setPropsList(list) })
-    const unsub = subscribeProperties((p) => setPropsList((prev) => [p, ...prev]))
-    return () => { mounted = false; unsub() }
+    const onNetwork = () => {
+      setIsOffline(!navigator.onLine)
+    }
+
+    window.addEventListener('online', onNetwork)
+    window.addEventListener('offline', onNetwork)
+
+    return () => {
+      window.removeEventListener('online', onNetwork)
+      window.removeEventListener('offline', onNetwork)
+    }
   }, [])
 
-  const onLocate = (lat: number, lon: number) => { if (!center) setCenter([lat, lon]) }
-
-  const onFiles = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files
-    if (!files || files.length === 0) return
-    const urls = Array.from(files).map((f) => URL.createObjectURL(f))
-    let lat = 0
-    let lon = 0
-    if (navigator.geolocation) {
-      try {
-        const pos = await new Promise<GeolocationPosition>((res, rej) => navigator.geolocation.getCurrentPosition(res, rej))
-        lat = pos.coords.latitude
-        lon = pos.coords.longitude
-      } catch (error) {
-        // ignore
-      }
-    }
-    await saveProperty({ owner: 'Field Officer', province: 'Unknown', latitude: lat, longitude: lon, marketPrice: 0, appraisalPrice: 0, status: 'inspected', lastInspection: new Date().toISOString(), images: urls })
-    if (fileRef.current) fileRef.current.value = ''
+  const refreshProperties = async () => {
+    await refetch()
   }
+
+  const pullToRefresh = usePullToRefresh(refreshProperties)
 
   const filteredProperties = useMemo(() => {
     const query = searchQuery.trim().toLowerCase()
-    return propsList
-      .filter((item) => {
-        const matchesType = filters.propertyType === 'All' || item.type?.toLowerCase().includes(filters.propertyType.toLowerCase())
-        const matchesOfficer = filters.surveyOfficer === 'All' || item.owner.toLowerCase().includes(filters.surveyOfficer.toLowerCase())
-        const matchesPrice = filters.priceRange === 'All' || (filters.priceRange === 'Under 5M' ? item.marketPrice < 5000000 : item.marketPrice >= 5000000)
-        const matchesQuery = !query || [item.owner, item.province, item.type || '', item.marketPrice.toString()].join(' ').toLowerCase().includes(query)
-        return matchesType && matchesOfficer && matchesPrice && matchesQuery
-      })
-      .sort((a, b) => filters.sort === 'newest' ? new Date(b.lastInspection).getTime() - new Date(a.lastInspection).getTime() : new Date(a.lastInspection).getTime() - new Date(b.lastInspection).getTime())
-  }, [propsList, searchQuery, filters])
 
-  const clusters = cluster(filteredProperties)
+    return properties
+      .filter((item) => {
+        const type = (item.type || '').toLowerCase()
+        const matchesQuery = !query || [item.owner, item.province, item.type || '', item.marketPrice.toString()].join(' ').toLowerCase().includes(query)
+
+        const matchesFilter = (() => {
+          if (activeFilter === 'all') return true
+          if (activeFilter === 'house') return type.includes('house')
+          if (activeFilter === 'townhome') return type.includes('town') || type.includes('semi') || type.includes('twin')
+          if (activeFilter === 'condo') return type.includes('condo')
+          if (activeFilter === 'land') return type.includes('land')
+          if (activeFilter === 'commercial') return type.includes('commercial')
+          if (activeFilter === 'latest') {
+            const inspectedAt = new Date(item.lastInspection).getTime()
+            return Date.now() - inspectedAt < 1000 * 60 * 60 * 24 * 30
+          }
+          if (activeFilter === 'nearby') {
+            if (!center) return true
+            return Math.abs(item.latitude - center[0]) < 0.04 && Math.abs(item.longitude - center[1]) < 0.04
+          }
+          return true
+        })()
+
+        return matchesQuery && matchesFilter
+      })
+      .sort((a, b) => new Date(b.lastInspection).getTime() - new Date(a.lastInspection).getTime())
+  }, [activeFilter, center, properties, searchQuery])
+
+  const clusters = useMemo<ClusterNode[]>(() => {
+    const grouped = new Map<string, ClusterNode>()
+
+    filteredProperties.forEach((property) => {
+      const key = `${property.latitude.toFixed(3)}|${property.longitude.toFixed(3)}`
+      const existing = grouped.get(key)
+      if (existing) {
+        existing.items.push(property)
+      } else {
+        grouped.set(key, { lat: property.latitude, lon: property.longitude, items: [property] })
+      }
+    })
+
+    return Array.from(grouped.values())
+  }, [filteredProperties])
+
+  const selectedProperty = useMemo(
+    () => properties.find((item) => item.id === selectedId) || null,
+    [properties, selectedId]
+  )
+
+  const nearbyProperties = useMemo<NearbyItem[]>(() => {
+    if (!selectedProperty) return []
+
+    return properties
+      .filter((item) => item.id !== selectedProperty.id)
+      .map((item, index) => ({
+        property: item,
+        distanceKm: Math.max(0.6, Math.abs(item.latitude - selectedProperty.latitude) * 90),
+        similarity: Math.min(98, Math.max(72, 92 - index * 4)),
+      }))
+      .slice(0, 10)
+  }, [properties, selectedProperty])
+
+  const selectedConfidence = selectedProperty ? confidenceFromProperty(selectedProperty) : 0
+  const selectedDistance = nearbyProperties[0]?.distanceKm || 0.9
+
+  const onLocate = (lat: number, lon: number) => {
+    setCenter([lat, lon])
+    setZoom(14)
+  }
+
+  const requestCurrentLocation = () => {
+    navigator.geolocation?.getCurrentPosition((position) => {
+      setCenter([position.coords.latitude, position.coords.longitude])
+      setZoom(15)
+    })
+  }
+
+  const centerOnProperty = (property: Property) => {
+    setSelectedId(property.id)
+    setCenter([property.latitude, property.longitude])
+    setZoom(15)
+  }
+
+  const todayLabel = useMemo(
+    () => new Intl.DateTimeFormat('th-TH', { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date()),
+    []
+  )
 
   return (
-    <Layout title="แผนที่อัจฉริยะ">
-      <div className="map-shell">
-        <div className="floating-search">
-          <input placeholder="ค้นหาตำบล จังหวัด ราคา หรือเจ้าหน้าที่" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
-          <div className="prop-count">{filteredProperties.length} จุด</div>
+    <Layout title="แผนที่อัจฉริยะ" immersive hideAssistant>
+      <div className="smart-map-page" {...pullToRefresh.bind}>
+        <MapHeader todayLabel={todayLabel} offline={isOffline} />
+
+        <div className={`smart-pull-indicator ${pullToRefresh.isRefreshing ? 'visible' : ''}`} style={{ height: `${pullToRefresh.pullDistance}px` }}>
+          {pullToRefresh.isRefreshing ? 'Refreshing...' : 'Pull to refresh'}
         </div>
 
-        <div className="summary-card">
-          <div>
-            <div className="summary-label">ความครอบคลุมสำรวจสด</div>
-            <div className="summary-title">วันนี้: <span>18</span> จุดบันทึกใกล้เคียง</div>
-          </div>
-          <div className="summary-badges">
-            <button className="pill-button">3 กม.</button>
-            <button className="pill-button active">5 กม.</button>
-            <button className="pill-button">10 กม.</button>
-          </div>
-        </div>
+        <div className="smart-map-frame">
+          <MapContainer center={center || DEFAULT_CENTER} zoom={zoom} zoomControl={false} style={{ height: '100%', width: '100%' }}>
+            <TileLayer attribution={satelliteOn ? '&copy; Esri' : '&copy; OpenStreetMap contributors'} url={satelliteOn ? SATELLITE_TILES : STREET_TILES} />
+            <MapFlyTo center={center} zoom={zoom} />
+            <UserPulseMarker onLocate={onLocate} />
+            <Circle center={center || DEFAULT_CENTER} radius={1200} pathOptions={{ color: '#FFC107', fillColor: '#FFE28A', fillOpacity: 0.14 }} />
 
-        <div className="filter-strip">
-          <select value={filters.propertyType} onChange={(e) => setFilters((prev) => ({ ...prev, propertyType: e.target.value }))}>
-            <option value="All">ประเภททรัพย์สิน</option>
-            <option value="Land">ที่ดินว่าง</option>
-            <option value="House">บ้านเดี่ยว</option>
-            <option value="Twin">ทาวน์เฮาส์คู่</option>
-            <option value="Town">ทาวน์เฮาส์</option>
-            <option value="Commercial">พาณิชย์</option>
-            <option value="Condo">คอนโดมิเนียม</option>
-          </select>
-          <select value={filters.priceRange} onChange={(e) => setFilters((prev) => ({ ...prev, priceRange: e.target.value }))}>
-            <option value="All">ช่วงราคา</option>
-            <option value="Under 5M">ต่ำกว่า 5 ล้าน</option>
-            <option value="5M+">5 ล้านขึ้นไป</option>
-          </select>
-          <select value={filters.surveyOfficer} onChange={(e) => setFilters((prev) => ({ ...prev, surveyOfficer: e.target.value }))}>
-            <option value="All">เจ้าหน้าที่สำรวจ</option>
-            <option value="Field Officer">เจ้าหน้าที่ภาคสนาม</option>
-            <option value="Nina">นีนา</option>
-            <option value="Korn">กร</option>
-          </select>
-          <select value={filters.sort} onChange={(e) => setFilters((prev) => ({ ...prev, sort: e.target.value as FilterState['sort'] }))}>
-            <option value="newest">ล่าสุด</option>
-            <option value="oldest">เก่าสุด</option>
-          </select>
-        </div>
-
-        <div className="map-frame">
-          <MapContainer center={center || DEFAULT_CENTER} zoom={13} style={{ height: '100%', width: '100%' }}>
-            <TileLayer attribution='&copy; OpenStreetMap contributors' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-            <LocationMarker onLocate={onLocate} />
-            <Circle center={center || DEFAULT_CENTER} radius={filters.radius * 1000} pathOptions={{ color: '#f59e0b', fillColor: '#fde68a', fillOpacity: 0.12 }} />
-            {clusters.map((c, idx) => {
-              if (c.count > 1) {
-                const clusterIcon = L.divIcon({ className: 'cluster-pin', html: `<div class="cluster-count">${c.count}</div>` })
-                return <Marker key={`cluster-${idx}`} position={[c.lat, c.lon]} icon={clusterIcon} eventHandlers={{ click: () => setSelected(c.items[0]) }} />
+            {clusters.map((node, index) => {
+              if (node.items.length > 1) {
+                return (
+                  <Marker
+                    key={`cluster-${index}`}
+                    position={[node.lat, node.lon]}
+                    icon={createClusterIcon(node.items.length)}
+                    eventHandlers={{
+                      click: () => {
+                        setCenter([node.lat, node.lon])
+                        setZoom((current) => Math.min(current + 1, 18))
+                        setSelectedId(node.items[0].id)
+                      },
+                    }}
+                  />
+                )
               }
-              const p = c.items[0]
-              const color = typeColor(p.type)
-              const propertyIcon = L.divIcon({ className: 'property-pin', html: `<div class="property-dot" style="background:${color}"></div>` })
-              return <Marker key={p.id} position={[p.latitude, p.longitude]} icon={propertyIcon} eventHandlers={{ click: () => setSelected(p) }} />
+
+              const property = node.items[0]
+              const selected = selectedId === property.id
+              return (
+                <Marker
+                  key={property.id}
+                  position={[property.latitude, property.longitude]}
+                  icon={createPropertyMarkerIcon(property, selected)}
+                  eventHandlers={{ click: () => centerOnProperty(property) }}
+                />
+              )
             })}
-            {filters.team ? teamMock.map((t) => <Marker key={t.id} position={[t.latitude, t.longitude]} icon={L.divIcon({ className: 'team-pin', html: `<img src="${t.avatar}" alt="team" />` })} />) : null}
           </MapContainer>
 
-          <input type="file" ref={fileRef} accept="image/*" multiple style={{ display: 'none' }} onChange={onFiles} />
-          <button className="fab-camera" onClick={() => fileRef.current?.click()} aria-label="ถ่ายภาพ">+</button>
-          <button className="fab-small fab-loc" title="ศูนย์กลางที่ฉันอยู่">📍</button>
-          <button className="fab-small fab-filter" title="ตัวกรองรัศมี">⚪</button>
+          <div className="smart-map-floating-top">
+            <FloatingSearch value={searchQuery} onChange={setSearchQuery} />
+            <FilterChips value={activeFilter} onChange={setActiveFilter} />
+          </div>
+
+          <div className="smart-map-fabs">
+            <MapFAB label="Current Location" icon="my_location" onClick={requestCurrentLocation} />
+            <MapFAB label="Compass" icon="explore" onClick={() => setZoom(13)} />
+            <MapFAB label="Layer" icon="layers" onClick={() => setShowLayers((current) => !current)} />
+            <MapFAB label="AI Suggest" icon="auto_awesome" onClick={() => setShowAITips((current) => !current)} />
+            <MapFAB label="GIS Intelligence" icon="public" onClick={() => navigate('/gis')} />
+            <MapFAB label="Route Planner" icon="route" onClick={() => navigate('/route-planner')} />
+          </div>
+
+          <div className={`smart-layer-panel ${showLayers ? 'open' : ''}`}>
+            <button type="button" className={!satelliteOn ? 'active' : ''} onClick={() => setSatelliteOn(false)}>Street</button>
+            <button type="button" className={satelliteOn ? 'active' : ''} onClick={() => setSatelliteOn(true)}>Satellite</button>
+          </div>
+
+          {showAITips && selectedProperty ? (
+            <Suspense fallback={null}>
+              <AITips confidence={selectedConfidence} />
+            </Suspense>
+          ) : null}
+
+          <div className="smart-map-meta-pills">
+            <span>{filteredProperties.length} results</span>
+            <span>{satelliteOn ? 'Satellite' : 'Street'}</span>
+            <button type="button" className="smart-map-gis-pill" onClick={() => navigate('/gis')}>GIS Intelligence</button>
+            <button type="button" className="smart-map-gis-pill" onClick={() => navigate('/route-planner')}>Route Planner</button>
+          </div>
         </div>
+
+        {!selectedProperty && !loading ? (
+          <button type="button" className="smart-open-camera" onClick={() => navigate('/camera')}>Open AI Camera</button>
+        ) : null}
       </div>
 
-      {selected && (
-        <div className="bottom-sheet">
-          <div className="sheet-handle" onClick={() => setSelected(null)} />
-          <div className="sheet-content">
-            <div className="sheet-image" style={{ backgroundImage: `url(${selected.images[0]})` }} />
-            <div className="sheet-body">
-              <div className="sheet-title">{selected.owner}</div>
-              <div className="sheet-meta">{selected.province} • {selected.type || 'Property'}</div>
-              <div className="sheet-meta">บันทึกเมื่อ {new Date(selected.lastInspection).toLocaleDateString('th-TH')}</div>
-            </div>
-          </div>
-          <div className="sheet-actions">
-            <button className="btn" onClick={() => navigate(`/property/${selected.id}`)}>เปิดรายละเอียด</button>
-            <button className="btn ghost" onClick={() => navigator.clipboard?.writeText(`${selected.latitude},${selected.longitude}`)}>คัดลอกพิกัด</button>
-          </div>
-        </div>
-      )}
+      <BottomSheet open={Boolean(selectedProperty)} onClose={() => setSelectedId(null)}>
+        {selectedProperty ? (
+          <>
+            <Suspense fallback={<div className="smart-gallery-skeleton" />}>
+              <PropertyGallery images={selectedProperty.images} title={selectedProperty.owner} />
+            </Suspense>
+
+            <Suspense fallback={<div className="smart-info-skeleton" />}>
+              <PropertyInfo
+                property={selectedProperty}
+                aiConfidence={selectedConfidence}
+                distanceKm={selectedDistance}
+                statusLabel={statusLabel(selectedProperty.status)}
+              />
+            </Suspense>
+
+            <Suspense fallback={null}>
+              <NearbyCarousel items={nearbyProperties} onSelect={centerOnProperty} />
+            </Suspense>
+          </>
+        ) : null}
+      </BottomSheet>
     </Layout>
   )
 }

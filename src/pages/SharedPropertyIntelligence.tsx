@@ -1,468 +1,468 @@
 import React, { useEffect, useMemo, useState } from 'react'
+import { motion } from 'framer-motion'
+import { useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
-import { fetchProperties } from '../api/mockApi'
 import { Property } from '../types'
-import styles from './SharedPropertyIntelligence.module.css'
+import { usePropertiesQuery } from '../hooks/useBackendQueries'
+import SharedPropertyCard, { SharedPropertyCardData } from '../components/shared-intelligence/SharedPropertyCard'
+import Timeline, { TimelineEvent } from '../components/shared-intelligence/Timeline'
+import VersionHistory, { VersionItem } from '../components/shared-intelligence/VersionHistory'
+import DuplicateCard from '../components/shared-intelligence/DuplicateCard'
+import MiniMap from '../components/shared-intelligence/MiniMap'
+import PropertyGallery from '../components/shared-intelligence/PropertyGallery'
+import OfficerCard from '../components/shared-intelligence/OfficerCard'
+import AISummaryCard from '../components/shared-intelligence/AISummaryCard'
+import CopyActionSheet from '../components/shared-intelligence/CopyActionSheet'
+import BottomSheet from '../components/shared-intelligence/BottomSheet'
+import '../styles/shared-intelligence.css'
 
-type CommentItem = {
-  id: string
-  officer: string
-  text: string
-  likes: number
-  resolved: boolean
-}
-
-type KnowledgeProperty = Property & {
-  district: string
-  road: string
-  village: string
-  condominium: string
-  phoneNumbers: string[]
-  captureDate: string
-  capturedBy: string
-  photoCount: number
-  updateCount: number
-  knowledgeScore: number
-  distanceKm: number
-  address: string
+type SharedProperty = Property & SharedPropertyCardData & {
+  propertyName: string
   projectName: string
-  landArea: string
-  usableArea: string
-  inspectionDate: string
-  remarks: string
-  statusLabel: string
-  history: Array<{ officer: string; date: string; action: string }>
-  comments: CommentItem[]
+  district: string
+  subdistrict: string
+  road: string
+  telephone: string
+  ocrText: string
+  note: string
+  versionHistory: VersionItem[]
+  timeline: TimelineEvent[]
+  nearby: Array<{ id: string; label: string; distance: string; price: number }>
+  duplicateCandidate: { similarity: number; officer: string; captureDate: string; withinMeters: number } | null
+  aiSummary: {
+    ocrSummary: string
+    marketInsight: string
+    comparable: string
+    risk: string
+  }
 }
 
-const filterOptions = [
-  'ใกล้ฉัน',
-  'บันทึกวันนี้',
-  'บันทึกสัปดาห์นี้',
-  'ที่ดินว่าง',
-  'บ้านเดี่ยว',
-  'ทาวน์เฮาส์คู่',
-  'ทาวน์เฮาส์',
-  'อาคารพาณิชย์',
-  'คอนโดมิเนียม',
+type FilterKey = 'all' | 'nearby' | 'today' | 'week' | 'house' | 'semi' | 'townhome' | 'commercial' | 'condo' | 'land'
+
+const FILTERS: Array<{ key: FilterKey; label: string }> = [
+  { key: 'all', label: 'ทั้งหมด' },
+  { key: 'nearby', label: 'ใกล้ฉัน' },
+  { key: 'today', label: 'วันนี้' },
+  { key: 'week', label: '7 วัน' },
+  { key: 'house', label: 'บ้านเดี่ยว' },
+  { key: 'semi', label: 'บ้านแฝด' },
+  { key: 'townhome', label: 'ทาวน์โฮม' },
+  { key: 'commercial', label: 'อาคารพาณิชย์' },
+  { key: 'condo', label: 'คอนโด' },
+  { key: 'land', label: 'ที่ดิน' },
 ]
 
-const districtPool = ['Suan Luang', 'Ratchada', 'Phra Khanong', 'Siam', 'Bangna']
-const roadPool = ['Rama 9', 'Sukhumvit', 'Phetkasem', 'Silom', 'Chaeng Watthana']
-const villagePool = ['Banmai', 'Nawamin', 'Samyan', 'Lumpini', 'Chula']
-const condominiumPool = ['The Crest', 'Avenue 88', 'Riverline', 'Harbor Point', 'Lumen']
-const officerPool = ['Nina', 'Korn', 'Mali', 'Pong', 'Aom']
-const projectPool = ['River Crest', 'Harbor View', 'North Point', 'Peak Square', 'Crown Residence']
-const remarksPool = [
-  'หน้าตาอาคารดีและสถานะกฎหมายชัดเจน',
-  'ต้องเข้าตรวจไซต์ใหม่เพื่อประเมินสภาพรั้ว',
-  'มีมูลค่าการนำกลับมาใช้กับทรัพย์สินใกล้เคียงสูง',
-  'มีศักยภาพปรับปรุงและเข้าถึงเส้นทางได้รวดเร็ว',
-]
+const CACHE_KEY = 'fieldmate:shared-intelligence:cache'
+const UPDATE_QUEUE_KEY = 'fieldmate:shared-intelligence:queue'
+const districts = ['Phra Khanong', 'Bang Na', 'Suan Luang', 'Huai Khwang', 'Pathum Wan']
+const subdistricts = ['Bang Chak', 'Udom Suk', 'On Nut', 'Rama 9', 'Lumphini']
+const roads = ['Sukhumvit', 'Bangna-Trad', 'Rama 9', 'Phetchaburi', 'Silom']
+const projects = ['Crown Residence', 'Harbor Crest', 'Urban Field', 'Amber Terrace', 'Luma Heights']
+const officers = ['Nina Rattanakul', 'Korn Sitthipong', 'Mali Chaturon', 'Pong Kiet', 'Aom Darin']
 
-function formatCurrency(value: number) {
-  return `THB ${value.toLocaleString()}`
-}
-
-function formatDate(value: string) {
-  return new Date(value).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+function formatDateTime(value: string) {
+  const date = new Date(value)
+  return {
+    date: date.toLocaleDateString('th-TH', { day: '2-digit', month: 'short', year: 'numeric' }),
+    time: date.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }),
+  }
 }
 
 function isToday(value: string) {
-  const now = new Date()
-  const target = new Date(value)
-  return target.toDateString() === now.toDateString()
+  return new Date(value).toDateString() === new Date().toDateString()
 }
 
-function isThisWeek(value: string) {
-  const now = new Date()
-  const target = new Date(value)
-  const diff = now.getTime() - target.getTime()
+function isWithinWeek(value: string) {
+  const diff = Date.now() - new Date(value).getTime()
   return diff >= 0 && diff <= 7 * 24 * 60 * 60 * 1000
 }
 
-function buildKnowledgeProperty(property: Property, index: number): KnowledgeProperty {
-  const captureDate = new Date(property.lastInspection)
-  const district = districtPool[index % districtPool.length]
-  const road = roadPool[index % roadPool.length]
-  const village = villagePool[index % villagePool.length]
-  const condominium = condominiumPool[index % condominiumPool.length]
-  const capturedBy = officerPool[index % officerPool.length]
-  const projectName = projectPool[index % projectPool.length]
-  const type = property.type || 'บ้านเดี่ยว'
+function mapType(type?: string) {
+  const lower = (type || '').toLowerCase()
+  if (lower.includes('semi') || lower.includes('twin')) return 'บ้านแฝด'
+  if (lower.includes('town')) return 'ทาวน์โฮม'
+  if (lower.includes('commercial')) return 'อาคารพาณิชย์'
+  if (lower.includes('condo')) return 'คอนโด'
+  if (lower.includes('land')) return 'ที่ดิน'
+  return 'บ้านเดี่ยว'
+}
+
+function writeCache(properties: SharedProperty[]) {
+  try {
+    localStorage.setItem(CACHE_KEY, JSON.stringify(properties))
+  } catch {
+    // ignore caching errors
+  }
+}
+
+function readCache() {
+  try {
+    const raw = localStorage.getItem(CACHE_KEY)
+    return raw ? (JSON.parse(raw) as SharedProperty[]) : []
+  } catch {
+    return []
+  }
+}
+
+function readQueue() {
+  try {
+    const raw = localStorage.getItem(UPDATE_QUEUE_KEY)
+    return raw ? (JSON.parse(raw) as string[]) : []
+  } catch {
+    return []
+  }
+}
+
+function writeQueue(queue: string[]) {
+  try {
+    localStorage.setItem(UPDATE_QUEUE_KEY, JSON.stringify(queue))
+  } catch {
+    // ignore queue errors
+  }
+}
+
+function enrichProperty(property: Property, index: number, all: Property[]): SharedProperty {
+  const district = districts[index % districts.length]
+  const subdistrict = subdistricts[index % subdistricts.length]
+  const road = roads[index % roads.length]
+  const projectName = projects[index % projects.length]
+  const officer = officers[index % officers.length]
+  const propertyType = mapType(property.type)
+  const dateTime = formatDateTime(property.lastInspection)
+  const distanceKm = Number((0.4 + index * 0.7).toFixed(1))
+  const nearby = all
+    .filter((item) => item.id !== property.id)
+    .slice(0, 4)
+    .map((item, nearbyIndex) => ({
+      id: item.id,
+      label: `${projects[(index + nearbyIndex) % projects.length]} ${nearbyIndex + 1}`,
+      distance: `${(0.7 + nearbyIndex * 0.8).toFixed(1)} km`,
+      price: item.marketPrice,
+    }))
 
   return {
     ...property,
-    district,
-    road,
-    village,
-    condominium,
-    phoneNumbers: [`+66 ${80 + index} ${100000 + index}`.replace(/\s+/g, ' ')],
-    captureDate: property.lastInspection,
-    capturedBy,
-    photoCount: 6 + (index % 4),
-    updateCount: 1 + (index % 3),
-    knowledgeScore: 84 + (index % 6) * 2,
-    distanceKm: Number((1.2 + index * 0.6).toFixed(1)),
-    address: `${index + 1}/${index + 5}, ${road}, ${village}`,
+    propertyName: `${projectName} ${district}`,
     projectName,
-    landArea: `${10 + index} Rai / ${2 + (index % 3)} Ngan`,
-    usableArea: `${220 + index * 15} m²`,
-    inspectionDate: property.lastInspection,
-    remarks: remarksPool[index % remarksPool.length],
-    statusLabel: ['พร้อมใช้', 'ต้องตรวจสอบ', 'ขายแล้ว', 'ซ้ำ', 'ป้ายถูกถอด'][index % 5],
-    history: [
-      { officer: capturedBy, date: formatDate(property.lastInspection), action: 'เพิ่มภาพถ่ายใหม่' },
-      { officer: 'Mali', date: formatDate(new Date(property.lastInspection).toISOString()), action: 'อัปเดตราคา' },
-      { officer: 'Pong', date: formatDate(new Date(Date.now() - 86400000 * 2).toISOString()), action: 'อัปเดตพิกัด GPS' },
-      { officer: 'Nina', date: formatDate(new Date(Date.now() - 86400000 * 4).toISOString()), action: 'แก้ไขหมายเหตุ' },
+    district,
+    subdistrict,
+    road,
+    telephone: `08${index}${(772300 + index).toString().padStart(6, '0')}`,
+    ocrText: `For sale ${property.marketPrice.toLocaleString()} THB near ${road} contact ${officer}`,
+    note: 'Boundary fence captured clearly. OCR from signage synced successfully.',
+    image: property.images[0],
+    propertyType,
+    salePrice: property.marketPrice,
+    landArea: `${8 + index} Rai / ${1 + (index % 3)} Ngan`,
+    province: property.province,
+    captureDate: dateTime.date,
+    officer,
+    aiConfidence: Math.min(97, 78 + (index % 5) * 4),
+    gps: `${property.latitude.toFixed(4)}, ${property.longitude.toFixed(4)}`,
+    distance: `${distanceKm.toFixed(1)} km`,
+    bookmarked: index % 3 === 0,
+    versionHistory: [
+      { id: `${property.id}-v1`, officer, changed: 'Captured initial field photos and OCR text', when: `${dateTime.date} ${dateTime.time}` },
+      { id: `${property.id}-v2`, officer: officers[(index + 1) % officers.length], changed: 'Edited GPS notes and market price', when: `${dateTime.date} 14:10` },
+      { id: `${property.id}-v3`, officer: officers[(index + 2) % officers.length], changed: 'Reviewed duplicate signals and voice note', when: `${dateTime.date} 16:40` },
     ],
-    comments: [
-      {
-        id: `comment-${index}-1`,
-        officer: 'Nina',
-        text: 'ชุดภาพดีมากสำหรับใช้ซ้ำในงานประเมินในอนาคต',
-        likes: 3,
-        resolved: false,
-      },
-      {
-        id: `comment-${index}-2`,
-        officer: 'Korn',
-        text: `ตรวจสถานะ${type.toLowerCase()}ก่อนแชร์ต่อภายนอก`,
-        likes: 1,
-        resolved: true,
-      },
+    timeline: [
+      { id: `${property.id}-t1`, stage: 'Captured', officer, date: dateTime.date, time: dateTime.time },
+      { id: `${property.id}-t2`, stage: 'Edited', officer: officers[(index + 1) % officers.length], date: dateTime.date, time: '14:10' },
+      { id: `${property.id}-t3`, stage: 'Reviewed', officer: officers[(index + 2) % officers.length], date: dateTime.date, time: '16:40' },
+      { id: `${property.id}-t4`, stage: 'Verified', officer: officers[(index + 3) % officers.length], date: dateTime.date, time: '18:05' },
     ],
+    nearby,
+    duplicateCandidate: index % 2 === 0 ? { similarity: 88 - (index % 4) * 3, officer: officers[(index + 1) % officers.length], captureDate: dateTime.date, withinMeters: 22 + index } : null,
+    aiSummary: {
+      ocrSummary: `OCR parsed sale price, road name and contact number from field photo for ${projectName}.`,
+      marketInsight: `${district} demand stable with strong residential absorption near ${road}.`,
+      comparable: nearby[0]?.label || 'Nearby reference pending',
+      risk: distanceKm < 2 ? 'Low duplicate risk, moderate traffic exposure' : 'Medium duplicate risk, verify boundary lines',
+    },
   }
 }
 
 export default function SharedPropertyIntelligence() {
-  const [properties, setProperties] = useState<KnowledgeProperty[]>([])
+  const navigate = useNavigate()
+  const { data: baseProperties = [], isError } = usePropertiesQuery()
+  const [properties, setProperties] = useState<SharedProperty[]>([])
   const [search, setSearch] = useState('')
+  const [activeFilter, setActiveFilter] = useState<FilterKey>('all')
   const [selectedId, setSelectedId] = useState<string | null>(null)
-  const [activeFilters, setActiveFilters] = useState<string[]>([])
-  const [commentDraft, setCommentDraft] = useState('')
-  const [actionMessage, setActionMessage] = useState('')
+  const [copySheetOpen, setCopySheetOpen] = useState(false)
+  const [message, setMessage] = useState('')
+  const [offline, setOffline] = useState(() => !navigator.onLine)
+  const [queuedUpdates, setQueuedUpdates] = useState<string[]>(() => readQueue())
 
   useEffect(() => {
-    let mounted = true
-    fetchProperties().then((list) => {
-      if (!mounted) return
-      const enriched = list.map((item, index) => buildKnowledgeProperty(item, index))
-      setProperties(enriched)
-      setSelectedId((current) => current ?? enriched[0]?.id ?? null)
-    })
+    const syncState = () => {
+      const online = navigator.onLine
+      setOffline(!online)
+      if (online) {
+        writeQueue([])
+        setQueuedUpdates([])
+      }
+    }
+
+    window.addEventListener('online', syncState)
+    window.addEventListener('offline', syncState)
+
     return () => {
-      mounted = false
+      window.removeEventListener('online', syncState)
+      window.removeEventListener('offline', syncState)
     }
   }, [])
+
+  useEffect(() => {
+    if (baseProperties.length) {
+      const enriched = baseProperties.map((item, index, arr) => enrichProperty(item, index, arr))
+      setProperties(enriched)
+      setSelectedId(enriched[0]?.id || null)
+      writeCache(enriched)
+      return
+    }
+
+    if (isError) {
+      const cached = readCache()
+      setProperties(cached)
+      setSelectedId(cached[0]?.id || null)
+    }
+  }, [baseProperties, isError])
 
   const filteredProperties = useMemo(() => {
     const query = search.trim().toLowerCase()
 
     return properties.filter((item) => {
       const haystack = [
+        item.propertyName,
+        item.projectName,
         item.province,
         item.district,
+        item.subdistrict,
         item.road,
-        item.village,
-        item.condominium,
-        item.phoneNumbers.join(' '),
-        item.marketPrice.toString(),
-        item.type || '',
-        formatDate(item.captureDate),
-        item.capturedBy,
-        item.address,
-        item.projectName,
-      ]
-        .join(' ')
-        .toLowerCase()
+        item.telephone,
+        item.salePrice.toString(),
+        item.propertyType,
+        item.officer,
+        item.gps,
+        item.ocrText,
+      ].join(' ').toLowerCase()
 
       const matchesQuery = !query || haystack.includes(query)
-      const matchesFilters = activeFilters.every((filter) => {
-        switch (filter) {
-          case 'ใกล้ฉัน':
-            return item.distanceKm <= 4
-          case 'บันทึกวันนี้':
-            return isToday(item.captureDate)
-          case 'บันทึกสัปดาห์นี้':
-            return isThisWeek(item.captureDate)
-          case 'ที่ดินว่าง':
-            return item.type?.toLowerCase() === 'vacant land'
-          case 'บ้านเดี่ยว':
-            return item.type?.toLowerCase() === 'detached house'
-          case 'ทาวน์เฮาส์คู่':
-            return item.type?.toLowerCase() === 'semi-detached house'
-          case 'ทาวน์เฮาส์':
-            return item.type?.toLowerCase() === 'townhouse'
-          case 'อาคารพาณิชย์':
-            return item.type?.toLowerCase() === 'commercial building'
-          case 'คอนโดมิเนียม':
-            return item.type?.toLowerCase() === 'condominium'
-          default:
-            return true
-        }
-      })
+      const matchesFilter = (() => {
+        if (activeFilter === 'all') return true
+        if (activeFilter === 'nearby') return Number(item.distance.replace(' km', '')) <= 3.5
+        if (activeFilter === 'today') return isToday(item.lastInspection)
+        if (activeFilter === 'week') return isWithinWeek(item.lastInspection)
+        if (activeFilter === 'house') return item.propertyType === 'บ้านเดี่ยว'
+        if (activeFilter === 'semi') return item.propertyType === 'บ้านแฝด'
+        if (activeFilter === 'townhome') return item.propertyType === 'ทาวน์โฮม'
+        if (activeFilter === 'commercial') return item.propertyType === 'อาคารพาณิชย์'
+        if (activeFilter === 'condo') return item.propertyType === 'คอนโด'
+        if (activeFilter === 'land') return item.propertyType === 'ที่ดิน'
+        return true
+      })()
 
-      return matchesQuery && matchesFilters
+      return matchesQuery && matchesFilter
     })
-  }, [properties, search, activeFilters])
-
-  useEffect(() => {
-    if (!filteredProperties.length) {
-      setSelectedId(null)
-      return
-    }
-
-    if (!filteredProperties.some((item) => item.id === selectedId)) {
-      setSelectedId(filteredProperties[0].id)
-    }
-  }, [filteredProperties, selectedId])
+  }, [activeFilter, properties, search])
 
   const selectedProperty = filteredProperties.find((item) => item.id === selectedId) || filteredProperties[0] || null
+  const recentUploads = filteredProperties.slice(0, 5)
+  const nearbyProperties = filteredProperties.filter((item) => Number(item.distance.replace(' km', '')) <= 3.5).slice(0, 5)
 
-  const toggleFilter = (filter: string) => {
-    setActiveFilters((current) => (current.includes(filter) ? current.filter((item) => item !== filter) : [...current, filter]))
-  }
-
-  const addComment = () => {
-    if (!selectedProperty || !commentDraft.trim()) return
-
-    const nextComment: CommentItem = {
-      id: `comment-${Date.now()}`,
-      officer: 'คุณ',
-      text: commentDraft.trim(),
-      likes: 0,
-      resolved: false,
+  const toggleBookmark = (id: string) => {
+    setProperties((current) => current.map((item) => item.id === id ? { ...item, bookmarked: !item.bookmarked } : item))
+    if (offline) {
+      const next = [...queuedUpdates, `bookmark:${id}`]
+      setQueuedUpdates(next)
+      writeQueue(next)
     }
-
-    setProperties((current) => current.map((item) => (item.id === selectedProperty.id ? { ...item, comments: [nextComment, ...item.comments] } : item)))
-    setCommentDraft('')
-    setActionMessage('ความคิดเห็นถูกแชร์กับทีมเรียบร้อยแล้ว')
   }
 
-  const toggleLike = (commentId: string) => {
-    if (!selectedProperty) return
-
-    setProperties((current) => current.map((item) => (item.id === selectedProperty.id ? {
-      ...item,
-      comments: item.comments.map((comment) => (comment.id === commentId ? { ...comment, likes: comment.likes + 1 } : comment)),
-    } : item)))
+  const shareProperty = (property: SharedProperty) => {
+    setMessage(`Share sheet prepared for ${property.propertyName}`)
   }
 
-  const toggleResolve = (commentId: string) => {
+  const handleCopyAction = async (action: string) => {
     if (!selectedProperty) return
+    let value = ''
 
-    setProperties((current) => current.map((item) => (item.id === selectedProperty.id ? {
-      ...item,
-      comments: item.comments.map((comment) => (comment.id === commentId ? { ...comment, resolved: !comment.resolved } : comment)),
-    } : item)))
-  }
+    if (action === 'Copy Telephone') value = selectedProperty.telephone
+    if (action === 'Copy Price') value = `${selectedProperty.salePrice}`
+    if (action === 'Copy Address') value = `${selectedProperty.projectName}, ${selectedProperty.road}, ${selectedProperty.subdistrict}, ${selectedProperty.district}, ${selectedProperty.province}`
+    if (action === 'Copy Coordinates') value = selectedProperty.gps
+    if (action === 'Copy OCR') value = selectedProperty.ocrText
+    if (action === 'Copy All') value = `${selectedProperty.propertyName}\n${selectedProperty.telephone}\n${selectedProperty.salePrice}\n${selectedProperty.gps}\n${selectedProperty.ocrText}`
 
-  const runAction = async (action: string) => {
-    if (!selectedProperty) return
-
-    switch (action) {
-      case 'Copy GPS':
-        await navigator.clipboard.writeText(`${selectedProperty.latitude.toFixed(4)}, ${selectedProperty.longitude.toFixed(4)}`)
-        break
-      case 'Copy Address':
-        await navigator.clipboard.writeText(selectedProperty.address)
-        break
-      default:
-        break
-    }
-
-    setActionMessage(`${action} สำเร็จสำหรับ ${selectedProperty.owner}`)
+    await navigator.clipboard.writeText(value)
+    setMessage(`${action} completed`)
+    setCopySheetOpen(false)
   }
 
   return (
-    <Layout title="ข้อมูลกลางทรัพย์สินร่วมกัน">
-      <div className={styles.shell}>
-        <section className={styles.heroCard}>
+    <Layout title="Shared Property Database" hideAssistant>
+      <div className="spi-page">
+        <motion.section className="spi-hero" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }}>
           <div>
-            <div className={styles.eyebrow}>ข้อมูลกลางทรัพย์สินร่วมกัน</div>
-            <h1>ฐานความรู้ที่ใช้ร่วมกันสำหรับทุกเจ้าหน้าที่ประเมิน</h1>
-            <p>ค้นหา นำกลับมาใช้ และอัปเดตทรัพย์สินที่บันทึกไว้จากพื้นที่ทำงานเดียวที่ออกแบบมาเพื่อการทำงานร่วมกัน</p>
+            <div className="spi-eyebrow">Shared Property Database</div>
+            <h1>Shared Property Intelligence</h1>
+            <p>Mobile-first shared intelligence for property valuers. Every field capture becomes reusable evidence for the whole organization.</p>
           </div>
-          <div className={styles.heroBadge}>
-            <span>คะแนนความรู้</span>
-            <strong>{selectedProperty?.knowledgeScore ?? 0}%</strong>
+          <div className="spi-hero-pills">
+            <span>{offline ? 'Cached Data' : 'Live Sync'}</span>
+            <span>{queuedUpdates.length} queued</span>
           </div>
-        </section>
+        </motion.section>
 
-        <section className={styles.searchCard}>
-          <div className={styles.searchBox}>
-            <span className={styles.searchIcon}>⌕</span>
+        <section className="spi-search-panel">
+          <div className="spi-search-box">
+            <span>⌕</span>
             <input
               value={search}
               onChange={(event) => setSearch(event.target.value)}
-              placeholder="ค้นหาจังหวัด อำเภอ ถนน หมู่บ้าน คอนโดมิเนียม เบอร์โทร ราคา เจ้าหน้าที่ วันที่"
+              placeholder="Property, project, province, district, road, telephone, price, GPS, OCR text"
             />
+            <button type="button">Voice</button>
           </div>
-          <div className={styles.filterRow}>
-            {filterOptions.map((filter) => (
+          <div className="spi-filter-row">
+            {FILTERS.map((filter) => (
               <button
-                key={filter}
+                key={filter.key}
                 type="button"
-                className={`${styles.filterChip} ${activeFilters.includes(filter) ? styles.filterChipActive : ''}`}
-                onClick={() => toggleFilter(filter)}
+                className={activeFilter === filter.key ? 'is-active' : ''}
+                onClick={() => setActiveFilter(filter.key)}
               >
-                {filter}
+                {filter.label}
               </button>
             ))}
           </div>
         </section>
 
-        <div className={styles.contentGrid}>
-          <div className={styles.cardsColumn}>
-            {filteredProperties.map((property) => (
-              <button
-                key={property.id}
-                type="button"
-                className={`${styles.propertyCard} ${selectedProperty?.id === property.id ? styles.propertyCardActive : ''}`}
-                onClick={() => setSelectedId(property.id)}
-              >
-                <img src={property.images[0]} alt={property.owner} className={styles.cardImage} />
-                <div className={styles.cardBody}>
-                  <div className={styles.cardHeader}>
-                    <div>
-                      <div className={styles.cardTitle}>{property.owner}</div>
-                      <div className={styles.cardMeta}>{property.type || 'บ้านเดี่ยว'} • {property.province}</div>
-                    </div>
-                    <span className={styles.priceTag}>{formatCurrency(property.marketPrice)}</span>
-                  </div>
-
-                  <div className={styles.cardFacts}>
-                    <span>{property.district}</span>
-                    <span>{property.capturedBy}</span>
-                    <span>{property.photoCount} ภาพ</span>
-                    <span>{property.updateCount} ครั้งอัปเดต</span>
-                  </div>
-
-                  <div className={styles.cardBottom}>
-                    <span>ความรู้ {property.knowledgeScore}%</span>
-                    <span>{property.distanceKm} กม.</span>
-                  </div>
-                </div>
+        <section className="spi-strip-section">
+          <div className="spi-strip-title">Recent uploads</div>
+          <div className="spi-horizontal-rail">
+            {recentUploads.map((property) => (
+              <button key={property.id} type="button" className="spi-mini-card" onClick={() => setSelectedId(property.id)}>
+                <img src={property.image} alt={property.propertyName} />
+                <strong>{property.propertyName}</strong>
+                <span>{property.captureDate}</span>
               </button>
             ))}
           </div>
+        </section>
 
-          {selectedProperty && (
-            <section className={styles.detailPanel}>
-              <div className={styles.detailHero}>
-                <img src={selectedProperty.images[0]} alt={selectedProperty.owner} className={styles.detailImage} />
-                <div className={styles.detailOverlay}>
-                  <span className={styles.statusPill}>{selectedProperty.statusLabel}</span>
-                  <span className={styles.statusPillAccent}>{selectedProperty.type || 'บ้านเดี่ยว'}</span>
+        <section className="spi-strip-section">
+          <div className="spi-strip-title">Nearby properties</div>
+          <div className="spi-horizontal-rail">
+            {nearbyProperties.map((property) => (
+              <button key={property.id} type="button" className="spi-mini-card" onClick={() => setSelectedId(property.id)}>
+                <img src={property.image} alt={property.propertyName} />
+                <strong>{property.propertyName}</strong>
+                <span>{property.distance}</span>
+              </button>
+            ))}
+          </div>
+        </section>
+
+        <section className="spi-list">
+          {filteredProperties.map((property) => (
+            <SharedPropertyCard
+              key={property.id}
+              property={property}
+              onOpen={() => setSelectedId(property.id)}
+              onBookmark={() => toggleBookmark(property.id)}
+              onShare={() => shareProperty(property)}
+            />
+          ))}
+        </section>
+
+        <BottomSheet open={Boolean(selectedProperty)} onClose={() => setSelectedId(null)}>
+          {selectedProperty ? (
+            <div className="spi-sheet-content">
+              <DuplicateCard
+                visible={Boolean(selectedProperty.duplicateCandidate && selectedProperty.duplicateCandidate.withinMeters <= 30)}
+                similarity={selectedProperty.duplicateCandidate?.similarity || 0}
+                officer={selectedProperty.duplicateCandidate?.officer || ''}
+                captureDate={selectedProperty.duplicateCandidate?.captureDate || ''}
+                onOpenExisting={() => setMessage('Opened possible duplicate record')}
+                onCreateNew={() => setMessage('Create new record confirmed')}
+              />
+
+              <PropertyGallery
+                images={selectedProperty.images}
+                onDownload={() => setMessage('Image download prepared')}
+                onCopy={() => setCopySheetOpen(true)}
+              />
+
+              <MiniMap
+                coordinates={selectedProperty.gps}
+                nearby={`${selectedProperty.road} • ${selectedProperty.distance}`}
+                onOpenMap={() => navigate('/map')}
+              />
+
+              <section className="spi-section">
+                <div className="spi-section-title">Property Information</div>
+                <div className="spi-info-grid">
+                  <div><span>Property Name</span><strong>{selectedProperty.propertyName}</strong></div>
+                  <div><span>Project</span><strong>{selectedProperty.projectName}</strong></div>
+                  <div><span>Province</span><strong>{selectedProperty.province}</strong></div>
+                  <div><span>District</span><strong>{selectedProperty.district}</strong></div>
+                  <div><span>Subdistrict</span><strong>{selectedProperty.subdistrict}</strong></div>
+                  <div><span>Road</span><strong>{selectedProperty.road}</strong></div>
+                  <div><span>Telephone</span><strong>{selectedProperty.telephone}</strong></div>
+                  <div><span>Sale Price</span><strong>THB {selectedProperty.salePrice.toLocaleString()}</strong></div>
+                  <div><span>GPS</span><strong>{selectedProperty.gps}</strong></div>
+                  <div><span>OCR</span><strong>{selectedProperty.ocrText}</strong></div>
                 </div>
-              </div>
+              </section>
 
-              <div className={styles.detailSection}>
-                <div className={styles.sectionTitle}>ข้อมูลทรัพย์สิน</div>
-                <div className={styles.infoGrid}>
-                  <div><span>ที่อยู่</span><strong>{selectedProperty.address}</strong></div>
-                  <div><span>ราคาขาย</span><strong>{formatCurrency(selectedProperty.marketPrice)}</strong></div>
-                  <div><span>จังหวัด</span><strong>{selectedProperty.province}</strong></div>
-                  <div><span>เขต</span><strong>{selectedProperty.district}</strong></div>
-                  <div><span>วันที่บันทึก</span><strong>{formatDate(selectedProperty.captureDate)}</strong></div>
-                  <div><span>บันทึกโดย</span><strong>{selectedProperty.capturedBy}</strong></div>
-                  <div><span>เบอร์โทร</span><strong>{selectedProperty.phoneNumbers[0]}</strong></div>
-                  <div><span>คะแนนความรู้</span><strong>{selectedProperty.knowledgeScore}%</strong></div>
-                </div>
-              </div>
+              <OfficerCard name={selectedProperty.officer} role="Senior Valuation Officer" updates={selectedProperty.versionHistory.length} />
 
-              <div className={styles.detailSection}>
-                <div className={styles.sectionTitle}>แกลเลอรีและพิกัด GPS</div>
-                <div className={styles.galleryRow}>
-                  {selectedProperty.images.map((image, index) => (
-                    <img key={`${image}-${index}`} src={image} alt={`${selectedProperty.owner}-${index}`} className={styles.thumb} />
+              <Timeline items={selectedProperty.timeline} />
+
+              <VersionHistory items={selectedProperty.versionHistory} onCompare={() => setMessage('Version compare opened')} />
+
+              <AISummaryCard
+                propertyType={selectedProperty.propertyType}
+                ocrSummary={selectedProperty.aiSummary.ocrSummary}
+                marketInsight={selectedProperty.aiSummary.marketInsight}
+                comparable={selectedProperty.aiSummary.comparable}
+                risk={selectedProperty.aiSummary.risk}
+                confidence={selectedProperty.aiConfidence}
+              />
+
+              <section className="spi-section">
+                <div className="spi-section-title">Capture History</div>
+                <div className="spi-history-copy">{selectedProperty.note}</div>
+                <div className="spi-nearby-list">
+                  {selectedProperty.nearby.map((item) => (
+                    <button key={item.id} type="button" className="spi-nearby-item" onClick={() => setSelectedId(item.id)}>
+                      <strong>{item.label}</strong>
+                      <span>{item.distance}</span>
+                      <span>THB {item.price.toLocaleString()}</span>
+                    </button>
                   ))}
                 </div>
-                <div className={styles.mapCard}>
-                  <div className={styles.mapBadge}>GPS</div>
-                  <div>
-                    <strong>{selectedProperty.latitude.toFixed(4)}, {selectedProperty.longitude.toFixed(4)}</strong>
-                    <div className={styles.mapMeta}>{selectedProperty.condominium} • {selectedProperty.road}</div>
-                  </div>
-                </div>
-              </div>
+              </section>
 
-              <div className={styles.detailSection}>
-                <div className={styles.sectionTitle}>รายละเอียดทรัพย์สิน</div>
-                <div className={styles.infoGrid}>
-                  <div><span>ประเภททรัพย์สิน</span><strong>{selectedProperty.type || 'บ้านเดี่ยว'}</strong></div>
-                  <div><span>พื้นที่ดิน</span><strong>{selectedProperty.landArea}</strong></div>
-                  <div><span>พื้นที่ใช้สอย</span><strong>{selectedProperty.usableArea}</strong></div>
-                  <div><span>ชื่อโครงการ</span><strong>{selectedProperty.projectName}</strong></div>
-                  <div><span>วันที่ตรวจสอบ</span><strong>{formatDate(selectedProperty.inspectionDate)}</strong></div>
-                  <div><span>เจ้าหน้าที่</span><strong>{selectedProperty.capturedBy}</strong></div>
+              <section className="spi-section">
+                <div className="spi-section-title">Export</div>
+                <div className="spi-inline-actions">
+                  <button type="button" onClick={() => shareProperty(selectedProperty)}>Share</button>
+                  <button type="button" onClick={() => setMessage('Excel export prepared')}>Excel</button>
+                  <button type="button" onClick={() => setMessage('PDF export prepared')}>PDF</button>
+                  <button type="button" onClick={() => setCopySheetOpen(true)}>Copy</button>
                 </div>
-              </div>
+              </section>
 
-              <div className={styles.detailSection}>
-                <div className={styles.sectionTitle}>กิจกรรมทีม</div>
-                <div className={styles.timelineList}>
-                  {selectedProperty.history.map((entry, index) => (
-                    <div key={`${entry.action}-${index}`} className={styles.timelineItem}>
-                      <div className={styles.timelineDot} />
-                      <div>
-                        <div className={styles.timelineAction}>{entry.action}</div>
-                        <div className={styles.timelineMeta}>{entry.officer} • {entry.date}</div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
+              {message ? <div className="spi-toast">{message}</div> : null}
+            </div>
+          ) : null}
+        </BottomSheet>
 
-              <div className={styles.detailSection}>
-                <div className={styles.sectionTitle}>ความคิดเห็น</div>
-                <div className={styles.commentComposer}>
-                  <textarea
-                    value={commentDraft}
-                    onChange={(event) => setCommentDraft(event.target.value)}
-                    rows={3}
-                    placeholder="กล่าวถึงเจ้าหน้าที่และแบ่งปันบันทึก..."
-                  />
-                  <div className={styles.commentActions}>
-                    <button type="button" className={styles.secondaryButton} onClick={() => setCommentDraft('@Nina ')}>กล่าวถึงเจ้าหน้าที่</button>
-                    <button type="button" className={styles.primaryButton} onClick={addComment}>โพสต์ความคิดเห็น</button>
-                  </div>
-                </div>
-                <div className={styles.commentList}>
-                  {selectedProperty.comments.map((comment) => (
-                    <div key={comment.id} className={styles.commentCard}>
-                      <div className={styles.commentHeader}>
-                        <strong>{comment.officer}</strong>
-                        <span className={comment.resolved ? styles.resolvedPill : styles.openPill}>{comment.resolved ? 'แก้ไขแล้ว' : 'กำลังดำเนินการ'}</span>
-                      </div>
-                      <div className={styles.commentText}>{comment.text}</div>
-                      <div className={styles.commentActions}>
-                        <button type="button" className={styles.secondaryButton} onClick={() => toggleLike(comment.id)}>ชอบ · {comment.likes}</button>
-                        <button type="button" className={styles.secondaryButton} onClick={() => toggleResolve(comment.id)}>{comment.resolved ? 'เปิดใหม่' : 'แก้ไขแล้ว'}</button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className={styles.detailSection}>
-                <div className={styles.sectionTitle}>ปุ่มดำเนินการล่าง</div>
-                <div className={styles.actionRow}>
-                  <button type="button" className={styles.secondaryButton}>นำทาง</button>
-                  <button type="button" className={styles.secondaryButton}>แชร์</button>
-                  <button type="button" className={styles.secondaryButton} onClick={() => runAction('Copy GPS')}>คัดลอกพิกัด</button>
-                  <button type="button" className={styles.secondaryButton} onClick={() => runAction('Copy Address')}>คัดลอกที่อยู่</button>
-                  <button type="button" className={styles.secondaryButton}>ส่งออก</button>
-                  <button type="button" className={styles.secondaryButton}>เพิ่มภาพ</button>
-                  <button type="button" className={styles.secondaryButton}>แก้ไข</button>
-                </div>
-                {actionMessage ? <div className={styles.statusMessage}>{actionMessage}</div> : null}
-              </div>
-            </section>
-          )}
-        </div>
+        <CopyActionSheet open={copySheetOpen} onClose={() => setCopySheetOpen(false)} onAction={handleCopyAction} />
       </div>
     </Layout>
   )

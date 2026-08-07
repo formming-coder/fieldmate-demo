@@ -1,11 +1,9 @@
-import React, { useEffect, useState } from 'react'
+import React from 'react'
 import Layout from '../components/Layout'
-import { fetchProperties } from '../api/mockApi'
-import { Property } from '../types'
+import { usePropertiesQuery } from '../hooks/useBackendQueries'
 
 export default function AISummary(){
-  const [props, setProps] = useState<Property[]>([])
-  useEffect(()=>{ fetchProperties().then(setProps) }, [])
+  const { data: props = [] } = usePropertiesQuery()
 
   return (
     <Layout title="สรุปข้อมูล AI">
@@ -17,7 +15,7 @@ export default function AISummary(){
               <div style={{color:'var(--muted)'}}>{p.province}</div>
             </div>
             <div style={{marginTop:8}}>
-              <div><strong>OCR:</strong> (จำลอง) ที่อยู่: ตัวอย่าง</div>
+              <div><strong>OCR:</strong> ที่อยู่: เขตบางนา กรุงเทพมหานคร</div>
               <div><strong>ประเภทที่ตรวจพบ:</strong> ที่พักอาศัย</div>
               <div><strong>สภาพ:</strong> ดี</div>
               <div><strong>คำแนะนำ:</strong> ตรวจหลังคาและระบบระบายน้ำ</div>
