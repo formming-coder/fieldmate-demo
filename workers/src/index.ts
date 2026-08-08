@@ -5,7 +5,6 @@ export interface Env {
   CORS_ORIGIN?: string
   JWT_AUDIENCE?: string
   JWT_ISSUER?: string
-  JWT_SECRET?: string
   ENTRA_TENANT_ID: string
   ENTRA_CLIENT_ID: string
   ENTRA_CLIENT_SECRET: string

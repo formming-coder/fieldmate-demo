@@ -1,0 +1,7 @@
+import React from 'react'
+import { Assessment } from '../../types'
+
+export default function AssessmentReview({ assessment }: { assessment: Assessment }) {
+  const finalValue = assessment.override.value || assessment.aiAnalysis.result.estimatedValue
+  return <section className="aa-review"><h1>ตรวจสอบก่อนบันทึก</h1><div className="as-card as-grid"><div><span>ข้อมูลทรัพย์</span><strong>{assessment.propertyData.owner}</strong></div><div><span>รูปภาพ</span><strong>{assessment.photos.length} รูป</strong></div><div><span>OCR</span><strong>{assessment.ocrResults.length} ผลลัพธ์</strong></div><div><span>ทรัพย์เปรียบเทียบ</span><strong>{assessment.comparables.length} รายการ</strong></div><div><span>ผล AI</span><strong>{assessment.aiAnalysis.result.estimatedValue.toLocaleString('th-TH')} บาท</strong></div><div><span>ความเสี่ยง</span><strong>{assessment.riskAnalysis.overallLevel}</strong></div><div><span>ราคาสรุป</span><strong>{finalValue.toLocaleString('th-TH')} บาท</strong></div><div><span>การปรับราคาโดยผู้ประเมิน</span><strong>{assessment.override.changed ? 'มีการปรับราคา' : 'ใช้ราคา AI'}</strong></div></div><section className="as-card"><h2>คำแนะนำ</h2><p>{assessment.aiAnalysis.recommendation}</p><h2>หมายเหตุ</h2><p>{assessment.note || assessment.override.note || 'ไม่มีหมายเหตุเพิ่มเติม'}</p></section></section>
+}

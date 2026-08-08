@@ -99,7 +99,6 @@ export default function Login() {
 
             <Button type="submit" fullWidth disabled={isSubmitting}>{isSubmitting ? (isDevelopmentAuth ? 'กำลังเข้าสู่ระบบ...' : 'กำลังเชื่อมต่อ Microsoft...') : 'เข้าสู่ระบบ'}</Button>
             <Button type="button" variant="secondary" fullWidth disabled={isSubmitting} onClick={handleMicrosoftLogin}>{isSubmitting ? 'กำลังเชื่อมต่อ Microsoft...' : 'เข้าสู่ระบบด้วย Microsoft'}</Button>
-            <Button type="button" variant="ghost" fullWidth disabled style={{ border: '1px solid var(--border)', opacity: 0.7, color: '#4b5563' }}>เร็ว ๆ นี้</Button>
           </form>
         </Card>
 
@@ -134,7 +133,7 @@ export default function Login() {
         </AnimatePresence>
 
         <div className="entry-footer">
-          <div>Version {appVersion}</div>
+          <div>เวอร์ชัน {appVersion}</div>
           <div>ลิขสิทธิ์ 2026 กรุงศรี</div>
           <div>สำหรับใช้งานภายในกรุงศรีเท่านั้น</div>
         </div>

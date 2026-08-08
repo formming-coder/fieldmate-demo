@@ -90,7 +90,7 @@ export default function Welcome() {
         </motion.section>
 
         <footer className="welcome-footer">
-          <div className="welcome-version">Version v0.0.0</div>
+          <div className="welcome-version">เวอร์ชัน v0.0.0</div>
           <div className="welcome-links">
             <button type="button" onClick={() => setToast('นโยบายความเป็นส่วนตัวสำหรับเดโมพร้อมใช้งานแล้ว')}>ความเป็นส่วนตัว</button>
             <button type="button" onClick={() => setToast('ข้อกำหนดการใช้งานสำหรับเดโมพร้อมใช้งานแล้ว')}>ข้อกำหนด</button>

@@ -1,7 +1,7 @@
 {
   "name": "Fieldmate AI",
   "short_name": "Fieldmate",
-  "description": "Premium mobile property valuation workflow with AI capture, GIS intelligence, route planning and shared knowledge.",
+  "description": "แอปสำรวจทรัพย์บนมือถือ พร้อมกล้อง AI ข้อมูล GIS การวางแผนเส้นทาง และข้อมูลส่วนกลาง",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#fffaf1",

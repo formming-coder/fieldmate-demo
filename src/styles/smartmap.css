@@ -911,6 +911,16 @@
   background: rgba(141, 195, 255, 0.38);
 }
 
+.smart-marker-status-surveyed {
+  border-color: rgba(20, 112, 83, 0.48);
+  background: linear-gradient(130deg, #e2f7ec 0%, #bce8d2 62%, #72c6a1 100%);
+}
+
+.smart-marker-status-surveyed .smart-marker-status {
+  color: #104f3b;
+  background: rgba(255, 255, 255, 0.62);
+}
+
 .smart-cluster {
   width: 44px;
   height: 44px;

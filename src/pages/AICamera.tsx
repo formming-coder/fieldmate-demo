@@ -1,11 +1,12 @@
 import React, { ChangeEvent, DragEvent, Suspense, lazy, useEffect, useMemo, useRef, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import Layout from '../components/Layout'
 import { useCurrentOfficerQuery, useSavePropertyMutation } from '../hooks/useBackendQueries'
 import { useDeviceCamera } from '../hooks/useDeviceCamera'
 import { useLiveLocation } from '../hooks/useLiveLocation'
 import { formatThaiDate, formatThaiDateTime, formatThaiTime } from '../lib/locale'
 import { processPhotoAsset } from '../lib/media/imagePipeline'
+import { SurveyPhotoType } from '../types'
 import { photoRepository } from '../repositories'
 import CameraView from '../components/camera/CameraView'
 import CaptureModes, { CaptureMode } from '../components/camera/CaptureModes'
@@ -16,6 +17,7 @@ import GPSOverlay from '../components/camera/GPSOverlay'
 import QualityIndicator from '../components/camera/QualityIndicator'
 import OCRPreview from '../components/camera/OCRPreview'
 import UploadProgress from '../components/camera/UploadProgress'
+import SurveyAICamera from '../components/camera/SurveyAICamera'
 import 'leaflet/dist/leaflet.css'
 import '../styles/camera.css'
 
@@ -175,7 +177,7 @@ async function createCenteredCrop(source: Blob): Promise<File> {
 	return new File([blob], `fieldmate-crop-${Date.now()}.jpg`, { type: 'image/jpeg' })
 }
 
-export default function AICamera() {
+function StandaloneAICamera({ activePropertyId, returnPath }: { activePropertyId: string; returnPath: string }) {
 	const navigate = useNavigate()
 	const fileInputRef = useRef<HTMLInputElement | null>(null)
 	const photosRef = useRef<PhotoItem[]>([])
@@ -346,7 +348,7 @@ export default function AICamera() {
 			heading: gps.direction,
 		})
 		const compressedUrl = URL.createObjectURL(processed.compressed)
-		const ocrLines = await photoRepository.runOcr('PROP-BKK-2208', compressedUrl).catch(() => mockOCRLines(mode))
+		const ocrLines = await photoRepository.runOcr(activePropertyId, compressedUrl).catch(() => mockOCRLines(mode))
 		const thumbnailUrl = URL.createObjectURL(processed.thumbnail)
 
 		return {
@@ -602,12 +604,12 @@ export default function AICamera() {
 						flashAvailable={torchAvailable}
 						onToggleFlash={() => void toggleTorch()}
 						onSwitchCamera={() => void switchCamera()}
-						onBack={() => (reviewMode || analysisMode || savedMode ? (setReviewMode(false), setAnalysisMode(false), setSavedMode(false)) : navigate('/map'))}
+						onBack={() => (reviewMode || analysisMode || savedMode ? (setReviewMode(false), setAnalysisMode(false), setSavedMode(false)) : navigate(returnPath))}
 					/>
 
 					<CameraOverlay
 						aid="FM-AI-2092"
-						propertyId="PROP-BKK-2208"
+						propertyId={activePropertyId}
 						level={Math.sin((Date.now() / 1000) * 1.6) * 22}
 						compass={gps.direction}
 						gpsAccuracy={gps.accuracy}
@@ -738,7 +740,7 @@ export default function AICamera() {
 							<div><span>เวลา</span><strong>{formatThaiTime(new Date())}</strong></div>
 							<div><span>ผู้ใช้งาน</span><strong>{officer}</strong></div>
 							<div><span>โครงการ</span><strong>ฟีลด์เมต ไพรม์</strong></div>
-							<div><span>รหัสทรัพย์</span><strong>PROP-BKK-2208</strong></div>
+							<div><span>รหัสทรัพย์</span><strong>{activePropertyId}</strong></div>
 							<div><span>สภาพอากาศ</span><strong>เมฆมาก 31 องศา</strong></div>
 							<div><span>ตำแหน่ง</span><strong>{gps.lat.toFixed(5)}, {gps.lon.toFixed(5)}</strong></div>
 							<div><span>ความแม่นยำ</span><strong>{accuracyLevel === 'high' ? 'สูง' : accuracyLevel === 'medium' ? 'ปานกลาง' : 'ต่ำ'} ({gps.accuracy} ม.)</strong></div>
@@ -755,4 +757,16 @@ export default function AICamera() {
 			</div>
 		</Layout>
 	)
+}
+
+export default function AICamera() {
+	const [searchParams] = useSearchParams()
+	const propertyId = searchParams.get('propertyId')
+	const surveyId = searchParams.get('surveyId')
+	const sourcePhotoId = searchParams.get('photoId') || undefined
+	const initialCategory = searchParams.get('category') || undefined
+	const returnTo = searchParams.get('returnTo') === 'assessment' ? 'assessment' as const : 'survey' as const
+
+	if (propertyId && surveyId) return <SurveyAICamera propertyId={propertyId} surveyId={surveyId} sourcePhotoId={sourcePhotoId} initialCategory={initialCategory as SurveyPhotoType | undefined} returnTo={returnTo} />
+	return <StandaloneAICamera activePropertyId="PROP-BKK-2208" returnPath="/map" />
 }

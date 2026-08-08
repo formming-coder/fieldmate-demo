@@ -1,0 +1,6 @@
+import React from 'react'
+import { ComparableProperty } from '../../types'
+
+export default function ComparableSelector({ items, onRemove, onMove }: { items: ComparableProperty[]; onRemove: (id: string) => void; onMove: (id: string, direction: -1 | 1) => void }) {
+  return <section className="as-card"><div className="aa-section-heading"><div><h2>รายการที่ใช้คำนวณ</h2><p>เลือกแล้ว {items.length} รายการ · ขั้นต่ำ 3 สูงสุด 10</p></div></div><div className="aa-selected-list">{items.map((item, index) => <div key={item.id}><span>{index + 1}</span><strong>{item.title}</strong><div><button type="button" disabled={index === 0} aria-label="เลื่อนขึ้น" onClick={() => onMove(item.id, -1)}><span className="material-symbols-rounded">arrow_upward</span></button><button type="button" disabled={index === items.length - 1} aria-label="เลื่อนลง" onClick={() => onMove(item.id, 1)}><span className="material-symbols-rounded">arrow_downward</span></button><button type="button" aria-label="ลบ" onClick={() => onRemove(item.id)}><span className="material-symbols-rounded">delete</span></button></div></div>)}</div></section>
+}

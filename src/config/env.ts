@@ -1,6 +1,8 @@
 export type AppMode = 'development' | 'production'
 
-const appMode: AppMode = import.meta.env.VITE_APP_MODE === 'production' ? 'production' : 'development'
+const appMode: AppMode = import.meta.env.VITE_APP_MODE === 'production' || import.meta.env.VITE_CLOUDFLARE_ENV === 'production'
+  ? 'production'
+  : 'development'
 
 function readEnv(primary: string, fallback?: string) {
   const primaryValue = (import.meta.env as Record<string, string | undefined>)[primary]
@@ -14,6 +16,9 @@ export const env = {
   apiBaseUrl: readEnv('VITE_API_URL', 'VITE_API_BASE_URL'),
   r2UploadBaseUrl: readEnv('VITE_UPLOAD_BASE_URL', 'VITE_R2_UPLOAD_BASE_URL'),
   googleMapsApiKey: readEnv('VITE_GOOGLE_MAPS_API_KEY'),
+  ocrProvider: readEnv('VITE_OCR_PROVIDER') || 'mock',
+  ocrApiUrl: readEnv('VITE_OCR_API_URL'),
+  ocrMockFail: readEnv('VITE_OCR_MOCK_FAIL') === 'true',
   cloudflareEnv: import.meta.env.VITE_CLOUDFLARE_ENV || 'development',
   entraClientId: readEnv('VITE_MS_CLIENT_ID', 'VITE_ENTRA_CLIENT_ID'),
   entraAuthority: readEnv('VITE_MS_AUTHORITY', 'VITE_ENTRA_AUTHORITY'),

@@ -22,12 +22,13 @@ const AICamera = lazy(() => import('./pages/AICamera'))
 const PropertyAlbum = lazy(() => import('./pages/PropertyAlbum'))
 const AISearch = lazy(() => import('./pages/AISearch'))
 const AISummary = lazy(() => import('./pages/AISummary'))
-const PropertyAssessment = lazy(() => import('./pages/PropertyAssessment'))
+const PropertyAssessment = lazy(() => import('./components/assessment/AIAssessment'))
 const PropertyDetail = lazy(() => import('./pages/PropertyDetail'))
 const Notifications = lazy(() => import('./pages/Notifications'))
 const Profile = lazy(() => import('./pages/Profile'))
 const Settings = lazy(() => import('./pages/Settings'))
 const SharedPropertyIntelligence = lazy(() => import('./pages/SharedPropertyIntelligence'))
+const SurveyMode = lazy(() => import('./pages/SurveyMode'))
 
 function readBooleanFlag(key: string) {
   if (typeof window === 'undefined') return false
@@ -56,6 +57,10 @@ function AnimatedRoutes({
 }) {
   const location = useLocation()
 
+  if (isAuthenticated && !permissionsComplete && location.pathname !== '/permissions') {
+    return <Navigate to="/permissions" replace />
+  }
+
   return (
     <AnimatePresence mode="wait">
       <motion.div
@@ -71,8 +76,8 @@ function AnimatedRoutes({
           <Route path="/" element={<Navigate to={getDefaultRoute(isAuthenticated, onboardingComplete, permissionsComplete)} replace />} />
           <Route path="/onboarding" element={isAuthenticated ? <Navigate to="/map" replace /> : onboardingComplete ? <Navigate to="/login" replace /> : <Onboarding onComplete={onOnboardingComplete} />} />
           <Route path="/welcome" element={isAuthenticated ? <Navigate to="/map" replace /> : <Welcome />} />
-          <Route path="/login" element={isAuthenticated ? <Navigate to="/map" replace /> : <Login />} />
-          <Route path="/permissions" element={isAuthenticated && permissionsComplete ? <Navigate to="/map" replace /> : <Permission onComplete={onPermissionsComplete} />} />
+          <Route path="/login" element={isAuthenticated ? <Navigate to={permissionsComplete ? '/map' : '/permissions'} replace /> : <Login />} />
+          <Route path="/permissions" element={!isAuthenticated ? <Navigate to="/login" replace /> : permissionsComplete ? <Navigate to="/map" replace /> : <Permission onComplete={onPermissionsComplete} />} />
           <Route path="/home" element={<Navigate to="/map" replace />} />
           <Route path="/dashboard" element={<ProtectedRoute route="dashboard"><Dashboard /></ProtectedRoute>} />
           <Route path="/map" element={<ProtectedRoute route="map"><SmartMap /></ProtectedRoute>} />
@@ -83,11 +88,13 @@ function AnimatedRoutes({
           <Route path="/shared-intelligence" element={<ProtectedRoute route="sharedIntelligence"><SharedPropertyIntelligence /></ProtectedRoute>} />
           <Route path="/search" element={<ProtectedRoute route="search"><AISearch /></ProtectedRoute>} />
           <Route path="/property/:id" element={<ProtectedRoute route="propertyDetail"><PropertyDetail /></ProtectedRoute>} />
+          <Route path="/survey/:propertyId" element={<ProtectedRoute route="propertyDetail"><SurveyMode /></ProtectedRoute>} />
           <Route path="/ai-summary" element={<ProtectedRoute route="aiSummary"><AISummary /></ProtectedRoute>} />
           <Route path="/assessment" element={<ProtectedRoute route="assessment"><PropertyAssessment /></ProtectedRoute>} />
           <Route path="/notifications" element={<ProtectedRoute route="notifications"><Notifications /></ProtectedRoute>} />
           <Route path="/profile" element={<ProtectedRoute route="profile"><Profile /></ProtectedRoute>} />
           <Route path="/settings" element={<ProtectedRoute route="settings"><Settings /></ProtectedRoute>} />
+          <Route path="*" element={<Navigate to={getDefaultRoute(isAuthenticated, onboardingComplete, permissionsComplete)} replace />} />
         </Routes>
         </Suspense>
       </motion.div>

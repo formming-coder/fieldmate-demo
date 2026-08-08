@@ -44,7 +44,7 @@ export default function AppCover({ onContinue }: { onContinue: () => void }) {
               animate={{ opacity: 1 }}
               transition={{ delay: 0.42, duration: 0.5 }}
             >
-              <div>Version 2.0</div>
+              <div>เวอร์ชัน 2.0</div>
               <div>รุ่นทดสอบ 1</div>
               <div>ลิขสิทธิ์ ฟีลด์เมต AI</div>
             </motion.footer>

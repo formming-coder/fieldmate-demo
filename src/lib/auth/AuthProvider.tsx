@@ -2,7 +2,6 @@ import React, { useEffect, useRef, useState } from 'react'
 import {
   AccountInfo,
   AuthenticationResult,
-  InteractionRequiredAuthError,
   PublicClientApplication,
 } from '@azure/msal-browser'
 import { env, isProductionMode } from '../../config/env'
@@ -20,12 +19,13 @@ function isMicrosoftConfigured() {
   return Boolean(env.entraClientId && env.entraAuthority && env.entraRedirectUri)
 }
 
-function getMsalInstance() {
+async function getMsalInstance() {
   if (!isProductionMode || !isMicrosoftConfigured()) {
     return null
   }
 
   if (!msalInstance) {
+    const { PublicClientApplication } = await import('@azure/msal-browser')
     msalInstance = new PublicClientApplication({
       auth: {
         clientId: env.entraClientId,
@@ -119,7 +119,7 @@ async function acquireMicrosoftToken(instance: PublicClientApplication, account:
       scopes: env.entraScopes,
     })
   } catch (error) {
-    if (error instanceof InteractionRequiredAuthError) {
+    if (error instanceof Error && error.name === 'InteractionRequiredAuthError') {
       return null
     }
 
@@ -152,7 +152,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           return
         }
 
-        const instance = getMsalInstance()
+        const instance = await getMsalInstance()
         if (!instance) {
           if (active) {
             syncFromStorage()
@@ -204,12 +204,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return
     }
 
-    const instance = getMsalInstance()
-    if (!instance) {
-      return
-    }
-
     const refreshToken = async () => {
+      const instance = await getMsalInstance()
+      if (!instance) return
       const account = instance.getActiveAccount() || instance.getAllAccounts()[0] || null
       if (!account) return
 
@@ -248,7 +245,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return
     }
 
-    const instance = getMsalInstance()
+    const instance = await getMsalInstance()
     if (!instance) {
       throw new Error('Microsoft Entra ID is not configured')
     }
@@ -275,7 +272,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     if (isProductionMode) {
-      const instance = getMsalInstance()
+      const instance = await getMsalInstance()
       const account = instance?.getActiveAccount() || instance?.getAllAccounts()[0] || null
 
       if (instance && account) {

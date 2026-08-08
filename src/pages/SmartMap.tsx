@@ -57,10 +57,10 @@ function mapPropertyType(type?: string) {
 
 function mapPropertyStatus(status?: string) {
   const lower = (status || '').toLowerCase()
-  if (lower.includes('sold') || lower.includes('verified') || lower.includes('archived')) return 'Sold'
-  if (lower.includes('pending')) return 'Pending'
-  if (lower.includes('appraisal') || lower.includes('inspected')) return 'Appraisal'
-  return 'For Sale'
+  if (lower.includes('sold') || lower.includes('verified') || lower.includes('archived')) return 'ปิดรายการ'
+  if (lower.includes('pending')) return 'รอตรวจสอบ'
+  if (lower.includes('appraisal') || lower.includes('inspected')) return 'ประเมินแล้ว'
+  return 'ประกาศขาย'
 }
 
 function thaiDate(value: string) {
@@ -140,6 +140,16 @@ function confidenceFromProperty(property: Property) {
   return Math.min(97, Math.max(72, base))
 }
 
+function readCompletedSurveyIds() {
+  if (typeof window === 'undefined') return new Set<string>()
+  try {
+    const raw = window.localStorage.getItem('fieldmate-completed-surveys')
+    return new Set(Object.keys(raw ? JSON.parse(raw) as Record<string, unknown> : {}))
+  } catch {
+    return new Set<string>()
+  }
+}
+
 export default function SmartMap() {
   const navigate = useNavigate()
   const { data: properties = [], isLoading: loading, refetch } = usePropertiesQuery()
@@ -162,6 +172,7 @@ export default function SmartMap() {
   const [mapRetrySeed, setMapRetrySeed] = useState(0)
   const [isMapBusy, setIsMapBusy] = useState(true)
   const [actionMessage, setActionMessage] = useState('')
+  const [completedSurveyIds, setCompletedSurveyIds] = useState(readCompletedSurveyIds)
   const mapFrameRef = useRef<HTMLDivElement | null>(null)
   const hasAutoCenteredRef = useRef(false)
   const { location, accuracyLevel, permission, error: gpsError, requestCurrentPosition } = useLiveLocation({ highAccuracy: true, watch: true, timeoutMs: 12000 })
@@ -180,6 +191,16 @@ export default function SmartMap() {
       window.removeEventListener('online', onNetwork)
       window.removeEventListener('offline', onNetwork)
       window.removeEventListener('fieldmate:offline-queue-updated', onNetwork)
+    }
+  }, [])
+
+  useEffect(() => {
+    const refreshSurveyStatus = () => setCompletedSurveyIds(readCompletedSurveyIds())
+    window.addEventListener('fieldmate:survey-completed', refreshSurveyStatus)
+    window.addEventListener('storage', refreshSurveyStatus)
+    return () => {
+      window.removeEventListener('fieldmate:survey-completed', refreshSurveyStatus)
+      window.removeEventListener('storage', refreshSurveyStatus)
     }
   }, [])
 
@@ -302,7 +323,7 @@ export default function SmartMap() {
 
   const requestCurrentGps = () => {
     requestCurrentLocation()
-    setActionMessage('กำลังอัปเดต Current GPS')
+    setActionMessage('กำลังอัปเดต GPS ปัจจุบัน')
   }
 
   const centerOnProperty = (property: Property) => {
@@ -366,7 +387,7 @@ export default function SmartMap() {
     return properties.filter((item) => {
       const distance = Math.abs(item.latitude - location.latitude) + Math.abs(item.longitude - location.longitude)
       const status = mapPropertyStatus(item.status)
-      return distance <= 0.08 && status === 'For Sale'
+      return distance <= 0.08 && status === 'ประกาศขาย'
     }).length
   }, [location, properties])
 
@@ -378,7 +399,7 @@ export default function SmartMap() {
     }).length
   }, [properties])
 
-  const summarySaved = useMemo(() => properties.filter((item) => mapPropertyStatus(item.status) !== 'Pending').length, [properties])
+  const summarySaved = useMemo(() => properties.filter((item) => mapPropertyStatus(item.status) !== 'รอตรวจสอบ').length, [properties])
 
   const currentLocationText = location ? `${location.latitude.toFixed(5)}, ${location.longitude.toFixed(5)}` : 'กำลังค้นหาตำแหน่ง'
 
@@ -472,7 +493,7 @@ export default function SmartMap() {
                 <Marker
                   key={property.id}
                   position={[property.latitude, property.longitude]}
-                  icon={createPropertyMarkerIcon(property, selected)}
+                  icon={createPropertyMarkerIcon(property, selected, completedSurveyIds.has(property.id))}
                   eventHandlers={{ click: () => centerOnProperty(property) }}
                 />
               )
@@ -539,11 +560,11 @@ export default function SmartMap() {
 
           <div className="smart-map-fabs">
             <MapFAB label="ค้นหา" icon="search" onClick={() => setActionMessage('โฟกัสช่องค้นหาแล้ว')} />
-            <MapFAB label="Filter" icon="tune" onClick={() => setShowLayers((current) => !current)} />
-            <MapFAB label="Current GPS" icon="my_location" onClick={requestCurrentGps} />
-            <MapFAB label="Layers" icon="layers" onClick={() => setShowLayers((current) => !current)} />
-            <MapFAB label="Nearby" icon="near_me" onClick={findNearbyProperty} />
-            <MapFAB label="Traffic" icon={showTraffic ? 'traffic' : 'route'} onClick={() => setShowTraffic((current) => !current)} />
+            <MapFAB label="ตัวกรอง" icon="tune" onClick={() => setShowLayers((current) => !current)} />
+            <MapFAB label="GPS ปัจจุบัน" icon="my_location" onClick={requestCurrentGps} />
+            <MapFAB label="ชั้นข้อมูล" icon="layers" onClick={() => setShowLayers((current) => !current)} />
+            <MapFAB label="ทรัพย์ใกล้เคียง" icon="near_me" onClick={findNearbyProperty} />
+            <MapFAB label="การจราจร" icon={showTraffic ? 'traffic' : 'route'} onClick={() => setShowTraffic((current) => !current)} />
             <MapFAB label="Compass" icon="explore" onClick={() => setZoom(13)} />
             <MapFAB label="ซูมเข้า" icon="add" onClick={() => setZoom((current) => Math.min(current + 1, 20))} />
             <MapFAB label="ซูมออก" icon="remove" onClick={() => setZoom((current) => Math.max(current - 1, 5))} />
@@ -596,7 +617,7 @@ export default function SmartMap() {
               <div>
                 <div className="smart-sheet-title">{selectedProperty.owner}</div>
                 <div className="smart-sheet-line">{selectedProperty.province} • เขตสำรวจหลัก</div>
-                <div className="smart-sheet-line">ID: {selectedProperty.id} • {mapPropertyType(selectedProperty.type)} • {mapPropertyStatus(selectedProperty.status)}</div>
+                <div className="smart-sheet-line">ID: {selectedProperty.id} • {mapPropertyType(selectedProperty.type)} • {completedSurveyIds.has(selectedProperty.id) ? 'สำรวจแล้ว' : mapPropertyStatus(selectedProperty.status)}</div>
                 <div className="smart-sheet-line">อัปเดตล่าสุด {thaiDate(selectedProperty.lastInspection)}</div>
               </div>
             </section>
@@ -626,6 +647,7 @@ export default function SmartMap() {
             </Suspense>
 
             <section className="smart-sheet-actions">
+              <button type="button" onClick={() => navigate(`/survey/${selectedProperty.id}`)}>{completedSurveyIds.has(selectedProperty.id) ? 'สำรวจอีกครั้ง' : 'เริ่มสำรวจ'}</button>
               <button type="button" onClick={() => navigate(`/property/${selectedProperty.id}`)}>ดูรายละเอียด</button>
               <button type="button" onClick={() => navigate('/assessment')}>เริ่มประเมิน</button>
               <button type="button" onClick={openPropertyNavigation}>นำทาง</button>

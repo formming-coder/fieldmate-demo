@@ -1,0 +1,7 @@
+import React from 'react'
+import { ComparableProperty } from '../../types'
+
+export default function ComparableDetail({ item, onClose, onToggle }: { item: ComparableProperty | null; onClose: () => void; onToggle: (item: ComparableProperty) => void }) {
+  if (!item) return null
+  return <div className="aa-sheet-backdrop" role="dialog" aria-modal="true" onClick={onClose}><section className="aa-comparable-sheet" onClick={(event) => event.stopPropagation()}><div className="aa-sheet-handle" /><img src={item.image} alt={item.title} /><h2>{item.title}</h2><div className="as-grid"><div><span>ประเภททรัพย์</span><strong>{item.type}</strong></div><div><span>พื้นที่</span><strong>{item.area} ตร.ม.</strong></div><div><span>ราคา</span><strong>{item.price.toLocaleString('th-TH')} บาท</strong></div><div><span>ราคา/ตร.ม.</span><strong>{item.pricePerSqm.toLocaleString('th-TH')} บาท</strong></div><div><span>ระยะทาง</span><strong>{item.distanceKm} กม.</strong></div><div><span>วันที่อัปเดต</span><strong>{new Date(item.updatedAt).toLocaleDateString('th-TH')}</strong></div><div><span>คะแนนความใกล้เคียง</span><strong>{item.similarity}%</strong></div></div><button type="button" className="aa-primary-button" onClick={() => onToggle(item)}>{item.selected ? 'นำออกจากทรัพย์เปรียบเทียบ' : 'ใช้เป็นทรัพย์เปรียบเทียบ'}</button><button type="button" className="aa-secondary-button" onClick={onClose}>ปิด</button></section></div>
+}

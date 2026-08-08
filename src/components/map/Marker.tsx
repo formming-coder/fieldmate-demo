@@ -20,15 +20,15 @@ function typeEmoji(type?: string) {
 function markerStatus(property: Property) {
   const raw = `${property.status || ''}`.toLowerCase()
   if (raw.includes('sold') || raw.includes('verified') || raw.includes('archived')) {
-    return { key: 'sold', label: 'Sold' }
+    return { key: 'sold', label: 'ปิดรายการ' }
   }
   if (raw.includes('pending')) {
-    return { key: 'pending', label: 'Pending' }
+    return { key: 'pending', label: 'รอตรวจสอบ' }
   }
   if (raw.includes('appraisal') || raw.includes('inspected')) {
-    return { key: 'appraisal', label: 'Appraisal' }
+    return { key: 'appraisal', label: 'ประเมินแล้ว' }
   }
-  return { key: 'for-sale', label: 'For Sale' }
+  return { key: 'for-sale', label: 'ประกาศขาย' }
 }
 
 function markerTypeLabel(type?: string) {
@@ -41,8 +41,8 @@ function markerTypeLabel(type?: string) {
   return 'ทรัพย์สิน'
 }
 
-export function createPropertyMarkerIcon(property: Property, selected: boolean) {
-  const status = markerStatus(property)
+export function createPropertyMarkerIcon(property: Property, selected: boolean, surveyed = false) {
+  const status = surveyed ? { key: 'surveyed', label: 'สำรวจแล้ว' } : markerStatus(property)
   return L.divIcon({
     className: 'smart-marker-wrap',
     html: `
