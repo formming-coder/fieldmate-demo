@@ -547,7 +547,7 @@ function StandaloneAICamera({ activePropertyId, returnPath }: { activePropertyId
 
 					try {
 						await photoRepository.uploadPhoto(uploadBlob, {
-							propertyId: 'PROP-BKK-2208',
+							propertyId: activePropertyId,
 							thumbnail: photo.thumbnailBlob,
 							metadata: photo.metadata,
 							onProgress: (progress) => {
@@ -768,5 +768,5 @@ export default function AICamera() {
 	const returnTo = searchParams.get('returnTo') === 'assessment' ? 'assessment' as const : 'survey' as const
 
 	if (propertyId && surveyId) return <SurveyAICamera propertyId={propertyId} surveyId={surveyId} sourcePhotoId={sourcePhotoId} initialCategory={initialCategory as SurveyPhotoType | undefined} returnTo={returnTo} />
-	return <StandaloneAICamera activePropertyId="PROP-BKK-2208" returnPath="/map" />
+	return <StandaloneAICamera activePropertyId="FM-BKK-26001" returnPath="/map" />
 }

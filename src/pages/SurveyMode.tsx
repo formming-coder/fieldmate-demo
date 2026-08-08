@@ -219,12 +219,12 @@ export default function SurveyMode() {
             <div className="survey-card-heading compact"><div><h2>ข้อมูลทรัพย์</h2><p>ข้อมูลจากรายการทรัพย์เดิม</p></div></div>
             <div className="survey-data-list">
               <div><span>ประเภททรัพย์</span><strong>{property.type || 'ทรัพย์สิน'}</strong></div>
-              <div><span>ที่อยู่</span><strong>{property.province} ประเทศไทย</strong></div>
+              <div><span>ที่อยู่</span><strong>{property.address}</strong></div>
               <div><span>จังหวัด</span><strong>{property.province}</strong></div>
               <div><span>อำเภอ</span><strong>เขตสำรวจหลัก</strong></div>
               <div><span>ตำบล</span><strong>พื้นที่สำรวจ {property.id}</strong></div>
               <div><span>ราคาประกาศ</span><strong>{property.marketPrice.toLocaleString('th-TH')} บาท</strong></div>
-              <div><span>พื้นที่</span><strong>120 ตร.ม.</strong></div>
+              <div><span>พื้นที่</span><strong>{property.areaSqm.toLocaleString('th-TH')} ตร.ม.</strong></div>
             </div>
           </section> : null}
           {step === 2 ? <>

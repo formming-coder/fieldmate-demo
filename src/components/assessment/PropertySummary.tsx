@@ -8,8 +8,8 @@ export default function PropertySummary({ property, survey }: { property: Proper
       <div className="as-grid">
         <div><span>ประเภททรัพย์</span><strong>{property.type || 'ทรัพย์สิน'}</strong></div>
         <div><span>ที่ตั้ง</span><strong>{property.province}</strong></div>
-        <div><span>พื้นที่ดิน</span><strong>120 ตร.ว.</strong></div>
-        <div><span>พื้นที่ใช้สอย</span><strong>220 ตร.ม.</strong></div>
+        <div><span>พื้นที่</span><strong>{property.areaSqm.toLocaleString('th-TH')} ตร.ม.</strong></div>
+        <div><span>ที่อยู่</span><strong>{property.address}</strong></div>
         <div><span>ราคาประกาศ</span><strong>{property.marketPrice.toLocaleString('th-TH')} บาท</strong></div>
         <div><span>อายุทรัพย์</span><strong>8 ปี</strong></div>
         <div><span>สภาพทรัพย์</span><strong>{survey.note.text ? 'มีข้อมูลตรวจสอบ' : 'รอตรวจสอบเพิ่มเติม'}</strong></div>

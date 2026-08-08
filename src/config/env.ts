@@ -1,6 +1,6 @@
 export type AppMode = 'development' | 'production'
 
-const appMode: AppMode = import.meta.env.VITE_APP_MODE === 'production' || import.meta.env.VITE_CLOUDFLARE_ENV === 'production'
+const appMode: AppMode = import.meta.env.VITE_APP_MODE === 'production'
   ? 'production'
   : 'development'
 

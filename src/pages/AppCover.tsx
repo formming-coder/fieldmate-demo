@@ -23,8 +23,8 @@ export default function AppCover({ onContinue }: { onContinue: () => void }) {
 
           <section className="app-cover-content">
             <AnimatedLogo
-              title="ฟีลด์เมต AI"
-              tagline="แพลตฟอร์มสำรวจทรัพย์สินด้วย AI"
+              title="Fieldmate AI"
+              tagline="AI Property Survey Platform"
               subtitle="แพลตฟอร์มอัจฉริยะสำหรับการสำรวจ เก็บข้อมูล และประเมินราคาหลักประกัน"
             />
 
@@ -44,8 +44,7 @@ export default function AppCover({ onContinue }: { onContinue: () => void }) {
               animate={{ opacity: 1 }}
               transition={{ delay: 0.42, duration: 0.5 }}
             >
-              <div>เวอร์ชัน 2.0</div>
-              <div>รุ่นทดสอบ 1</div>
+              <div>เวอร์ชัน 1.0 รุ่นต้นแบบ</div>
               <div>ลิขสิทธิ์ ฟีลด์เมต AI</div>
             </motion.footer>
           </section>

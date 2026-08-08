@@ -4,10 +4,10 @@ const DAY_IN_MS = 24 * 60 * 60 * 1000
 
 const demoUser: AuthUser = {
   id: 'demo-officer',
-  name: 'Demo Officer',
+  name: 'นีนา รัตนกุล',
   email: 'demo@fieldmate.ai',
   role: 'Officer',
-  department: 'Property Valuation',
+  department: 'ฝ่ายประเมินหลักประกัน',
   avatar: null,
 }
 
@@ -16,7 +16,7 @@ export async function createDemoSession(rememberMe: boolean) {
 
   return AuthStorage.write({
     user: demoUser,
-    token: 'demo-token',
+    token: `demo-session-${crypto.randomUUID()}`,
     expiresAt,
     provider: 'demo',
     rememberMe,

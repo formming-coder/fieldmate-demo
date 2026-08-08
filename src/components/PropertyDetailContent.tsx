@@ -66,13 +66,12 @@ export default function PropertyDetailContent({ property, nearby = [], onSelectN
         <div className="section-title">ข้อมูลทรัพย์สิน</div>
         <div className="info-grid">
           <div><span>ประเภททรัพย์สิน</span><strong>{propertyType}</strong></div>
-          <div><span>พื้นที่ดิน</span><strong>12 ไร่ / 3 งาน</strong></div>
-          <div><span>พื้นที่ใช้สอย</span><strong>245 ตร.ม.</strong></div>
+          <div><span>พื้นที่</span><strong>{property.areaSqm.toLocaleString('th-TH')} ตร.ม.</strong></div>
           <div><span>จำนวนชั้น</span><strong>2</strong></div>
           <div><span>ชื่อโครงการ</span><strong>ริเวอร์ เครสต์</strong></div>
           <div><span>อาคาร</span><strong>อาคาร B</strong></div>
           <div><span>ชั้น</span><strong>3</strong></div>
-          <div><span>ที่อยู่</span><strong>123/4 ซอย 6 ถนนพระราม 9</strong></div>
+          <div><span>ที่อยู่</span><strong>{property.address}</strong></div>
           <div><span>พิกัด GPS</span><strong>{property.latitude.toFixed(4)}, {property.longitude.toFixed(4)}</strong></div>
           <div><span>วันที่ตรวจสอบ</span><strong>{new Date(property.lastInspection).toLocaleDateString('th-TH')}</strong></div>
           <div><span>เจ้าหน้าที่</span><strong>นีนา</strong></div>

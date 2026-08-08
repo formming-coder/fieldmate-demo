@@ -18,7 +18,7 @@ export default function Login() {
   const [error, setError] = useState('')
   const [toast, setToast] = useState('')
   const [showMicrosoftDialog, setShowMicrosoftDialog] = useState(false)
-  const appVersion = 'v0.0.0'
+  const appVersion = '1.0 รุ่นต้นแบบ'
   const isDevelopmentAuth = appMode === 'development'
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -117,7 +117,7 @@ export default function Login() {
             <motion.div className="entry-dialog-overlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
               <motion.div className="entry-dialog-card" initial={{ y: 12, scale: 0.98 }} animate={{ y: 0, scale: 1 }} exit={{ y: 12, scale: 0.98 }}>
                 <strong>เข้าสู่ระบบด้วย Microsoft</strong>
-                  <p>Microsoft จะเปิดใช้งานเมื่อเชื่อมต่อโหมดใช้งานจริง</p>
+                  <p>ยังไม่ได้ตั้งค่าการยืนยันตัวตนด้วย Microsoft สำหรับรุ่นต้นแบบนี้</p>
                 <Button type="button" fullWidth onClick={() => setShowMicrosoftDialog(false)}>รับทราบ</Button>
               </motion.div>
             </motion.div>

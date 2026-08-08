@@ -97,7 +97,7 @@ function buildMicrosoftUser(account: AccountInfo, result?: AuthenticationResult)
 function persistMicrosoftSession(result: AuthenticationResult, rememberMe: boolean) {
   const account = result.account
   if (!account) {
-    throw new Error('Microsoft account information is missing')
+    throw new Error('ไม่พบข้อมูลบัญชี Microsoft กรุณาลองใหม่อีกครั้ง')
   }
 
   const expiresAt = result.expiresOn?.getTime() || Date.now() + (rememberMe ? 30 : 1) * 24 * 60 * 60 * 1000
@@ -247,7 +247,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const instance = await getMsalInstance()
     if (!instance) {
-      throw new Error('Microsoft Entra ID is not configured')
+      throw new Error('ยังไม่ได้ตั้งค่าการยืนยันตัวตนด้วย Microsoft สำหรับรุ่นต้นแบบนี้')
     }
 
     if (typeof window !== 'undefined') {

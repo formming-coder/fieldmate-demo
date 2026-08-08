@@ -13,6 +13,9 @@ type PropertyRecord = {
   id: string
   owner: string
   province: string
+  address?: string
+  areaSqm?: number
+  area_sqm?: number
   latitude: number
   longitude: number
   marketPrice?: number
@@ -42,6 +45,8 @@ function toProperty(record: PropertyRecord): Property {
     id: record.id,
     owner: record.owner,
     province: record.province,
+    address: record.address || `${record.owner} ${record.province}`,
+    areaSqm: Number(record.areaSqm ?? record.area_sqm ?? 120),
     latitude: Number(record.latitude),
     longitude: Number(record.longitude),
     marketPrice: Number(record.marketPrice ?? record.market_price ?? 0),

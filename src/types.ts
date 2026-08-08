@@ -2,6 +2,8 @@ export type Property = {
   id: string
   owner: string
   province: string
+  address: string
+  areaSqm: number
   latitude: number
   longitude: number
   marketPrice: number

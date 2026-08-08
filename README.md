@@ -1,6 +1,17 @@
-# fieldmate-demo
+# Fieldmate AI
 
-Fieldmate AI mobile web application with enterprise-ready architecture on React + TypeScript + Vite, backed by Cloudflare Workers, D1, and R2.
+Mobile property survey prototype built with React, TypeScript, and Vite, with Cloudflare Worker, D1, and R2 deployment scaffolding.
+
+## Release
+
+- Product: Fieldmate AI
+- Version: 1.0 Prototype
+- Local status: Prototype Demo Ready
+- Official release gate: Blocked pending Cloudflare HTTPS deployment and physical-device validation
+
+The supported demonstration flow covers App Cover, onboarding, Demo Login, permissions, Smart Map, property survey, real camera capture, deterministic OCR, AI-assisted assessment, save, and return to Smart Map.
+
+See [VERSION.md](VERSION.md) for release limitations and [QA_REPORT.md](QA_REPORT.md) for acceptance evidence.
 
 ## Run
 
@@ -28,6 +39,8 @@ npm run build
 
 ## Environment Variables
 
+Prototype deployments use Demo Authentication by default. Set `VITE_APP_MODE=production` only when Microsoft Entra is configured and production authentication is intentionally enabled.
+
 Primary (enterprise naming):
 
 - `VITE_API_URL`
@@ -37,6 +50,10 @@ Primary (enterprise naming):
 - `VITE_MS_REDIRECT_URI`
 - `VITE_MS_SCOPES`
 - `VITE_CLOUDFLARE_ENV`
+- `VITE_APP_MODE`
+- `VITE_GOOGLE_MAPS_API_KEY`
+- `VITE_OCR_PROVIDER`
+- `VITE_OCR_API_URL`
 
 Compatibility aliases are still supported:
 
@@ -80,7 +97,7 @@ Base path: `/api`
 
 ## Worker Deployment
 
-1. Configure `workers/wrangler.toml` values for D1, R2, CORS, and JWT settings.
+1. Authenticate Wrangler and configure production D1, R2, CORS, and Entra values without committing secrets.
 2. Apply D1 schema from `workers/schema.sql`.
 3. Deploy Worker:
 
@@ -88,6 +105,17 @@ Base path: `/api`
 cd workers
 npx wrangler deploy
 ```
+
+The checked-in Worker configuration is development scaffolding and is not a production deployment.
+
+## Known Limitations
+
+- OCR is deterministic mock processing.
+- Authentication uses a local demo session unless Microsoft mode is explicitly configured.
+- AI assessment results are deterministic demo analysis and are not official valuations.
+- Property records and images are demo data.
+- Smart Map currently renders with Leaflet and OSM/Esri/Stadia tiles, not Google Maps.
+- Cloudflare production, HTTPS camera/PWA behavior, and physical iPhone/Android validation remain outstanding.
 
 ## Folder Guide
 

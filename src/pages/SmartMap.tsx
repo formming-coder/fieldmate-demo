@@ -624,7 +624,7 @@ export default function SmartMap() {
 
             <section className="smart-sheet-kpis">
               <div><span>ราคา</span><strong>{formatThaiCurrency(selectedProperty.marketPrice)}</strong></div>
-              <div><span>ราคาต่อ ตร.ม.</span><strong>{formatThaiCurrency(Math.round(selectedProperty.marketPrice / 120))}</strong></div>
+              <div><span>ราคาต่อ ตร.ม.</span><strong>{formatThaiCurrency(Math.round(selectedProperty.marketPrice / selectedProperty.areaSqm))}</strong></div>
               <div><span>เจ้าของ</span><strong>{selectedProperty.owner}</strong></div>
               <div><span>ระยะห่างจาก Current Location</span><strong>{selectedDistanceLabel}</strong></div>
             </section>
