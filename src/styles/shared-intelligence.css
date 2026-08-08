@@ -325,6 +325,7 @@
 .spi-duplicate-card {
   display: grid;
   gap: 8px;
+  padding: 10px 12px;
   background: linear-gradient(135deg, rgba(255, 236, 190, 0.95), rgba(255, 248, 232, 0.9));
 }
 
@@ -337,8 +338,19 @@
 .spi-gallery-hero {
   border-radius: 14px;
   overflow: hidden;
-  height: 210px;
+  width: 100%;
+  aspect-ratio: 16 / 10;
   margin-bottom: 8px;
+  touch-action: pan-y pinch-zoom;
+}
+
+.spi-gallery-hero button {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  padding: 0;
+  background: transparent;
 }
 
 .spi-gallery-hero img {

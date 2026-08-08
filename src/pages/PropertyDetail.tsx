@@ -3,7 +3,6 @@ import { useNavigate, useParams } from 'react-router-dom'
 import Layout from '../components/Layout'
 import PropertyDetailContent from '../components/PropertyDetailContent'
 import { BottomSheet } from '../components/ui'
-import { useSwipeBack } from '../hooks/useSwipeBack'
 import { usePropertiesQuery } from '../hooks/useBackendQueries'
 import 'leaflet/dist/leaflet.css'
 import '../components/PropertyDetailContent.css'
@@ -12,7 +11,6 @@ export default function PropertyDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
   const { data: properties = [] } = usePropertiesQuery()
-  const swipeBack = useSwipeBack(() => navigate(-1))
   const [toast, setToast] = useState('')
   const property = useMemo(() => properties.find((item) => item.id === id) || properties[0] || null, [properties, id])
   const nearby = useMemo(() => {
@@ -68,21 +66,29 @@ export default function PropertyDetail() {
 
   return (
     <Layout title="รายละเอียดทรัพย์สิน">
-      <div {...swipeBack}>
-        <BottomSheet open onClose={() => navigate(-1)} snapPoints={[0.54, 0.84, 0.96]} initialSnap={1}>
-          <PropertyDetailContent property={property} nearby={nearby} onSelectNearby={(item) => navigate(`/property/${item.id}`)} />
+      <BottomSheet
+        open
+        mode="property"
+        title="รายละเอียดทรัพย์สิน"
+        onClose={() => navigate('/map', { replace: true })}
+        footer={(
+          <>
+            <button type="button" onClick={() => navigate(`/survey/${property.id}`)}>เริ่มสำรวจ</button>
+            <button type="button" onClick={openNavigation}>นำทาง</button>
+            <button type="button" onClick={() => setToast('บันทึกข้อมูลทรัพย์สินเรียบร้อยแล้ว')}>บันทึก</button>
+          </>
+        )}
+      >
+        <PropertyDetailContent property={property} nearby={nearby} onSelectNearby={(item) => navigate(`/property/${item.id}`, { replace: true })} />
 
-          <div className="bottom-actions">
-            <button type="button" className="action-btn" onClick={openNavigation}>นำทาง</button>
+          <div className="detail-secondary-actions">
             <button type="button" className="action-btn" onClick={() => void shareProperty()}>แชร์</button>
             <button type="button" className="action-btn" onClick={() => navigate('/camera')}>เพิ่มภาพ</button>
             <button type="button" className="action-btn" onClick={() => navigate('/assessment')}>แก้ไข</button>
-            <button type="button" className="action-btn primary" onClick={() => setToast('บันทึกข้อมูลทรัพย์สินเรียบร้อยแล้ว')}>บันทึก</button>
           </div>
 
           {toast ? <div className="detail-toast" role="status" aria-live="polite">{toast}</div> : null}
-        </BottomSheet>
-      </div>
+      </BottomSheet>
     </Layout>
   )
 }

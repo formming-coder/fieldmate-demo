@@ -10,7 +10,7 @@ import MapHeader from '../components/map/MapHeader'
 import FloatingSearch from '../components/map/FloatingSearch'
 import FilterChips, { SmartFilter } from '../components/map/FilterChips'
 import MapFAB from '../components/map/MapFAB'
-import BottomSheet from '../components/map/BottomSheet'
+import { BottomSheet } from '../components/ui'
 import GoogleMapCanvas from '../components/map/GoogleMapCanvas'
 import { getOfflineQueueCounts } from '../lib/offline/queue'
 import { env, hasGoogleMapsApiKey } from '../config/env'
@@ -487,7 +487,19 @@ export default function SmartMap() {
         {actionMessage ? <div className="smart-map-action-toast" role="status" aria-live="polite">{actionMessage}</div> : null}
       </div>
 
-      <BottomSheet open={Boolean(selectedProperty)} onClose={() => setSelectedId(null)}>
+      <BottomSheet
+        open={Boolean(selectedProperty)}
+        mode="property"
+        title="รายละเอียดทรัพย์สิน"
+        onClose={() => setSelectedId(null)}
+        footer={selectedProperty ? (
+          <>
+            <button type="button" onClick={() => navigate(`/survey/${selectedProperty.id}`)}>เริ่มสำรวจ</button>
+            <button type="button" onClick={openPropertyNavigation}>นำทาง</button>
+            <button type="button" onClick={() => setActionMessage('บันทึกข้อมูลทรัพย์สินเรียบร้อยแล้ว')}>บันทึก</button>
+          </>
+        ) : null}
+      >
         {selectedProperty ? (
           <div className="smart-sheet-content">
             <section className="smart-sheet-summary">
@@ -525,11 +537,10 @@ export default function SmartMap() {
             </Suspense>
 
             <section className="smart-sheet-actions">
-              <button type="button" onClick={() => navigate(`/survey/${selectedProperty.id}`)}>{completedSurveyIds.has(selectedProperty.id) ? 'สำรวจอีกครั้ง' : 'เริ่มสำรวจ'}</button>
               <button type="button" onClick={() => navigate(`/property/${selectedProperty.id}`)}>ดูรายละเอียด</button>
               <button type="button" onClick={() => navigate('/assessment')}>เริ่มประเมิน</button>
-              <button type="button" onClick={openPropertyNavigation}>นำทาง</button>
             </section>
+            {actionMessage ? <div className="smart-sheet-status" role="status" aria-live="polite">{actionMessage}</div> : null}
           </div>
         ) : null}
       </BottomSheet>

@@ -14,7 +14,7 @@ import PropertyGallery from '../components/shared-intelligence/PropertyGallery'
 import OfficerCard from '../components/shared-intelligence/OfficerCard'
 import AISummaryCard from '../components/shared-intelligence/AISummaryCard'
 import CopyActionSheet from '../components/shared-intelligence/CopyActionSheet'
-import BottomSheet from '../components/shared-intelligence/BottomSheet'
+import { BottomSheet } from '../components/ui'
 import '../styles/shared-intelligence.css'
 
 type SharedProperty = Property & SharedPropertyCardData & {
@@ -395,7 +395,19 @@ export default function SharedPropertyIntelligence() {
           )}
         </section>
 
-        <BottomSheet open={Boolean(selectedProperty)} onClose={() => setSelectedId(null)}>
+        <BottomSheet
+          open={Boolean(selectedProperty)}
+          mode="property"
+          title="รายละเอียดทรัพย์สิน"
+          onClose={() => navigate('/map')}
+          footer={selectedProperty ? (
+            <>
+              <button type="button" onClick={() => navigate(`/survey/${selectedProperty.id}`)}>เริ่มสำรวจ</button>
+              <button type="button" onClick={() => navigate('/map')}>นำทาง</button>
+              <button type="button" onClick={() => setMessage('บันทึกข้อมูลทรัพย์สินเรียบร้อยแล้ว')}>บันทึก</button>
+            </>
+          ) : null}
+        >
           {selectedProperty ? (
             <div className="spi-sheet-content">
               <DuplicateCard

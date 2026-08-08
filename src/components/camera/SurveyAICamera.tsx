@@ -6,7 +6,8 @@ import { useLiveLocation } from '../../hooks/useLiveLocation'
 import { imageService } from '../../services/camera/imageService'
 import { ocrService } from '../../services/ocr/ocrService'
 import { photoStorageService } from '../../services/camera/photoStorageService'
-import { CameraState, CapturedPhoto, ImageQuality, OCRResult as OCRResultType, OCRStatus, SurveyPhotoType } from '../../types'
+import { CameraState, CapturedPhoto, ImageQuality, ListingPropertyType, OCRResult as OCRResultType, OCRStatus, PropertyListingForm as PropertyListingData, PropertySurvey, SurveyPhotoType } from '../../types'
+import { createEmptyListingInput, formatThaiNumber, ListingDraftInput } from '../../utils/propertyListing'
 import CameraPreview from './CameraPreview'
 import CameraControls from './CameraControls'
 import CameraPermission from './CameraPermission'
@@ -14,6 +15,8 @@ import PhotoPreview from './PhotoPreview'
 import ImageQualityCheck from './ImageQualityCheck'
 import OCRProcessing from './OCRProcessing'
 import OCRResult from './OCRResult'
+import PropertyTypeSelector from '../property-listing/PropertyTypeSelector'
+import PropertyListingForm from '../property-listing/PropertyListingForm'
 import '../../styles/camera-survey.css'
 
 const categories: Array<{ id: SurveyPhotoType; label: string }> = [
@@ -42,6 +45,8 @@ export default function SurveyAICamera({ propertyId, surveyId, sourcePhotoId, in
   const [preparedPhoto, setPreparedPhoto] = useState<CapturedPhoto | null>(null)
   const [ocrResult, setOcrResult] = useState<OCRResultType | null>(null)
   const [message, setMessage] = useState('')
+  const [listingInitial, setListingInitial] = useState<ListingDraftInput | null>(null)
+  const [savedListing, setSavedListing] = useState<PropertyListingData | null>(null)
   const [offline, setOffline] = useState(() => !navigator.onLine)
   const [flashActive, setFlashActive] = useState(false)
   const { videoRef, permission, error: cameraError, loading, torchEnabled, torchAvailable, requestCamera, capturePhoto, switchCamera, toggleTorch, stopCamera } = useDeviceCamera()
@@ -49,6 +54,7 @@ export default function SurveyAICamera({ propertyId, surveyId, sourcePhotoId, in
   const returnPath = returnTo === 'assessment'
     ? `/assessment?propertyId=${encodeURIComponent(propertyId)}&surveyId=${encodeURIComponent(surveyId)}`
     : `/survey/${encodeURIComponent(propertyId)}?step=photos&cameraReturn=1`
+  const listingDraftKey = `fieldmate-property-listing-draft:${surveyId}`
 
   useEffect(() => { void requestCamera('environment') }, [requestCamera])
   useEffect(() => {
@@ -59,6 +65,45 @@ export default function SurveyAICamera({ propertyId, surveyId, sourcePhotoId, in
   }, [])
   useEffect(() => { previewUrlRef.current = previewUrl }, [previewUrl])
   useEffect(() => () => { if (previewUrlRef.current.startsWith('blob:')) URL.revokeObjectURL(previewUrlRef.current) }, [])
+
+  useEffect(() => {
+    if (sourcePhotoId) return
+    try {
+      const rawListing = window.localStorage.getItem(listingDraftKey)
+      const rawSurvey = window.localStorage.getItem(`fieldmate-survey-draft:${propertyId}`)
+      if (!rawListing || !rawSurvey) return
+      const restored = JSON.parse(rawListing) as ListingDraftInput
+      const survey = JSON.parse(rawSurvey) as PropertySurvey
+      const photo = survey.photos.find((item) => restored.photoIds.includes(item.id))
+      if (!photo || restored.surveyId !== surveyId) return
+      setPreparedPhoto({
+        id: photo.id,
+        originalImage: photo.originalImage || photo.dataUrl,
+        image: photo.dataUrl,
+        thumbnail: photo.thumbnailDataUrl || photo.dataUrl,
+        metadata: {
+          propertyId,
+          surveyId,
+          photoId: photo.id,
+          latitude: photo.latitude,
+          longitude: photo.longitude,
+          capturedAt: photo.capturedAt,
+          date: new Date(photo.capturedAt).toLocaleDateString('th-TH'),
+          time: new Date(photo.capturedAt).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }),
+          category: photo.type,
+          propertyType: restored.propertyType,
+        },
+        ocrStatus: photo.ocrStatus || 'idle',
+        ocrResult: photo.ocrResult || null,
+        quality: photo.quality || emptyQuality,
+      })
+      setListingInitial(restored)
+      setState('listing-form')
+      stopCamera()
+    } catch {
+      window.localStorage.removeItem(listingDraftKey)
+    }
+  }, [listingDraftKey, propertyId, sourcePhotoId, stopCamera, surveyId])
 
   const resetCapture = () => {
     if (previewUrl.startsWith('blob:')) URL.revokeObjectURL(previewUrl)
@@ -112,7 +157,16 @@ export default function SurveyAICamera({ propertyId, surveyId, sourcePhotoId, in
 
   const createPhoto = async (status: OCRStatus, result: OCRResultType | null) => {
     if (!sourceFile) throw new Error('ไม่พบภาพที่เลือก')
-    const processed = await imageService.process(sourceFile, location?.latitude ?? null, location?.longitude ?? null)
+    let surveyLocation: { latitude: number; longitude: number } | null = null
+    try {
+      const rawSurvey = window.localStorage.getItem(`fieldmate-survey-draft:${propertyId}`)
+      surveyLocation = rawSurvey ? (JSON.parse(rawSurvey) as PropertySurvey).location : null
+    } catch {
+      surveyLocation = null
+    }
+    const latitude = location?.latitude ?? surveyLocation?.latitude ?? null
+    const longitude = location?.longitude ?? surveyLocation?.longitude ?? null
+    const processed = await imageService.process(sourceFile, latitude, longitude)
     const now = new Date()
     const photoId = sourcePhotoId || `survey-photo-${Date.now()}`
     return {
@@ -122,8 +176,8 @@ export default function SurveyAICamera({ propertyId, surveyId, sourcePhotoId, in
         propertyId,
         surveyId,
         photoId,
-        latitude: location?.latitude ?? null,
-        longitude: location?.longitude ?? null,
+        latitude,
+        longitude,
         capturedAt: now.toISOString(),
         date: now.toLocaleDateString('th-TH'),
         time: now.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }),
@@ -140,7 +194,7 @@ export default function SurveyAICamera({ propertyId, surveyId, sourcePhotoId, in
       await photoStorageService.attachToSurvey(photo)
       setPreparedPhoto(photo)
       setMessage(successMessage)
-      setState('saved')
+      setState('property-type')
       stopCamera()
     } catch (error) {
       setMessage(error instanceof Error ? error.message : 'ไม่สามารถบันทึกรูปลงแบบสำรวจได้')
@@ -193,12 +247,61 @@ export default function SurveyAICamera({ propertyId, surveyId, sourcePhotoId, in
   }
   const saveAfterError = () => { if (preparedPhoto) void savePhoto({ ...preparedPhoto, ocrStatus: 'failed', ocrResult: null }, 'บันทึกภาพแล้ว สามารถวิเคราะห์ OCR ภายหลังได้') }
 
+  const selectPropertyType = (propertyType: ListingPropertyType) => {
+    if (!preparedPhoto) return
+    const initial = createEmptyListingInput({
+      propertyType,
+      propertyId,
+      surveyId,
+      photoId: preparedPhoto.id,
+      photoCategory: preparedPhoto.metadata.category,
+      latitude: preparedPhoto.metadata.latitude,
+      longitude: preparedPhoto.metadata.longitude,
+      ocrResult: preparedPhoto.ocrResult,
+    })
+    try {
+      const raw = window.localStorage.getItem(listingDraftKey)
+      const previous = raw ? JSON.parse(raw) as ListingDraftInput : null
+      const next = previous?.surveyId === surveyId ? { ...previous, propertyType } : initial
+      window.localStorage.setItem(listingDraftKey, JSON.stringify(next))
+      setListingInitial(next)
+    } catch {
+      setListingInitial(initial)
+    }
+    setState('listing-form')
+  }
+
+  const saveListing = async (listing: PropertyListingData) => {
+    const surveyKey = `fieldmate-survey-draft:${propertyId}`
+    try {
+      await Promise.all(listing.photoIds.map((photoId) => photoStorageService.updatePropertyType(photoId, listing.propertyType)))
+      const raw = window.localStorage.getItem(surveyKey)
+      if (!raw) throw new Error('ไม่พบแบบสำรวจปัจจุบัน')
+      const survey = JSON.parse(raw) as PropertySurvey
+      if (survey.id !== surveyId) throw new Error('แบบสำรวจปัจจุบันไม่ตรงกัน')
+      const linkedPhotoIds = new Set(listing.photoIds)
+      const photos = survey.photos.map((photo) => linkedPhotoIds.has(photo.id) ? { ...photo, propertyType: listing.propertyType } : photo)
+      window.localStorage.setItem(surveyKey, JSON.stringify({ ...survey, listing, photos, updatedAt: listing.updatedAt }))
+      window.dispatchEvent(new CustomEvent('fieldmate:property-listing-saved', { detail: { propertyId, surveyId, photoIds: listing.photoIds } }))
+      setSavedListing(listing)
+      setState('listing-saved')
+      return true
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : 'ไม่สามารถบันทึกข้อมูลประกาศขายได้')
+      return false
+    }
+  }
+
+  const maskedPhone = savedListing?.phone
+    ? `${savedListing.phone.slice(0, 3)}-XXX-${savedListing.phone.slice(-4)}`
+    : '-'
+
   return (
     <Layout title="กล้อง AI" immersive hideAssistant hideBottomNavigation>
       <div className="survey-ai-camera-page">
         <input ref={inputRef} type="file" accept="image/*" className="cam-hidden-input" onChange={selectFile} />
-        <header className="survey-ai-header"><button type="button" aria-label="ย้อนกลับ" onClick={() => state === 'camera' ? navigate(returnPath) : resetCapture()}><span className="material-symbols-rounded">arrow_back</span></button><div><strong>กล้อง AI</strong><small>{propertyId}</small></div><span className={permission === 'granted' ? 'ready' : ''}>{permission === 'granted' ? 'กล้องพร้อม' : 'รอกล้อง'}</span></header>
-        {offline ? <div className="survey-ai-offline"><span className="material-symbols-rounded">cloud_off</span>ออฟไลน์ · รูปจะบันทึกในเครื่อง</div> : null}
+        {!['property-type', 'listing-form', 'listing-saved'].includes(state) ? <header className="survey-ai-header"><button type="button" aria-label="ย้อนกลับ" onClick={() => state === 'camera' ? navigate(returnPath) : resetCapture()}><span className="material-symbols-rounded">arrow_back</span></button><div><strong>กล้อง AI</strong><small>{propertyId}</small></div><span className={permission === 'granted' ? 'ready' : ''}>{permission === 'granted' ? 'กล้องพร้อม' : 'รอกล้อง'}</span></header> : null}
+        {offline && !['property-type', 'listing-form', 'listing-saved'].includes(state) ? <div className="survey-ai-offline"><span className="material-symbols-rounded">cloud_off</span>ออฟไลน์ · รูปจะบันทึกในเครื่อง</div> : null}
 
         {state === 'camera' ? <>
           <CameraPreview videoRef={videoRef} active={permission === 'granted'} flashActive={flashActive} />
@@ -211,8 +314,11 @@ export default function SurveyAICamera({ propertyId, surveyId, sourcePhotoId, in
         {state === 'processing' ? <OCRProcessing stage={stage} /> : null}
         {state === 'result' && ocrResult ? <div className="survey-ai-workspace"><OCRResult result={ocrResult} onChange={setOcrResult} onRetake={resetCapture} onSave={saveResult} /></div> : null}
         {state === 'ocr-error' ? <section className="survey-ai-error"><span className="material-symbols-rounded">scan_delete</span><h1>ไม่สามารถอ่านข้อมูลจากภาพได้</h1><p>คุณยังสามารถบันทึกรูปนี้ลงแบบสำรวจและวิเคราะห์ภายหลังได้</p><div><button type="button" onClick={retryOCR}>ลองใหม่</button><button type="button" onClick={resetCapture}>ถ่ายภาพใหม่</button><button type="button" className="primary" onClick={saveAfterError}>ใช้รูปนี้ต่อ</button></div></section> : null}
+        {state === 'property-type' ? <PropertyTypeSelector onSelect={selectPropertyType} onBack={() => navigate(returnPath)} /> : null}
+        {state === 'listing-form' && listingInitial ? <PropertyListingForm initialValue={listingInitial} draftKey={listingDraftKey} onBack={() => setState('property-type')} onCancel={() => navigate(returnPath)} onSave={saveListing} /> : null}
+        {state === 'listing-saved' && savedListing ? <section className="listing-saved-page"><span className="material-symbols-rounded">check_circle</span><h1>บันทึกข้อมูลประกาศขายแล้ว</h1><div><p><span>ประเภททรัพย์</span><strong>{savedListing.propertyType}</strong></p><p><span>ราคาเสนอขาย</span><strong>฿{formatThaiNumber(savedListing.price, 0)}</strong></p><p><span>พื้นที่</span><strong>{savedListing.propertyType === 'ที่ดิน' ? `${formatThaiNumber(savedListing.totalLandSqWah)} ตร.ว.` : `${formatThaiNumber(savedListing.usableAreaSqm || 0)} ตร.ม.`}</strong></p><p><span>เบอร์โทรผู้ขาย</span><strong>{maskedPhone}</strong></p><p><span>จำนวนรูป</span><strong>{savedListing.photoIds.length} รูป</strong></p><p><span>บันทึกเมื่อ</span><strong>{new Date(savedListing.updatedAt).toLocaleString('th-TH')}</strong></p></div><button type="button" onClick={() => navigate(returnPath)}>กลับไปสำรวจ</button></section> : null}
         {state === 'saved' ? <section className="survey-ai-saved"><span className="material-symbols-rounded">check_circle</span><h1>บันทึกลงแบบสำรวจแล้ว</h1><p>{message}</p><button type="button" onClick={() => navigate(returnPath)}>{returnTo === 'assessment' ? 'กลับไปหน้าประเมิน' : 'กลับไปแบบสำรวจ'}</button></section> : null}
-        {message && state !== 'saved' ? <div className="survey-ai-message" role="alert">{message}</div> : null}
+        {message && !['saved', 'property-type', 'listing-form', 'listing-saved'].includes(state) ? <div className="survey-ai-message" role="alert">{message}</div> : null}
       </div>
     </Layout>
   )

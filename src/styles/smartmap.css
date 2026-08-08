@@ -594,11 +594,18 @@
   display: flex;
   width: 100%;
   transition: transform 0.35s ease;
+  touch-action: pan-y pinch-zoom;
 }
 
 .smart-gallery-frame {
+  display: block;
   min-width: 100%;
-  height: 186px;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  border: 0;
+  padding: 0;
+  overflow: hidden;
+  background: transparent;
 }
 
 .smart-gallery-frame img {
@@ -1015,8 +1022,18 @@
 
 .smart-sheet-actions {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
+}
+
+.smart-sheet-status {
+  padding: 9px 12px;
+  border-radius: 10px;
+  background: rgba(255, 213, 74, 0.24);
+  color: #49330f;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-align: center;
 }
 
 .smart-sheet-actions button {

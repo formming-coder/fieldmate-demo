@@ -1,4 +1,4 @@
-import { CapturedPhoto, PropertySurvey, SurveyPhoto } from '../../types'
+import { CapturedPhoto, ListingPropertyType, PropertySurvey, SurveyPhoto } from '../../types'
 
 const DATABASE_NAME = 'fieldmate-local-media'
 const STORE_NAME = 'survey-photos'
@@ -26,6 +26,26 @@ async function saveMedia(photo: CapturedPhoto) {
 }
 
 export const photoStorageService = {
+  async updatePropertyType(photoId: string, propertyType: ListingPropertyType) {
+    const database = await openDatabase()
+    await new Promise<void>((resolve, reject) => {
+      const transaction = database.transaction(STORE_NAME, 'readwrite')
+      const store = transaction.objectStore(STORE_NAME)
+      const request = store.get(photoId)
+      request.onsuccess = () => {
+        const photo = request.result as CapturedPhoto | undefined
+        if (!photo) {
+          reject(new Error('ไม่พบรูปภาพที่เชื่อมโยงกับแบบฟอร์ม'))
+          return
+        }
+        store.put({ ...photo, metadata: { ...photo.metadata, propertyType } })
+      }
+      request.onerror = () => reject(new Error('ไม่สามารถอัปเดตข้อมูลรูปภาพได้'))
+      transaction.oncomplete = () => resolve()
+      transaction.onerror = () => reject(new Error('ไม่สามารถอัปเดตข้อมูลรูปภาพได้'))
+    })
+    database.close()
+  },
   async attachToSurvey(photo: CapturedPhoto) {
     await saveMedia(photo)
     const key = `fieldmate-survey-draft:${photo.metadata.propertyId}`

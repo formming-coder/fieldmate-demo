@@ -18,7 +18,33 @@ export type SurveyStatus = 'draft' | 'review' | 'saving' | 'completed'
 
 export type SurveyPhotoType = 'front' | 'side' | 'rear' | 'road' | 'surroundings' | 'sign' | 'document' | 'other'
 
-export type CameraState = 'camera' | 'preview' | 'processing' | 'result' | 'ocr-error' | 'saved'
+export type ListingPropertyType = 'ที่ดิน' | 'บ้านเดี่ยว' | 'บ้านแฝด' | 'ทาวน์เฮ้าส์' | 'ตึกแถว'
+
+export type PropertyListingForm = {
+  propertyType: ListingPropertyType
+  price: number
+  phone: string
+  notes: string
+  landRai: number
+  landNgan: number
+  landSqWah: number
+  totalLandSqWah: number
+  pricePerSqWah: number | null
+  floors: number | null
+  bedrooms: number | null
+  bathrooms: number | null
+  usableAreaSqm: number | null
+  latitude: number | null
+  longitude: number | null
+  photoIds: string[]
+  photoCategory: SurveyPhotoType
+  propertyId: string
+  surveyId: string
+  createdAt: string
+  updatedAt: string
+}
+
+export type CameraState = 'camera' | 'preview' | 'processing' | 'result' | 'ocr-error' | 'saved' | 'property-type' | 'listing-form' | 'listing-saved'
 
 export type OCRStatus = 'idle' | 'processing' | 'completed' | 'failed' | 'pending'
 
@@ -58,6 +84,7 @@ export type PhotoMetadata = {
   date: string
   time: string
   category: SurveyPhotoType
+  propertyType?: ListingPropertyType
 }
 
 export type CapturedPhoto = {
@@ -93,6 +120,7 @@ export type SurveyPhoto = {
   ocrStatus?: OCRStatus
   ocrResult?: OCRResult | null
   quality?: ImageQuality
+  propertyType?: ListingPropertyType
 }
 
 export type SurveyChecklistItem = {
@@ -115,6 +143,7 @@ export type PropertySurvey = {
   photos: SurveyPhoto[]
   checklist: SurveyChecklistItem[]
   note: SurveyNote
+  listing: PropertyListingForm | null
   createdAt: string
   updatedAt: string
   completedAt: string | null

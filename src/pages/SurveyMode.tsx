@@ -47,6 +47,7 @@ function createSurvey(propertyId: string): PropertySurvey {
     photos: [],
     checklist: buildChecklist(null, [], note),
     note,
+    listing: null,
     createdAt: now,
     updatedAt: now,
     completedAt: null,
@@ -218,13 +219,13 @@ export default function SurveyMode() {
             {property.images[0] ? <img className="survey-property-image" src={property.images[0]} alt={property.owner} /> : null}
             <div className="survey-card-heading compact"><div><h2>ข้อมูลทรัพย์</h2><p>ข้อมูลจากรายการทรัพย์เดิม</p></div></div>
             <div className="survey-data-list">
-              <div><span>ประเภททรัพย์</span><strong>{property.type || 'ทรัพย์สิน'}</strong></div>
+              <div><span>ประเภททรัพย์</span><strong>{survey.listing?.propertyType || property.type || 'ทรัพย์สิน'}</strong></div>
               <div><span>ที่อยู่</span><strong>{property.address}</strong></div>
               <div><span>จังหวัด</span><strong>{property.province}</strong></div>
               <div><span>อำเภอ</span><strong>เขตสำรวจหลัก</strong></div>
               <div><span>ตำบล</span><strong>พื้นที่สำรวจ {property.id}</strong></div>
-              <div><span>ราคาประกาศ</span><strong>{property.marketPrice.toLocaleString('th-TH')} บาท</strong></div>
-              <div><span>พื้นที่</span><strong>{property.areaSqm.toLocaleString('th-TH')} ตร.ม.</strong></div>
+              <div><span>ราคาประกาศ</span><strong>{(survey.listing?.price || property.marketPrice).toLocaleString('th-TH')} บาท</strong></div>
+              <div><span>พื้นที่</span><strong>{survey.listing ? (survey.listing.propertyType === 'ที่ดิน' ? `${survey.listing.totalLandSqWah.toLocaleString('th-TH')} ตร.ว.` : `${(survey.listing.usableAreaSqm || 0).toLocaleString('th-TH')} ตร.ม.`) : `${property.areaSqm.toLocaleString('th-TH')} ตร.ม.`}</strong></div>
             </div>
           </section> : null}
           {step === 2 ? <>

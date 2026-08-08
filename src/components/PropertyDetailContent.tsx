@@ -1,4 +1,5 @@
-import React, { useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { MapContainer, Marker, TileLayer } from 'react-leaflet'
 import L from 'leaflet'
 import { Property } from '../types'
@@ -35,6 +36,7 @@ export default function PropertyDetailContent({ property, nearby = [], onSelectN
   const [galleryIndex, setGalleryIndex] = useState(0)
   const [zoom, setZoom] = useState(1)
   const [fullscreen, setFullscreen] = useState(false)
+  const touchStartRef = useRef<number | null>(null)
 
   const galleryImages = property.images.length ? property.images : ['https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80']
   const activeImage = galleryImages[galleryIndex] || galleryImages[0]
@@ -42,10 +44,36 @@ export default function PropertyDetailContent({ property, nearby = [], onSelectN
   const nextImage = () => setGalleryIndex((current) => (current + 1) % galleryImages.length)
   const previousImage = () => setGalleryIndex((current) => (current - 1 + galleryImages.length) % galleryImages.length)
 
+  useEffect(() => {
+    if (!fullscreen) return
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setFullscreen(false)
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [fullscreen])
+
+  const finishSwipe = (clientX: number) => {
+    if (touchStartRef.current === null) return
+    const delta = clientX - touchStartRef.current
+    touchStartRef.current = null
+    if (delta < -48) nextImage()
+    if (delta > 48) previousImage()
+  }
+
   return (
     <div className={`detail-shell ${compact ? 'detail-shell-compact' : ''}`}>
       <div className="detail-card hero-card">
-        <img className="hero-image" src={activeImage} alt={property.owner} style={{ transform: `scale(${zoom})` }} />
+        <button
+          type="button"
+          className="hero-image-button"
+          onClick={() => setFullscreen(true)}
+          onTouchStart={(event) => { touchStartRef.current = event.touches[0]?.clientX ?? null }}
+          onTouchEnd={(event) => finishSwipe(event.changedTouches[0]?.clientX ?? 0)}
+          aria-label="เปิดภาพทรัพย์สินแบบเต็มจอ"
+        >
+          <img className="hero-image" src={activeImage} alt={property.owner} style={{ transform: `scale(${zoom})` }} />
+        </button>
         <div className="hero-overlay">
           <span className="pill">{propertyType}</span>
           <span className="pill accent">{property.marketPrice.toLocaleString()} บาท</span>
@@ -199,11 +227,12 @@ export default function PropertyDetailContent({ property, nearby = [], onSelectN
         </>
       ) : null}
 
-      {fullscreen ? (
-        <div className="detail-fullscreen" role="dialog" aria-modal="true">
-          <button type="button" className="chip" onClick={() => setFullscreen(false)}>ปิด</button>
-          <img className="detail-fullscreen-image" src={activeImage} alt={property.owner} style={{ transform: `scale(${zoom})` }} />
-        </div>
+      {fullscreen ? createPortal(
+        <div className="property-gallery-fullscreen" data-property-gallery-fullscreen role="dialog" aria-modal="true" aria-label="ภาพทรัพย์สินเต็มจอ" onClick={() => setFullscreen(false)}>
+          <button type="button" className="property-gallery-fullscreen-close" onClick={() => setFullscreen(false)} aria-label="ปิดภาพเต็มจอ">×</button>
+          <img className="detail-fullscreen-image" src={activeImage} alt={property.owner} style={{ transform: `scale(${zoom})` }} onClick={(event) => event.stopPropagation()} />
+        </div>,
+        document.body,
       ) : null}
     </div>
   )
