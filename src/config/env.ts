@@ -15,7 +15,7 @@ export const env = {
   appMode,
   apiBaseUrl: readEnv('VITE_API_URL', 'VITE_API_BASE_URL'),
   r2UploadBaseUrl: readEnv('VITE_UPLOAD_BASE_URL', 'VITE_R2_UPLOAD_BASE_URL'),
-  googleMapsApiKey: readEnv('VITE_GOOGLE_MAPS_API_KEY'),
+  googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '',
   ocrProvider: readEnv('VITE_OCR_PROVIDER') || 'mock',
   ocrApiUrl: readEnv('VITE_OCR_API_URL'),
   ocrMockFail: readEnv('VITE_OCR_MOCK_FAIL') === 'true',

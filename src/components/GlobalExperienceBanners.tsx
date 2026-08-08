@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
+import { useLocation } from 'react-router-dom'
 import { getOfflineQueueCounts } from '../lib/offline/queue'
 
 type InstallPromptEvent = Event & {
@@ -8,10 +9,13 @@ type InstallPromptEvent = Event & {
 }
 
 export default function GlobalExperienceBanners() {
+  const location = useLocation()
   const [installEvent, setInstallEvent] = useState<InstallPromptEvent | null>(null)
   const [updateAvailable, setUpdateAvailable] = useState(false)
   const [isOffline, setIsOffline] = useState(() => (typeof navigator !== 'undefined' ? !navigator.onLine : false))
   const [queueTotal, setQueueTotal] = useState(() => getOfflineQueueCounts().total)
+  const [installDismissed, setInstallDismissed] = useState(false)
+  const showInstallPrompt = Boolean(installEvent && !installDismissed && location.pathname !== '/map')
 
   useEffect(() => {
     const onBeforeInstallPrompt = (event: Event) => {
@@ -59,15 +63,15 @@ export default function GlobalExperienceBanners() {
 
   return (
     <AnimatePresence>
-      {(installEvent || updateAvailable || isOffline) ? (
+      {(showInstallPrompt || updateAvailable || isOffline) ? (
         <motion.div className="global-banner-stack" initial={{ opacity: 0, y: -14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -14 }}>
-          {installEvent ? (
+          {showInstallPrompt ? (
             <div className="global-banner">
               <div>
                 <strong>ติดตั้งแอป ฟีลด์เมต AI</strong>
                 <span>ใช้งานแบบแอปเต็มหน้าจอ พร้อมประสบการณ์เหมือนแอปบนอุปกรณ์</span>
               </div>
-              <button type="button" onClick={triggerInstall}>ติดตั้ง</button>
+              <div><button type="button" onClick={triggerInstall}>ติดตั้ง</button><button type="button" onClick={() => setInstallDismissed(true)}>ปิด</button></div>
             </div>
           ) : null}
 

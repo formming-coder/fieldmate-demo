@@ -64,6 +64,12 @@ Compatibility aliases are still supported:
 - `VITE_ENTRA_REDIRECT_URI`
 - `VITE_ENTRA_SCOPES`
 
+### Smart Map deployment
+
+Set `VITE_GOOGLE_MAPS_API_KEY` in both Preview and Production variables for the Cloudflare Pages project, then trigger a new deployment. Vite embeds this value at build time, so changing the variable without rebuilding does not update the deployed application.
+
+In Google Cloud, enable the Maps JavaScript API and billing for the key. Restrict browser use to the production origin, for example `https://fieldmate-demo10.pages.dev/*`, plus any intentional preview or custom domains. The Smart Map reports missing, invalid, disabled-API, billing, referrer, expiration, and script-loading failures in the browser console without exposing the key.
+
 ## Backend API Contracts
 
 Base path: `/api`
@@ -114,7 +120,6 @@ The checked-in Worker configuration is development scaffolding and is not a prod
 - Authentication uses a local demo session unless Microsoft mode is explicitly configured.
 - AI assessment results are deterministic demo analysis and are not official valuations.
 - Property records and images are demo data.
-- Smart Map currently renders with Leaflet and OSM/Esri/Stadia tiles, not Google Maps.
 - Cloudflare production, HTTPS camera/PWA behavior, and physical iPhone/Android validation remain outstanding.
 
 ## Folder Guide

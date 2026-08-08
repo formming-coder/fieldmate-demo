@@ -103,11 +103,11 @@
   width: 100%;
 }
 
-.smart-map-frame .leaflet-container {
+.smart-google-map {
   height: 100%;
   min-height: 100dvh;
   width: 100%;
-  background: #efe3ca;
+  background: #e8edf1;
 }
 
 .smart-map-state-overlay {

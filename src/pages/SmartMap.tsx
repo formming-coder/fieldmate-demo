@@ -6,18 +6,14 @@ import { usePropertiesQuery } from '../hooks/useBackendQueries'
 import { usePullToRefresh } from '../hooks/usePullToRefresh'
 import { useLiveLocation } from '../hooks/useLiveLocation'
 import { Property } from '../types'
-import { Circle, MapContainer, Marker, Polyline, TileLayer, useMap, useMapEvents } from 'react-leaflet'
-import L from 'leaflet'
 import MapHeader from '../components/map/MapHeader'
 import FloatingSearch from '../components/map/FloatingSearch'
 import FilterChips, { SmartFilter } from '../components/map/FilterChips'
 import MapFAB from '../components/map/MapFAB'
 import BottomSheet from '../components/map/BottomSheet'
-import { createClusterIcon } from '../components/map/Cluster'
-import { createPropertyMarkerIcon } from '../components/map/Marker'
+import GoogleMapCanvas from '../components/map/GoogleMapCanvas'
 import { getOfflineQueueCounts } from '../lib/offline/queue'
-import { hasGoogleMapsApiKey } from '../config/env'
-import 'leaflet/dist/leaflet.css'
+import { env, hasGoogleMapsApiKey } from '../config/env'
 import '../styles/smartmap.css'
 
 const PropertyGallery = lazy(() => import('../components/map/PropertyGallery'))
@@ -25,19 +21,10 @@ const PropertyInfo = lazy(() => import('../components/map/PropertyInfo'))
 const NearbyCarousel = lazy(() => import('../components/map/NearbyCarousel'))
 const AITips = lazy(() => import('../components/map/AITips'))
 
-const DEFAULT_CENTER: [number, number] = [13.736717, 100.523186]
-const SATELLITE_TILES = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
-const STREET_TILES = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
-const TERRAIN_TILES = 'https://tiles.stadiamaps.com/tiles/stamen_terrain/{z}/{x}/{y}.jpg'
+const DEFAULT_CENTER: [number, number] = [13.7563, 100.5018]
 
 type MapMode = 'street' | 'satellite' | 'terrain'
 type MapLoadState = 'initializing' | 'loading' | 'ready' | 'error'
-
-type ClusterNode = {
-  lat: number
-  lon: number
-  items: Property[]
-}
 
 type NearbyItem = {
   property: Property
@@ -67,34 +54,6 @@ function thaiDate(value: string) {
   return new Date(value).toLocaleDateString('th-TH', { day: '2-digit', month: 'short', year: 'numeric' })
 }
 
-function UserPulseMarker({ onLocate }: { onLocate: (lat: number, lon: number) => void }) {
-  const [position, setPosition] = useState<[number, number] | null>(null)
-
-  useMapEvents({
-    locationfound(event) {
-      const next: [number, number] = [event.latlng.lat, event.latlng.lng]
-      setPosition(next)
-      onLocate(event.latlng.lat, event.latlng.lng)
-    },
-  })
-
-  return position ? <Marker position={position} icon={L.divIcon({ className: 'smart-user-pulse' })} /> : null
-}
-
-function MapInteraction({ onLocate, measureMode, onMeasurePoint }: { onLocate: (lat: number, lon: number) => void; measureMode: boolean; onMeasurePoint: (lat: number, lon: number) => void }) {
-  useMapEvents({
-    click(event) {
-      if (measureMode) {
-        onMeasurePoint(event.latlng.lat, event.latlng.lng)
-        return
-      }
-      onLocate(event.latlng.lat, event.latlng.lng)
-    },
-  })
-
-  return null
-}
-
 function distanceKm(from: [number, number], to: [number, number]) {
   const toRad = (value: number) => (value * Math.PI) / 180
   const earthRadiusKm = 6371
@@ -103,29 +62,6 @@ function distanceKm(from: [number, number], to: [number, number]) {
   const a = Math.sin(lat / 2) ** 2 + Math.cos(toRad(from[0])) * Math.cos(toRad(to[0])) * Math.sin(lon / 2) ** 2
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
   return earthRadiusKm * c
-}
-
-function MapFlyTo({ center, zoom }: { center: [number, number] | null; zoom: number }) {
-  const map = useMap()
-
-  useEffect(() => {
-    if (!center) return
-    map.flyTo(center, zoom, { duration: 0.75 })
-  }, [center, zoom, map])
-
-  return null
-}
-
-function MapReadyWatcher({ onReady }: { onReady: () => void }) {
-  const map = useMap()
-
-  useEffect(() => {
-    map.whenReady(() => {
-      onReady()
-    })
-  }, [map, onReady])
-
-  return null
 }
 
 function statusLabel(status: string) {
@@ -168,7 +104,6 @@ export default function SmartMap() {
   const [measurePoints, setMeasurePoints] = useState<Array<[number, number]>>([])
   const [mapLoadState, setMapLoadState] = useState<MapLoadState>('initializing')
   const [mapError, setMapError] = useState('')
-  const [tileErrorCount, setTileErrorCount] = useState(0)
   const [mapRetrySeed, setMapRetrySeed] = useState(0)
   const [isMapBusy, setIsMapBusy] = useState(true)
   const [actionMessage, setActionMessage] = useState('')
@@ -177,6 +112,18 @@ export default function SmartMap() {
   const hasAutoCenteredRef = useRef(false)
   const { location, accuracyLevel, permission, error: gpsError, requestCurrentPosition } = useLiveLocation({ highAccuracy: true, watch: true, timeoutMs: 12000 })
   const googleKeyReady = hasGoogleMapsApiKey()
+
+  useEffect(() => {
+    if (googleKeyReady) {
+      setMapLoadState('loading')
+      return
+    }
+    const error = new Error('MissingKeyMapError: VITE_GOOGLE_MAPS_API_KEY is missing or invalid')
+    console.error('[Fieldmate Smart Map] Google Maps configuration error', error)
+    setMapError('กรุณาตรวจสอบการตั้งค่า Google Maps')
+    setMapLoadState('error')
+    setIsMapBusy(false)
+  }, [googleKeyReady])
 
   useEffect(() => {
     const onNetwork = () => {
@@ -268,22 +215,6 @@ export default function SmartMap() {
       .sort((a, b) => new Date(b.lastInspection).getTime() - new Date(a.lastInspection).getTime())
   }, [activeFilter, center, properties, searchQuery])
 
-  const clusters = useMemo<ClusterNode[]>(() => {
-    const grouped = new Map<string, ClusterNode>()
-
-    filteredProperties.forEach((property) => {
-      const key = `${property.latitude.toFixed(3)}|${property.longitude.toFixed(3)}`
-      const existing = grouped.get(key)
-      if (existing) {
-        existing.items.push(property)
-      } else {
-        grouped.set(key, { lat: property.latitude, lon: property.longitude, items: [property] })
-      }
-    })
-
-    return Array.from(grouped.values())
-  }, [filteredProperties])
-
   const selectedProperty = useMemo(
     () => properties.find((item) => item.id === selectedId) || null,
     [properties, selectedId]
@@ -305,11 +236,6 @@ export default function SmartMap() {
   const selectedConfidence = selectedProperty ? confidenceFromProperty(selectedProperty) : 0
   const selectedDistance = nearbyProperties[0]?.distanceKm || 0.9
   const selectedDistanceLabel = `${selectedDistance.toFixed(1)} กม.`
-
-  const onLocate = (lat: number, lon: number) => {
-    setCenter([lat, lon])
-    setZoom(14)
-  }
 
   const requestCurrentLocation = () => {
     setIsMapBusy(true)
@@ -346,8 +272,6 @@ export default function SmartMap() {
     }
     setIsMapBusy(false)
   }, [location?.latitude, location?.longitude])
-
-  const livePosition = location ? ([location.latitude, location.longitude] as [number, number]) : null
 
   const gpsLabel = useMemo(() => {
     if (!location) return 'GPS กำลังค้นหา'
@@ -409,13 +333,9 @@ export default function SmartMap() {
     window.open(url, '_blank', 'noopener,noreferrer')
   }
 
-  const tileUrl = mapMode === 'satellite' ? SATELLITE_TILES : mapMode === 'terrain' ? TERRAIN_TILES : STREET_TILES
-  const attribution = mapMode === 'satellite' ? '&copy; Esri' : mapMode === 'terrain' ? '&copy; Stadia Maps & OpenMapTiles & OpenStreetMap contributors' : '&copy; OpenStreetMap contributors'
-
   const retryMap = () => {
     setMapError('')
-    setTileErrorCount(0)
-    setMapLoadState('initializing')
+    setMapLoadState(googleKeyReady ? 'loading' : 'error')
     setIsMapBusy(true)
     setMapRetrySeed((current) => current + 1)
     requestCurrentPosition()
@@ -435,70 +355,32 @@ export default function SmartMap() {
         </div>
 
         <div className="smart-map-frame" ref={mapFrameRef}>
-          <MapContainer key={`${mapRetrySeed}-${mapMode}`} center={center || DEFAULT_CENTER} zoom={zoom} zoomControl={false} style={{ height: '100%', width: '100%' }}>
-            <TileLayer
-              attribution={attribution}
-              url={tileUrl}
-              eventHandlers={{
-                loading: () => {
-                  setMapLoadState('loading')
-                },
-                load: () => {
-                  setMapLoadState('ready')
-                  setMapError('')
-                  setTileErrorCount(0)
-                },
-                tileerror: () => {
-                  setTileErrorCount((current) => {
-                    const next = current + 1
-                    if (next >= 4) {
-                      setMapLoadState('error')
-                      setMapError('ไม่สามารถโหลดแผนที่ได้ในขณะนี้ กรุณาตรวจสอบอินเทอร์เน็ตหรือคีย์แผนที่')
-                    }
-                    return next
-                  })
-                },
+          {googleKeyReady ? (
+            <GoogleMapCanvas
+              apiKey={env.googleMapsApiKey}
+              center={center || DEFAULT_CENTER}
+              zoom={zoom}
+              mapMode={mapMode}
+              showTraffic={showTraffic}
+              properties={filteredProperties}
+              selectedId={selectedId}
+              currentLocation={location}
+              retrySeed={mapRetrySeed}
+              measureMode={measureMode}
+              onMeasurePoint={addMeasurePoint}
+              onPropertySelect={centerOnProperty}
+              onReady={() => {
+                setMapLoadState('ready')
+                setMapError('')
+                setIsMapBusy(false)
+              }}
+              onError={(error) => {
+                setMapError(error.message.includes('authentication') ? 'กรุณาตรวจสอบการตั้งค่า Google Maps' : 'Maps JavaScript API loading failure')
+                setMapLoadState('error')
+                setIsMapBusy(false)
               }}
             />
-            <MapReadyWatcher onReady={() => setMapLoadState((current) => (current === 'error' ? current : 'ready'))} />
-            <MapFlyTo center={center} zoom={zoom} />
-            <MapInteraction onLocate={onLocate} measureMode={measureMode} onMeasurePoint={addMeasurePoint} />
-            <UserPulseMarker onLocate={onLocate} />
-            <Circle center={center || DEFAULT_CENTER} radius={Math.max(140, location?.accuracy || 360)} pathOptions={{ color: '#2f8fff', fillColor: '#7cc4ff', fillOpacity: 0.2 }} />
-            {livePosition ? <Marker position={livePosition} icon={L.divIcon({ className: 'smart-live-location-marker' })} /> : null}
-            {measurePoints.length ? <Polyline positions={measurePoints} pathOptions={{ color: '#1d5eff', weight: 4, dashArray: '8 8' }} /> : null}
-            {showTraffic ? <Polyline positions={[[13.729, 100.507], [13.734, 100.518], [13.742, 100.529], [13.753, 100.541]]} pathOptions={{ color: '#e34c2f', weight: 7, opacity: 0.5 }} /> : null}
-
-            {clusters.map((node, index) => {
-              if (node.items.length > 1) {
-                return (
-                  <Marker
-                    key={`cluster-${index}`}
-                    position={[node.lat, node.lon]}
-                    icon={createClusterIcon(node.items.length)}
-                    eventHandlers={{
-                      click: () => {
-                        setCenter([node.lat, node.lon])
-                        setZoom((current) => Math.min(current + 1, 18))
-                        setSelectedId(node.items[0].id)
-                      },
-                    }}
-                  />
-                )
-              }
-
-              const property = node.items[0]
-              const selected = selectedId === property.id
-              return (
-                <Marker
-                  key={property.id}
-                  position={[property.latitude, property.longitude]}
-                  icon={createPropertyMarkerIcon(property, selected, completedSurveyIds.has(property.id))}
-                  eventHandlers={{ click: () => centerOnProperty(property) }}
-                />
-              )
-            })}
-          </MapContainer>
+          ) : null}
 
           {showMapSkeleton ? (
             <div className="smart-map-state-overlay" role="status" aria-live="polite">
@@ -511,9 +393,9 @@ export default function SmartMap() {
           {showMapError ? (
             <div className="smart-map-state-overlay is-error" role="alert">
               <div className="smart-map-error-card">
-                <strong>ไม่สามารถแสดงแผนที่ได้</strong>
+                <strong>ไม่สามารถโหลดแผนที่ได้</strong>
                 <span>{mapError}</span>
-                <button type="button" onClick={retryMap}>ลองใหม่อีกครั้ง</button>
+                <button type="button" onClick={retryMap}>ลองใหม่</button>
               </div>
             </div>
           ) : null}
@@ -525,15 +407,11 @@ export default function SmartMap() {
             </div>
           ) : null}
 
-          {!googleKeyReady ? (
-            <div className="smart-map-health-warning">ไม่พบคีย์แผนที่ในตัวแปรแวดล้อม ระบบจะใช้แผนที่สำรองเพื่อป้องกันหน้าจอว่าง</div>
-          ) : null}
-
           {(permission === 'denied' || permission === 'unsupported' || gpsError) ? (
             <div className="smart-map-gps-warning">
-              <strong>การเข้าถึง GPS มีปัญหา</strong>
+              <strong>ยังไม่ได้รับอนุญาตให้ใช้ตำแหน่ง</strong>
               <span>{gpsError || (permission === 'unsupported' ? 'อุปกรณ์นี้ไม่รองรับ GPS' : 'กรุณาอนุญาตตำแหน่งเพื่อจัดศูนย์แผนที่อัตโนมัติ')}</span>
-              <button type="button" onClick={requestCurrentPosition}>ลองขอสิทธิ์อีกครั้ง</button>
+              <button type="button" onClick={requestCurrentPosition}>อนุญาตตำแหน่ง</button>
             </div>
           ) : null}
 
