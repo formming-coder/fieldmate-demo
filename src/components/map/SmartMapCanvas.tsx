@@ -156,7 +156,7 @@ export default function SmartMapCanvas({
           <Circle
             center={[currentLocation.latitude, currentLocation.longitude]}
             radius={radiusKm * 1000}
-            pathOptions={{ color: '#ffb100', fillColor: '#ffe188', fillOpacity: 0.1, weight: 2 }}
+            pathOptions={{ color: '#0f8b58', fillColor: '#bcebd3', fillOpacity: 0.12, weight: 2 }}
           />
         </>
       ) : null}

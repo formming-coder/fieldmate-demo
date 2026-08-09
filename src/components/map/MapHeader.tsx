@@ -14,8 +14,8 @@ function MapHeader({ todayLabel, offline, gpsLabel, queuedCount }: MapHeaderProp
       <div className="map-header-leading">
         <BrandMark size="small" />
         <div>
-          <div className="map-header-title">ตำแหน่งปัจจุบัน</div>
-          <div className="map-header-subtitle">{todayLabel} • พร้อมสำรวจภาคสนาม</div>
+          <div className="map-header-title">Fieldmate AI</div>
+          <div className="map-header-subtitle">{todayLabel} • แผนที่สำรวจภาคสนาม</div>
         </div>
       </div>
       <div className="map-header-statuses">

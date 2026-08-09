@@ -174,7 +174,7 @@ export default function AICameraV2() {
       })
       setSavedId(saved.id)
       setToast('บันทึกทรัพย์แล้ว')
-      navigate('/album', { replace: true })
+      navigate('/map', { replace: true })
     } catch {
       setMessage('ไม่สามารถบันทึกทรัพย์ได้')
     } finally {
@@ -308,11 +308,11 @@ export default function AICameraV2() {
             <div className={s.sectionHeader}>
               <div>
                 <div className={s.stepTitle}>บันทึกแล้ว</div>
-                <div className={s.sectionTitle}>พร้อมไปที่รายการทรัพย์</div>
+                <div className={s.sectionTitle}>พร้อมกลับไปที่แผนที่</div>
               </div>
             </div>
             <div className={s.mapActions}>
-              <button type="button" className={s.primaryBtn} onClick={() => navigate('/album')}>ไปที่รายการทรัพย์</button>
+              <button type="button" className={s.primaryBtn} onClick={() => navigate('/map')}>ไปที่แผนที่</button>
               <button type="button" className={s.secondaryBtn} onClick={() => navigate(`/property/${savedId}`)}>เปิดรายละเอียด</button>
             </div>
           </section>

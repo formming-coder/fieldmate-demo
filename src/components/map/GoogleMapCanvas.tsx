@@ -180,11 +180,11 @@ export default function GoogleMapCanvas({ apiKey, center, zoom, mapMode, showTra
       map,
       center: position,
       radius: radiusKm * 1000,
-      strokeColor: '#ffb100',
-      strokeOpacity: 0.8,
+      strokeColor: '#0f8b58',
+      strokeOpacity: 0.85,
       strokeWeight: 2,
-      fillColor: '#ffe188',
-      fillOpacity: 0.12,
+      fillColor: '#bcebd3',
+      fillOpacity: 0.14,
     })
   }, [currentLocation, retrySeed, mapGeneration])
 
