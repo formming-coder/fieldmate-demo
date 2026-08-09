@@ -5,6 +5,7 @@ import CameraView from '../components/camera/CameraView'
 import { useCurrentOfficerQuery, useSavePropertyMutation } from '../hooks/useBackendQueries'
 import { useDeviceCamera } from '../hooks/useDeviceCamera'
 import { useLiveLocation } from '../hooks/useLiveLocation'
+import { historyRepository } from '../repositories'
 import { Property } from '../types'
 import s from './AICameraV2.module.css'
 
@@ -166,6 +167,11 @@ export default function AICameraV2() {
         images: photos.map((photo) => photo.url),
         sellerPhone: sellerPhone.trim() || undefined,
       } as Partial<Property>)
+      await historyRepository.create({
+        propertyId: saved.id,
+        action: 'บันทึกทรัพย์ภาคสนาม',
+        actor: currentOfficer?.name || 'Demo Officer',
+      })
       setSavedId(saved.id)
       setToast('บันทึกทรัพย์แล้ว')
       navigate('/album', { replace: true })

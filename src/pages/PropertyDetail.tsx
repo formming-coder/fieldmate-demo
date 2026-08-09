@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import Layout from '../components/Layout'
 import PropertyDetailContent from '../components/PropertyDetailContent'
 import { BottomSheet } from '../components/ui'
-import { usePropertiesQuery } from '../hooks/useBackendQueries'
+import { useCurrentOfficerQuery, usePropertiesQuery } from '../hooks/useBackendQueries'
 import { historyRepository } from '../repositories'
 import '../components/PropertyDetailContent.css'
 import '../pages/propertydetail.css'
@@ -34,6 +34,7 @@ export default function PropertyDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
   const { data: properties = [] } = usePropertiesQuery()
+  const { data: currentOfficer } = useCurrentOfficerQuery()
   const [toast, setToast] = useState('')
   const [history, setHistory] = useState<Array<{ id: string; action: string; createdAt: string; actor: string }>>([])
   const [followUp, setFollowUp] = useState<FollowUpState>(defaultFollowUp)
@@ -43,7 +44,7 @@ export default function PropertyDetail() {
   useEffect(() => {
     if (!property) return
     setFollowUp(readFollowUp(property.id))
-    void historyRepository.list(8).then(setHistory).catch(() => setHistory([]))
+    void historyRepository.list(property.id, 8).then(setHistory).catch(() => setHistory([]))
   }, [property])
 
   useEffect(() => {
@@ -60,6 +61,13 @@ export default function PropertyDetail() {
   const saveFollowUp = () => {
     if (!property || typeof window === 'undefined') return
     window.localStorage.setItem(`fieldmate-followup:${property.id}`, JSON.stringify(followUp))
+    void historyRepository.create({
+      propertyId: property.id,
+      action: 'อัปเดตข้อมูลภายหลัง',
+      actor: currentOfficer?.name || 'Demo Officer',
+    }).then(() => {
+      void historyRepository.list(property.id, 8).then(setHistory).catch(() => setHistory([]))
+    })
     setToast('บันทึกข้อมูลอัปเดตภายหลังแล้ว')
   }
 

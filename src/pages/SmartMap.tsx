@@ -94,6 +94,7 @@ export default function SmartMap() {
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [activeFilter, setActiveFilter] = useState<SmartFilter>('all')
+  const [radiusKm, setRadiusKm] = useState(2)
   const [mapMode, setMapMode] = useState<MapMode>('street')
   const [showLayers, setShowLayers] = useState(false)
   const [showTraffic, setShowTraffic] = useState(true)
@@ -186,34 +187,31 @@ export default function SmartMap() {
 
   const filteredProperties = useMemo(() => {
     const query = searchQuery.trim().toLowerCase()
+    const origin: [number, number] = location
+      ? [location.latitude, location.longitude]
+      : center || DEFAULT_CENTER
 
     return properties
       .filter((item) => {
         const type = (item.type || '').toLowerCase()
         const matchesQuery = !query || [item.owner, item.province, item.type || '', item.marketPrice.toString()].join(' ').toLowerCase().includes(query)
+        const matchesRadius = radiusKm <= 0 ? true : distanceKm(origin, [item.latitude, item.longitude]) <= radiusKm
 
         const matchesFilter = (() => {
           if (activeFilter === 'all') return true
-          if (activeFilter === 'house') return type.includes('house')
-          if (activeFilter === 'townhome') return type.includes('town') || type.includes('semi') || type.includes('twin')
-          if (activeFilter === 'condo') return type.includes('condo')
-          if (activeFilter === 'land') return type.includes('land')
-          if (activeFilter === 'commercial') return type.includes('commercial')
-          if (activeFilter === 'latest') {
-            const inspectedAt = new Date(item.lastInspection).getTime()
-            return Date.now() - inspectedAt < 1000 * 60 * 60 * 24 * 30
-          }
-          if (activeFilter === 'nearby') {
-            if (!center) return true
-            return Math.abs(item.latitude - center[0]) < 0.04 && Math.abs(item.longitude - center[1]) < 0.04
-          }
+          if (activeFilter === 'land') return type.includes('land') || type.includes('ที่ดิน')
+          if (activeFilter === 'house') return type.includes('house') || type.includes('บ้านเดี่ยว')
+          if (activeFilter === 'semi') return type.includes('semi') || type.includes('บ้านแฝด')
+          if (activeFilter === 'townhouse') return type.includes('townhouse') || type.includes('ทาวน์เฮ้าส์')
+          if (activeFilter === 'townhome') return type.includes('townhome') || type.includes('ทาวน์โฮม') || type.includes('town home')
+          if (activeFilter === 'commercial') return type.includes('commercial') || type.includes('อาคารพาณิชย์') || type.includes('ตึกแถว')
           return true
         })()
 
-        return matchesQuery && matchesFilter
+        return matchesQuery && matchesRadius && matchesFilter
       })
       .sort((a, b) => new Date(b.lastInspection).getTime() - new Date(a.lastInspection).getTime())
-  }, [activeFilter, center, properties, searchQuery])
+  }, [activeFilter, center, location, properties, radiusKm, searchQuery])
 
   const selectedProperty = useMemo(
     () => properties.find((item) => item.id === selectedId) || null,
@@ -433,6 +431,13 @@ export default function SmartMap() {
                 setActionMessage('เติมคำค้นหาด้วยเสียงสำหรับเดโมแล้ว')
               }}
             />
+            <div className="smart-radius-rail" role="radiogroup" aria-label="ระยะค้นหาแผนที่">
+              {[1, 2, 3, 5].map((value) => (
+                <button key={value} type="button" className={radiusKm === value ? 'is-active' : ''} onClick={() => setRadiusKm(value)}>
+                  {value} กม.
+                </button>
+              ))}
+            </div>
             <FilterChips value={activeFilter} onChange={setActiveFilter} />
           </div>
 
@@ -471,6 +476,7 @@ export default function SmartMap() {
 
           <div className="smart-map-meta-pills">
             <span>{filteredProperties.length} รายการ</span>
+            <span>รัศมี {radiusKm} กม.</span>
             <span>{mapMode === 'satellite' ? 'ดาวเทียม' : mapMode === 'terrain' ? 'ภูมิประเทศ' : 'ถนน'}</span>
             <span>{showTraffic ? 'Traffic เปิด' : 'Traffic ปิด'}</span>
             <span>{googleKeyReady ? 'คีย์แผนที่พร้อมใช้' : 'คีย์แผนที่ยังไม่พร้อม'}</span>

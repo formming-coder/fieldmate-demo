@@ -1,7 +1,7 @@
 import React, { memo } from 'react'
 import { motion } from 'framer-motion'
 
-export type SmartFilter = 'all' | 'house' | 'townhome' | 'condo' | 'land' | 'commercial' | 'latest' | 'nearby'
+export type SmartFilter = 'all' | 'land' | 'house' | 'semi' | 'townhouse' | 'townhome' | 'commercial'
 
 type FilterChipsProps = {
   value: SmartFilter
@@ -10,13 +10,12 @@ type FilterChipsProps = {
 
 const chips: Array<{ key: SmartFilter; label: string }> = [
   { key: 'all', label: 'ทั้งหมด' },
+  { key: 'land', label: 'ที่ดินเปล่า' },
   { key: 'house', label: 'บ้านเดี่ยว' },
+  { key: 'semi', label: 'บ้านแฝด' },
+  { key: 'townhouse', label: 'ทาวน์เฮ้าส์' },
   { key: 'townhome', label: 'ทาวน์โฮม' },
-  { key: 'condo', label: 'คอนโด' },
-  { key: 'land', label: 'ที่ดิน' },
-  { key: 'commercial', label: 'อาคารพาณิชย์' },
-  { key: 'latest', label: 'ล่าสุด' },
-  { key: 'nearby', label: 'ใกล้ฉัน' },
+  { key: 'commercial', label: 'ตึกแถว/อาคารพาณิชย์' },
 ]
 
 function FilterChips({ value, onChange }: FilterChipsProps) {

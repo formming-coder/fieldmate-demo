@@ -313,6 +313,34 @@
   gap: 10px;
 }
 
+.smart-radius-rail {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 0 2px;
+  scrollbar-width: none;
+}
+
+.smart-radius-rail::-webkit-scrollbar {
+  display: none;
+}
+
+.smart-radius-rail button {
+  border: 1px solid rgba(36, 30, 23, 0.11);
+  background: rgba(255, 251, 242, 0.88);
+  color: #44372b;
+  border-radius: 999px;
+  padding: 8px 12px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.smart-radius-rail button.is-active {
+  color: #3f2400;
+  background: linear-gradient(130deg, #ffd56a 0%, #ffb200 70%);
+}
+
 .map-floating-search {
   display: grid;
   grid-template-columns: auto 1fr auto;
