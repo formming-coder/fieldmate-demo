@@ -66,9 +66,9 @@ Compatibility aliases are still supported:
 
 ### Smart Map deployment
 
-Set `VITE_GOOGLE_MAPS_API_KEY` in both Preview and Production variables for the Cloudflare Pages project, then trigger a new deployment. Vite embeds this value at build time, so changing the variable without rebuilding does not update the deployed application.
+The Smart Map uses OpenStreetMap tiles by default and automatically falls back to them when the Google Maps key is missing or blocked, so the deployed demo still renders roads/buildings on Cloudflare Pages.
 
-In Google Cloud, enable the Maps JavaScript API and billing for the key. Restrict browser use to the production origin, for example `https://fieldmate-demo10.pages.dev/*`, plus any intentional preview or custom domains. The Smart Map reports missing, invalid, disabled-API, billing, referrer, expiration, and script-loading failures in the browser console without exposing the key.
+If you do provide `VITE_GOOGLE_MAPS_API_KEY`, set it in both Preview and Production variables for the Cloudflare Pages project before rebuilding. In Google Cloud, enable the Maps JavaScript API and billing for the key, and restrict browser use to the production origin, for example `https://fieldmate-demo10.pages.dev/*`, plus any intentional preview or custom domains.
 
 ## Backend API Contracts
 
@@ -130,4 +130,3 @@ The checked-in Worker configuration is development scaffolding and is not a prod
 - `src/repositories`: domain data access used by existing screens.
 - `workers/src`: Cloudflare Worker API handlers.
 - `workers/schema.sql`: D1 schema and indexes.
-

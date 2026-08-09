@@ -7,6 +7,7 @@ import {
   taskRepository,
 } from '../repositories'
 import { AssessmentInput } from '../repositories/assessmentRepository'
+import { queryClient } from '../lib/query/client'
 import { Property } from '../types'
 
 export const queryKeys = {
@@ -56,6 +57,12 @@ export function useCurrentOfficerQuery() {
 export function useSavePropertyMutation() {
   return useMutation({
     mutationFn: (payload: Partial<Property>) => propertyRepository.create(payload),
+    onSuccess: async (property) => {
+      await queryClient.invalidateQueries({ queryKey: queryKeys.properties })
+      if (property?.id) {
+        await queryClient.invalidateQueries({ queryKey: queryKeys.property(property.id) })
+      }
+    },
   })
 }
 

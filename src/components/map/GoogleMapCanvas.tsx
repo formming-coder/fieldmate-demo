@@ -81,6 +81,7 @@ type GoogleMapCanvasProps = {
   showTraffic: boolean
   properties: Property[]
   selectedId: string | null
+  radiusKm: number
   currentLocation: { latitude: number; longitude: number; accuracy: number } | null
   retrySeed: number
   measureMode: boolean
@@ -90,13 +91,13 @@ type GoogleMapCanvasProps = {
   onError: (error: Error) => void
 }
 
-export default function GoogleMapCanvas({ apiKey, center, zoom, mapMode, showTraffic, properties, selectedId, currentLocation, retrySeed, measureMode, onMeasurePoint, onPropertySelect, onReady, onError }: GoogleMapCanvasProps) {
+export default function GoogleMapCanvas({ apiKey, center, zoom, mapMode, showTraffic, properties, selectedId, radiusKm, currentLocation, retrySeed, measureMode, onMeasurePoint, onPropertySelect, onReady, onError }: GoogleMapCanvasProps) {
   const containerRef = useRef<HTMLDivElement | null>(null)
   const mapRef = useRef<GoogleMapInstance | null>(null)
   const mapsRef = useRef<GoogleMapsApi | null>(null)
   const markersRef = useRef<GoogleMarker[]>([])
   const locationMarkerRef = useRef<GoogleMarker | null>(null)
-  const accuracyCircleRef = useRef<GoogleCircle | null>(null)
+  const radiusCircleRef = useRef<GoogleCircle | null>(null)
   const trafficLayerRef = useRef<GoogleTrafficLayer | null>(null)
   const measureModeRef = useRef(measureMode)
   const [mapGeneration, setMapGeneration] = useState(0)
@@ -170,20 +171,20 @@ export default function GoogleMapCanvas({ apiKey, center, zoom, mapMode, showTra
     const map = mapRef.current
     if (!maps || !map) return
     locationMarkerRef.current?.setMap(null)
-    accuracyCircleRef.current?.setMap(null)
+    radiusCircleRef.current?.setMap(null)
     if (!currentLocation) return
 
     const position = { lat: currentLocation.latitude, lng: currentLocation.longitude }
     locationMarkerRef.current = new maps.Marker({ map, position, title: 'ตำแหน่งปัจจุบัน', zIndex: 100 })
-    accuracyCircleRef.current = new maps.Circle({
+    radiusCircleRef.current = new maps.Circle({
       map,
       center: position,
-      radius: Math.max(20, currentLocation.accuracy),
-      strokeColor: '#1677ff',
-      strokeOpacity: 0.8,
+      radius: radiusKm * 1000,
+      strokeColor: '#0f8b58',
+      strokeOpacity: 0.85,
       strokeWeight: 2,
-      fillColor: '#4da3ff',
-      fillOpacity: 0.2,
+      fillColor: '#bcebd3',
+      fillOpacity: 0.14,
     })
   }, [currentLocation, retrySeed, mapGeneration])
 
@@ -198,7 +199,7 @@ export default function GoogleMapCanvas({ apiKey, center, zoom, mapMode, showTra
   useEffect(() => () => {
     markersRef.current.forEach((marker) => marker.setMap(null))
     locationMarkerRef.current?.setMap(null)
-    accuracyCircleRef.current?.setMap(null)
+    radiusCircleRef.current?.setMap(null)
     trafficLayerRef.current?.setMap(null)
   }, [])
 

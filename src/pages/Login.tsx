@@ -41,7 +41,7 @@ export default function Login() {
       setToast('เข้าสู่ระบบสำเร็จ')
       setIsRoutingAfterLogin(true)
       await new Promise((resolve) => window.setTimeout(resolve, 1000))
-      navigate('/permissions', { replace: true })
+      navigate('/map', { replace: true })
     } catch (caughtError) {
       setIsSubmitting(false)
       setError(caughtError instanceof Error ? caughtError.message : 'เข้าสู่ระบบไม่สำเร็จ กรุณาลองใหม่อีกครั้ง')
@@ -59,6 +59,10 @@ export default function Login() {
 
     try {
       await login({ rememberMe, provider: 'microsoft' })
+      setToast('เข้าสู่ระบบสำเร็จ')
+      setIsRoutingAfterLogin(true)
+      await new Promise((resolve) => window.setTimeout(resolve, 1000))
+      navigate('/map', { replace: true })
     } catch (caughtError) {
       setIsSubmitting(false)
       setError(caughtError instanceof Error ? caughtError.message : 'ไม่สามารถเชื่อมต่อ Microsoft ได้ในขณะนี้ กรุณาลองใหม่อีกครั้ง')

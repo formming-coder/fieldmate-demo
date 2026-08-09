@@ -48,13 +48,14 @@ export function createPropertyMarkerIcon(property: Property, selected: boolean, 
     html: `
       <div class="smart-marker ${selected ? 'smart-marker-selected' : 'smart-marker-normal'} smart-marker-status-${status.key}">
         <span class="smart-marker-type">${typeEmoji(property.type)}</span>
-        <span class="smart-marker-price">${shortPrice(property.marketPrice)} บาท</span>
-        <span class="smart-marker-id">${property.id}</span>
+        <span class="smart-marker-body">
+          <strong>${markerTypeLabel(property.type)}</strong>
+          <span>${property.id}</span>
+        </span>
         <span class="smart-marker-status">${status.label}</span>
-        <span class="smart-marker-meta">${markerTypeLabel(property.type)}</span>
       </div>
     `,
-    iconSize: [124, 52],
-    iconAnchor: [62, 48],
+    iconSize: [104, 44],
+    iconAnchor: [52, 40],
   })
 }

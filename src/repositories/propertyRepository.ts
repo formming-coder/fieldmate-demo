@@ -24,6 +24,7 @@ type PropertyRecord = {
   appraisal_price?: number
   status: string
   type?: string
+  sellerPhone?: string
   lastInspection?: string
   last_inspection?: string
   images: string[] | string
@@ -53,6 +54,7 @@ function toProperty(record: PropertyRecord): Property {
     appraisalPrice: Number(record.appraisalPrice ?? record.appraisal_price ?? 0),
     status: record.status,
     type: record.type,
+    sellerPhone: record.sellerPhone,
     lastInspection: record.lastInspection || record.last_inspection || new Date().toISOString(),
     images: rawImages,
   }
@@ -77,10 +79,19 @@ function writePropertyCache(items: Property[]) {
   }
 }
 
+function mergeProperties(base: Property[], next: Property[]) {
+  const byId = new Map(base.map((item) => [item.id, item]))
+  next.forEach((item) => {
+    byId.set(item.id, item)
+  })
+  return Array.from(byId.values())
+}
+
 export const propertyRepository = {
   async list() {
     if (isDevelopmentMode) {
-      return (mockProperties as PropertyRecord[]).map(toProperty)
+      const base = (mockProperties as PropertyRecord[]).map(toProperty)
+      return mergeProperties(base, readPropertyCache())
     }
 
     if (typeof navigator !== 'undefined' && !navigator.onLine) {
@@ -94,6 +105,8 @@ export const propertyRepository = {
   },
   async getById(id: string) {
     if (isDevelopmentMode) {
+      const cached = readPropertyCache().find((item) => item.id === id)
+      if (cached) return cached
       const record = (mockProperties as PropertyRecord[]).find((item) => item.id === id)
       if (!record) {
         throw new Error('Property not found')
@@ -114,7 +127,7 @@ export const propertyRepository = {
   },
   async create(payload: PropertyCreateInput) {
     if (isDevelopmentMode) {
-      return {
+      const created = {
         ...(payload as Property),
         id: payload.id || `demo-${Date.now()}`,
         owner: payload.owner || 'Demo owner',
@@ -125,9 +138,12 @@ export const propertyRepository = {
         appraisalPrice: payload.appraisalPrice || 0,
         status: payload.status || 'pending',
         type: payload.type,
+        sellerPhone: payload.sellerPhone,
         lastInspection: payload.lastInspection || new Date().toISOString(),
         images: payload.images || [],
       }
+      writePropertyCache(mergeProperties(readPropertyCache(), [created]))
+      return created
     }
 
     if (typeof navigator !== 'undefined' && !navigator.onLine) {
@@ -142,6 +158,7 @@ export const propertyRepository = {
         marketPrice: payload.marketPrice || 0,
         appraisalPrice: payload.appraisalPrice || 0,
         status: payload.status || 'pending',
+        sellerPhone: payload.sellerPhone,
         lastInspection: payload.lastInspection || new Date().toISOString(),
         images: payload.images || [],
       }

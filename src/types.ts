@@ -10,6 +10,7 @@ export type Property = {
   appraisalPrice: number
   status: 'inspected' | 'pending' | 'archived' | string
   type?: string
+  sellerPhone?: string
   lastInspection: string
   images: string[]
 }

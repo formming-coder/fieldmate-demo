@@ -4,9 +4,8 @@ import { motion } from 'framer-motion'
 
 const items = [
   { to: '/map', label: 'แผนที่', icon: 'map' },
-  { to: '/camera', label: 'กล้อง AI', icon: 'photo_camera' },
-  { to: '/assessment', label: 'ประเมิน', icon: 'assignment' },
-  { to: '/shared-intelligence', label: 'ข้อมูลกลาง', icon: 'hub' },
+  { to: '/camera', label: 'บันทึก', icon: 'photo_camera' },
+  { to: '/album', label: 'ทรัพย์', icon: 'inventory_2' },
   { to: '/profile', label: 'โปรไฟล์', icon: 'person' },
 ]
 

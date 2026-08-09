@@ -3,9 +3,9 @@
 :root {
   color-scheme: light;
   font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --primary: #FFD400;
-  --secondary: #2F3542;
-  --background: #F8F9FB;
+  --primary: #0F8B58;
+  --secondary: #145C43;
+  --background: #F6FBF8;
   --surface: #FFFFFF;
   --success: #27AE60;
   --warning: #F39C12;
@@ -71,7 +71,7 @@ body::before {
   position: fixed;
   inset: 0;
   pointer-events: none;
-  background: linear-gradient(180deg, rgba(255,212,0,0.04), transparent 24%);
+  background: linear-gradient(180deg, rgba(15,139,88,0.06), transparent 24%);
 }
 
 .app-shell {
@@ -214,8 +214,8 @@ body::before {
   padding: 0 12px;
   font-size: 12px;
   font-weight: 700;
-  background: linear-gradient(125deg, #ffe089 0%, #ffb400 65%);
-  color: #3f2a00;
+  background: linear-gradient(125deg, #c5f0dc 0%, #36b37e 65%);
+  color: #0f3d29;
 }
 
 .property-sheet-overlay {
