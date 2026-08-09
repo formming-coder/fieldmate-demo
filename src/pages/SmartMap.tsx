@@ -10,6 +10,7 @@ import MapHeader from '../components/map/MapHeader'
 import FloatingSearch from '../components/map/FloatingSearch'
 import FilterChips, { SmartFilter } from '../components/map/FilterChips'
 import MapFAB from '../components/map/MapFAB'
+import SmartMapCanvas from '../components/map/SmartMapCanvas'
 import { BottomSheet } from '../components/ui'
 import GoogleMapCanvas from '../components/map/GoogleMapCanvas'
 import { getOfflineQueueCounts } from '../lib/offline/queue'
@@ -106,25 +107,17 @@ export default function SmartMap() {
   const [mapLoadState, setMapLoadState] = useState<MapLoadState>('initializing')
   const [mapError, setMapError] = useState('')
   const [mapRetrySeed, setMapRetrySeed] = useState(0)
+  const [mapProvider, setMapProvider] = useState<'google' | 'leaflet'>(() => (hasGoogleMapsApiKey() ? 'google' : 'leaflet'))
   const [isMapBusy, setIsMapBusy] = useState(true)
   const [actionMessage, setActionMessage] = useState('')
   const [completedSurveyIds, setCompletedSurveyIds] = useState(readCompletedSurveyIds)
   const mapFrameRef = useRef<HTMLDivElement | null>(null)
   const hasAutoCenteredRef = useRef(false)
   const { location, accuracyLevel, permission, error: gpsError, requestCurrentPosition } = useLiveLocation({ highAccuracy: true, watch: true, timeoutMs: 12000 })
-  const googleKeyReady = hasGoogleMapsApiKey()
 
   useEffect(() => {
-    if (googleKeyReady) {
-      setMapLoadState('loading')
-      return
-    }
-    const error = new Error('MissingKeyMapError: VITE_GOOGLE_MAPS_API_KEY is missing or invalid')
-    console.error('[Fieldmate Smart Map] Google Maps configuration error', error)
-    setMapError('กรุณาตรวจสอบการตั้งค่า Google Maps')
-    setMapLoadState('error')
-    setIsMapBusy(false)
-  }, [googleKeyReady])
+    setMapLoadState('loading')
+  }, [])
 
   useEffect(() => {
     const onNetwork = () => {
@@ -333,14 +326,36 @@ export default function SmartMap() {
 
   const retryMap = () => {
     setMapError('')
-    setMapLoadState(googleKeyReady ? 'loading' : 'error')
+    setMapLoadState('loading')
     setIsMapBusy(true)
     setMapRetrySeed((current) => current + 1)
     requestCurrentPosition()
     void refetch()
   }
 
-  const showMapSkeleton = loading || mapLoadState === 'initializing' || mapLoadState === 'loading'
+  const handleMapReady = () => {
+    setMapLoadState('ready')
+    setMapError('')
+    setIsMapBusy(false)
+  }
+
+  const handleGoogleMapError = (error: Error) => {
+    console.error('[Fieldmate Smart Map] Google Maps load failed', error)
+    setMapProvider('leaflet')
+    setMapLoadState('loading')
+    setMapError('')
+    setIsMapBusy(true)
+    setActionMessage('ใช้แผนที่สำรองเพื่อแสดงผลต่อเนื่อง')
+  }
+
+  const handleLeafletMapError = (error: Error) => {
+    console.error('[Fieldmate Smart Map] Leaflet map load failed', error)
+    setMapError('ไม่สามารถโหลดแผนที่สำรองได้')
+    setMapLoadState('error')
+    setIsMapBusy(false)
+  }
+
+  const showMapSkeleton = loading || mapLoadState !== 'ready'
   const showMapError = mapLoadState === 'error'
 
   return (
@@ -353,7 +368,7 @@ export default function SmartMap() {
         </div>
 
         <div className="smart-map-frame" ref={mapFrameRef}>
-          {googleKeyReady ? (
+          {mapProvider === 'google' ? (
             <GoogleMapCanvas
               apiKey={env.googleMapsApiKey}
               center={center || DEFAULT_CENTER}
@@ -367,18 +382,26 @@ export default function SmartMap() {
               measureMode={measureMode}
               onMeasurePoint={addMeasurePoint}
               onPropertySelect={centerOnProperty}
-              onReady={() => {
-                setMapLoadState('ready')
-                setMapError('')
-                setIsMapBusy(false)
-              }}
-              onError={(error) => {
-                setMapError(error.message.includes('authentication') ? 'กรุณาตรวจสอบการตั้งค่า Google Maps' : 'Maps JavaScript API loading failure')
-                setMapLoadState('error')
-                setIsMapBusy(false)
-              }}
+              onReady={handleMapReady}
+              onError={handleGoogleMapError}
             />
-          ) : null}
+          ) : (
+            <SmartMapCanvas
+              key={`leaflet-${mapRetrySeed}`}
+              center={center || DEFAULT_CENTER}
+              zoom={zoom}
+              mapMode={mapMode}
+              showTraffic={showTraffic}
+              properties={filteredProperties}
+              selectedId={selectedId}
+              currentLocation={location}
+              measureMode={measureMode}
+              onMeasurePoint={addMeasurePoint}
+              onPropertySelect={centerOnProperty}
+              onReady={handleMapReady}
+              onError={handleLeafletMapError}
+            />
+          )}
 
           {showMapSkeleton ? (
             <div className="smart-map-state-overlay" role="status" aria-live="polite">
@@ -479,7 +502,7 @@ export default function SmartMap() {
             <span>รัศมี {radiusKm} กม.</span>
             <span>{mapMode === 'satellite' ? 'ดาวเทียม' : mapMode === 'terrain' ? 'ภูมิประเทศ' : 'ถนน'}</span>
             <span>{showTraffic ? 'Traffic เปิด' : 'Traffic ปิด'}</span>
-            <span>{googleKeyReady ? 'คีย์แผนที่พร้อมใช้' : 'คีย์แผนที่ยังไม่พร้อม'}</span>
+            <span>{mapProvider === 'google' ? 'ใช้ Google Maps' : 'ใช้ OpenStreetMap สำรอง'}</span>
             {measurePoints.length === 2 ? <span>{measureDistance.toFixed(2)} กม.</span> : null}
             <button type="button" className="smart-map-gis-pill" onClick={() => navigate('/gis')}>GIS อัจฉริยะ</button>
             <button type="button" className="smart-map-gis-pill" onClick={() => navigate('/route-planner')}>วางแผนเส้นทาง</button>
