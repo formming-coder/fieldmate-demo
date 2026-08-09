@@ -14,8 +14,20 @@ export const historyRepository = {
       return [
         {
           id: 'demo-history-1',
-          action: 'Demo session started',
+          action: 'บันทึกทรัพย์ภาคสนาม',
           createdAt: new Date().toISOString(),
+          actor: 'Demo Officer',
+        },
+        {
+          id: 'demo-history-2',
+          action: 'อัปเดตข้อมูลภายหลัง',
+          createdAt: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
+          actor: 'Demo Officer',
+        },
+        {
+          id: 'demo-history-3',
+          action: 'เพิ่มรูปภาพใหม่',
+          createdAt: new Date(Date.now() - 1000 * 60 * 90).toISOString(),
           actor: 'Demo Officer',
         },
       ].slice(0, limit)

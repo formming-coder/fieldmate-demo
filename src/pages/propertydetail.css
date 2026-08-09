@@ -18,6 +18,11 @@
 .timeline-list { display:grid; gap:8px; }
 .timeline-item { display:flex; gap:10px; align-items:flex-start; padding:8px 0; }
 .timeline-dot { width:10px; height:10px; border-radius:999px; background:var(--krungsri); margin-top:4px; }
+.follow-up-grid { display:grid; gap:10px; }
+.follow-up-grid label { display:grid; gap:6px; font-size:12px; color:var(--muted); }
+.follow-up-grid input, .follow-up-grid textarea { width:100%; border:1px solid rgba(31,58,95,0.12); border-radius:12px; padding:10px 12px; font:inherit; color:#1f3a5f; background:#fff; }
+.follow-up-grid textarea { min-height:96px; resize:vertical; }
+.follow-up-grid .full-width { grid-column:1 / -1; }
 .chip-row { display:flex; flex-wrap:wrap; gap:8px; }
 .chip { background:#f3f6f8; border-radius:999px; padding:7px 10px; font-size:12px; color:#1f3a5f; }
 .bottom-actions { position:sticky; bottom:72px; display:grid; grid-template-columns:repeat(5, minmax(0, 1fr)); gap:8px; margin:0 12px 12px; }

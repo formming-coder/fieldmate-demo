@@ -9,11 +9,11 @@ const titleMap: Record<string, string> = {
   '/home': 'หน้าหลัก',
   '/dashboard': 'ภาพรวม',
   '/map': 'แผนที่',
-  '/camera': 'ถ่ายภาพ',
-  '/album': 'อัลบั้ม',
+  '/camera': 'บันทึกทรัพย์',
+  '/album': 'รายการทรัพย์',
+  '/property': 'ทรัพย์',
   '/shared-intelligence': 'ข้อมูลทรัพย์สินส่วนกลาง',
   '/search': 'ค้นหา',
-  '/property': 'ทรัพย์สิน',
   '/notifications': 'การแจ้งเตือน',
   '/profile': 'โปรไฟล์',
   '/settings': 'ตั้งค่า',
@@ -23,9 +23,8 @@ const titleMap: Record<string, string> = {
 
 const navItems = [
   { label: 'แผนที่', to: '/map', icon: 'map' },
-  { label: 'กล้อง AI', to: '/camera', icon: 'photo_camera' },
-  { label: 'ประเมิน', to: '/assessment', icon: 'assignment' },
-  { label: 'ข้อมูลกลาง', to: '/shared-intelligence', icon: 'hub' },
+  { label: 'บันทึก', to: '/camera', icon: 'photo_camera' },
+  { label: 'ทรัพย์', to: '/album', icon: 'inventory_2' },
   { label: 'โปรไฟล์', to: '/profile', icon: 'person' },
 ]
 
@@ -40,8 +39,7 @@ export default function Layout({ children, title, immersive = false, hideAssista
   const filteredNavItems = navItems.filter((item) => {
     if (item.to === '/map') return canAccessAnyRoute(currentRole, ['map'])
     if (item.to === '/camera') return canAccessAnyRoute(currentRole, ['camera'])
-    if (item.to === '/assessment') return canAccessAnyRoute(currentRole, ['assessment'])
-    if (item.to === '/shared-intelligence') return canAccessAnyRoute(currentRole, ['sharedIntelligence'])
+    if (item.to === '/album') return canAccessAnyRoute(currentRole, ['album'])
     if (item.to === '/profile') return canAccessAnyRoute(currentRole, ['profile'])
     return true
   })

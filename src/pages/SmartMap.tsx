@@ -450,7 +450,7 @@ export default function SmartMap() {
               setMeasureMode((current) => !current)
               setMeasurePoints([])
             }} />
-            <MapFAB label="คำแนะนำ AI" icon="auto_awesome" onClick={() => setShowAITips((current) => !current)} />
+            <MapFAB label="คำแนะนำ" icon="auto_awesome" onClick={() => setShowAITips((current) => !current)} />
             {selectedProperty ? <MapFAB label="นำทาง" icon="navigation" onClick={openNavigation} /> : null}
             <MapFAB label="GIS อัจฉริยะ" icon="public" onClick={() => navigate('/gis')} />
             <MapFAB label="วางแผนเส้นทาง" icon="route" onClick={() => navigate('/route-planner')} />
@@ -481,7 +481,7 @@ export default function SmartMap() {
         </div>
 
         {!selectedProperty && !loading ? (
-          <button type="button" className="smart-open-camera" onClick={() => navigate('/camera')}>เปิดกล้อง AI</button>
+          <button type="button" className="smart-open-camera" onClick={() => navigate('/camera')}>บันทึกทรัพย์</button>
         ) : null}
 
         {actionMessage ? <div className="smart-map-action-toast" role="status" aria-live="polite">{actionMessage}</div> : null}
@@ -494,7 +494,7 @@ export default function SmartMap() {
         onClose={() => setSelectedId(null)}
         footer={selectedProperty ? (
           <>
-            <button type="button" onClick={() => navigate(`/survey/${selectedProperty.id}`)}>เริ่มสำรวจ</button>
+            <button type="button" onClick={() => navigate('/camera')}>บันทึกเพิ่ม</button>
             <button type="button" onClick={openPropertyNavigation}>นำทาง</button>
             <button type="button" onClick={() => setActionMessage('บันทึกข้อมูลทรัพย์สินเรียบร้อยแล้ว')}>บันทึก</button>
           </>

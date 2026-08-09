@@ -1,235 +1,243 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import React, { ChangeEvent, useEffect, useMemo, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
-import s from './AICameraV2.module.css'
+import CameraView from '../components/camera/CameraView'
 import { useCurrentOfficerQuery, useSavePropertyMutation } from '../hooks/useBackendQueries'
-import { MapContainer, Marker, TileLayer, useMap, Popup } from 'react-leaflet'
-import L from 'leaflet'
-import 'leaflet/dist/leaflet.css'
+import { useDeviceCamera } from '../hooks/useDeviceCamera'
+import { useLiveLocation } from '../hooks/useLiveLocation'
+import { Property } from '../types'
+import s from './AICameraV2.module.css'
 
 const propertyTypes = [
-  { key: 'land', label: 'ที่ดินว่าง', emoji: '🏞' },
+  { key: 'land', label: 'ที่ดิน', emoji: '🏞' },
   { key: 'house', label: 'บ้านเดี่ยว', emoji: '🏠' },
-  { key: 'semi', label: 'บ้านแฝด/บ้านต่อเนื่อง', emoji: '🏡' },
+  { key: 'semi', label: 'บ้านแฝด', emoji: '🏡' },
   { key: 'townhouse', label: 'ทาวน์เฮาส์', emoji: '🏘' },
-  { key: 'commercial', label: 'ร้านค้า/อาคารพาณิชย์', emoji: '🏬' },
+  { key: 'commercial', label: 'อาคารพาณิชย์', emoji: '🏬' },
   { key: 'condo', label: 'คอนโดมิเนียม', emoji: '🏢' },
-]
+] as const
 
-const defaultLocation: [number, number] = [13.736717, 100.523186]
+type PropertyTypeKey = typeof propertyTypes[number]['key']
 
-function CenterMap({ position }: { position: [number, number] }){
-  const map = useMap()
-  useEffect(()=>{ map.setView(position, map.getZoom()) }, [position, map])
-  return null
+type PhotoItem = {
+  id: string
+  url: string
+  file: File
 }
 
-export default function AICameraV2(){
-  const [images, setImages] = useState<string[]>([])
-  const [previewImage, setPreviewImage] = useState<string | null>(null)
-  const [isAnalyzing, setIsAnalyzing] = useState(false)
-  const [propertyType, setPropertyType] = useState<string>('land')
-  const [price, setPrice] = useState('')
-  const [phones, setPhones] = useState<string[]>([''])
-  const [phoneInput, setPhoneInput] = useState('')
-  const [landArea, setLandArea] = useState({ rai:'0', ngan:'0', wah:'0' })
-  const [usableArea, setUsableArea] = useState('')
-  const [floors, setFloors] = useState('1')
-  const [projectName, setProjectName] = useState('')
-  const [building, setBuilding] = useState('')
-  const [floor, setFloor] = useState('')
-  const [location, setLocation] = useState<[number, number]>(defaultLocation)
-  const [accuracy, setAccuracy] = useState('')
-  const [address, setAddress] = useState({ house:'', road:'', subdistrict:'', district:'', province:'' })
-  const [inspectionDate, setInspectionDate] = useState(new Date().toISOString().slice(0,10))
-  const [remark, setRemark] = useState('')
-  const [officer, setOfficer] = useState('ชื่อเจ้าหน้าที่')
-  const [history, setHistory] = useState<Array<{id:string;action:string;time:string}>>([])
+const propertyTypeLabels: Record<PropertyTypeKey, string> = {
+  land: 'ที่ดิน',
+  house: 'บ้านเดี่ยว',
+  semi: 'บ้านแฝด',
+  townhouse: 'ทาวน์เฮาส์',
+  commercial: 'อาคารพาณิชย์',
+  condo: 'คอนโดมิเนียม',
+}
+
+function revokeIfBlob(url: string) {
+  if (url.startsWith('blob:')) URL.revokeObjectURL(url)
+}
+
+export default function AICameraV2() {
+  const navigate = useNavigate()
   const fileRef = useRef<HTMLInputElement | null>(null)
+  const photosRef = useRef<PhotoItem[]>([])
+  const { videoRef, permission, error, loading, requestCamera, capturePhoto, switchCamera, stopCamera } = useDeviceCamera()
+  const { location, accuracyLevel, requestCurrentPosition } = useLiveLocation({ highAccuracy: true, watch: true, timeoutMs: 12000 })
   const { data: currentOfficer } = useCurrentOfficerQuery()
   const savePropertyMutation = useSavePropertyMutation()
 
-  useEffect(()=>{
-    if(currentOfficer?.name) setOfficer(currentOfficer.name)
-  }, [currentOfficer?.name])
+  const [propertyType, setPropertyType] = useState<PropertyTypeKey | ''>('')
+  const [sellerPhone, setSellerPhone] = useState('')
+  const [photos, setPhotos] = useState<PhotoItem[]>([])
+  const [activeIndex, setActiveIndex] = useState(0)
+  const [saving, setSaving] = useState(false)
+  const [savedId, setSavedId] = useState('')
+  const [toast, setToast] = useState('')
+  const [flashActive, setFlashActive] = useState(false)
+  const [message, setMessage] = useState('')
 
-  useEffect(()=>{
-    if(navigator.geolocation){
-      navigator.geolocation.getCurrentPosition(pos => {
-        setLocation([pos.coords.latitude, pos.coords.longitude])
-        setAccuracy(`${Math.round(pos.coords.accuracy)} m`)
-      }, ()=>{}, { enableHighAccuracy: true, maximumAge: 10000, timeout: 8000 })
+  useEffect(() => {
+    void requestCamera('environment')
+  }, [requestCamera])
+
+  useEffect(() => {
+    if (!toast) return
+    const timer = window.setTimeout(() => setToast(''), 2400)
+    return () => window.clearTimeout(timer)
+  }, [toast])
+
+  useEffect(() => {
+    if (!message) return
+    const timer = window.setTimeout(() => setMessage(''), 2600)
+    return () => window.clearTimeout(timer)
+  }, [message])
+
+  useEffect(() => {
+    photosRef.current = photos
+  }, [photos])
+
+  useEffect(() => {
+    return () => {
+      stopCamera()
+      photosRef.current.forEach((photo) => revokeIfBlob(photo.url))
     }
-  }, [])
+  }, [stopCamera])
 
-  const addHistory = (action: string) => {
-    setHistory(prev => [{ id: `${Date.now()}`, action, time: new Date().toLocaleString() }, ...prev])
+  const activePhoto = photos[activeIndex]
+
+  const currentTypeLabel = useMemo(() => {
+    if (!propertyType) return 'ยังไม่เลือกประเภท'
+    return propertyTypeLabels[propertyType]
+  }, [propertyType])
+
+  const addPhoto = async (file: File, url?: string) => {
+    const nextUrl = url || URL.createObjectURL(file)
+    setPhotos((current) => [{ id: `photo-${Date.now()}`, url: nextUrl, file }, ...current])
+    setActiveIndex(0)
   }
 
-  const pickFiles = () => fileRef.current?.click()
-  const onFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files
-    if(!files) return
-    const urls = Array.from(files).map(file => URL.createObjectURL(file))
-    setImages(prev => [...prev, ...urls])
-    addHistory('เพิ่มภาพถ่ายแล้ว')
+  const capture = async () => {
+    setMessage('')
+    if (permission !== 'granted') {
+      setToast('อนุญาตกล้องก่อนถ่ายภาพ')
+      return
+    }
+
+    const captureResult = await capturePhoto()
+    if (!captureResult) {
+      setToast('ไม่สามารถถ่ายภาพได้')
+      return
+    }
+
+    setFlashActive(true)
+    window.setTimeout(() => setFlashActive(false), 180)
+    await addPhoto(captureResult.file, captureResult.url)
+    setToast('บันทึกภาพแล้ว')
   }
 
-  const removePhoto = (index:number) => {
-    setImages(prev => prev.filter((_,i) => i !== index))
-    addHistory('ลบภาพถ่ายแล้ว')
+  const openGallery = () => fileRef.current?.click()
+
+  const onFiles = async (event: ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files || []).filter((file) => file.type.startsWith('image/'))
+    event.target.value = ''
+    if (!files.length) return
+    await Promise.all(files.map(async (file) => addPhoto(file)))
+    setToast('เพิ่มภาพจากเครื่องแล้ว')
   }
 
-  const movePhoto = (index:number, direction: -1|1) => {
-    setImages(prev => {
-      const next = [...prev]
-      const swap = next[index + direction]
-      if(!swap) return next
-      next[index + direction] = next[index]
-      next[index] = swap
-      return next
+  const removePhoto = (index: number) => {
+    setPhotos((current) => {
+      const target = current[index]
+      if (target) revokeIfBlob(target.url)
+      return current.filter((_, photoIndex) => photoIndex !== index)
     })
-    addHistory('จัดลำดับภาพแล้ว')
+    setActiveIndex((current) => Math.max(0, current - 1))
   }
 
-  const addPhoneNumber = () => {
-    if(!phoneInput.trim()) return
-    setPhones(prev => [...prev, phoneInput.trim()])
-    setPhoneInput('')
-    addHistory('เพิ่มเบอร์โทรแล้ว')
-  }
+  const saveCapture = async () => {
+    if (!propertyType) {
+      setMessage('กรุณาเลือกประเภททรัพย์')
+      return
+    }
+    if (!photos.length) {
+      setMessage('กรุณาถ่ายหรือเพิ่มรูปอย่างน้อย 1 รูป')
+      return
+    }
+    if (!location) {
+      setMessage('กำลังรอ GPS อัตโนมัติ')
+      return
+    }
 
-  const removePhone = (index:number) => {
-    setPhones(prev => prev.filter((_,i)=>i!==index))
-    addHistory('ลบเบอร์โทรแล้ว')
-  }
-
-  const setCurrentLocation = () => {
-    if(navigator.geolocation){
-      navigator.geolocation.getCurrentPosition(pos => {
-        const coords:[number,number] = [pos.coords.latitude, pos.coords.longitude]
-        setLocation(coords)
-        setAccuracy(`${Math.round(pos.coords.accuracy)} m`)
-        addHistory('อัปเดตพิกัดปัจจุบันแล้ว')
-      })
+    setSaving(true)
+    try {
+      const saved = await savePropertyMutation.mutateAsync({
+        owner: currentOfficer?.name ? `ทรัพย์ใหม่โดย${currentOfficer.name}` : 'ทรัพย์ใหม่',
+        province: 'ไม่ระบุจังหวัด',
+        address: 'บันทึกภาคสนาม',
+        areaSqm: 0,
+        latitude: location.latitude,
+        longitude: location.longitude,
+        marketPrice: 0,
+        appraisalPrice: 0,
+        status: 'pending',
+        type: propertyTypeLabels[propertyType],
+        lastInspection: new Date().toISOString(),
+        images: photos.map((photo) => photo.url),
+        sellerPhone: sellerPhone.trim() || undefined,
+      } as Partial<Property>)
+      setSavedId(saved.id)
+      setToast('บันทึกทรัพย์แล้ว')
+      navigate('/album', { replace: true })
+    } catch {
+      setMessage('ไม่สามารถบันทึกทรัพย์ได้')
+    } finally {
+      setSaving(false)
     }
   }
-
-  const handleUpload = async () => {
-    setIsAnalyzing(true)
-    setTimeout(async () => {
-      const prop = await savePropertyMutation.mutateAsync({
-        owner: officer,
-        province: address.province || 'ไม่ระบุจังหวัด',
-        latitude: location[0],
-        longitude: location[1],
-        marketPrice: Number(price) || 0,
-        appraisalPrice: Number(price) || 0,
-        status: 'pending',
-        lastInspection: new Date().toISOString(),
-        type: propertyType,
-        images,
-      })
-      addHistory('อัปโหลดแบบร่างทรัพย์สินแล้ว')
-      setIsAnalyzing(false)
-      alert(`บันทึกเรียบร้อยแล้ว: ${prop.id}`)
-    }, 700)
-  }
-
-  const handleSearchLocation = () => {
-    addHistory('เปิดการค้นหาสถานที่แล้ว')
-    alert('กำลังเตรียมหน้าค้นหาสถานที่')
-  }
-
-  const selectedTypeLabel = useMemo(() => propertyTypes.find(type => type.key === propertyType)?.label || '', [propertyType])
 
   return (
-    <Layout title="บันทึกทรัพย์สิน">
+    <Layout title="บันทึกทรัพย์" immersive hideAssistant hideBottomNavigation>
       <div className={s.pageWrap}>
+        <input ref={fileRef} type="file" accept="image/*" multiple className="cam-hidden-input" onChange={onFiles} />
+
         <section className={s.heroSection}>
           <div className={s.heroTopBar}>
-            <button className={s.iconBtn} onClick={() => window.history.back()}>←</button>
-            <div className={s.heroTitle}>บันทึกทรัพย์สิน</div>
+            <button className={s.iconBtn} type="button" onClick={() => navigate('/map')}>←</button>
+            <div className={s.heroTitle}>Capture First</div>
             <div className={s.heroActions}>
-              <button className={s.iconBtn}>⚡</button>
-              <button className={s.iconBtn}>🖼</button>
+              <button className={s.iconBtn} type="button" onClick={() => void requestCurrentPosition()}>📍</button>
+              <button className={s.iconBtn} type="button" onClick={() => void switchCamera()}>↻</button>
             </div>
           </div>
 
-          {previewImage ? (
-            <div className={s.previewFrame} style={{ backgroundImage: `url(${previewImage})` }}>
-              <div className={s.previewOverlay}>
-                <div className={s.previewBadge}>ตัวอย่าง</div>
-                <div className={s.previewButtons}>
-                  <button className={s.secondaryBtn} onClick={() => setPreviewImage(null)}>ถ่ายใหม่</button>
-                  <button className={s.primaryBtn} onClick={() => { addHistory('บันทึกตัวอย่างแล้ว'); setPreviewImage(null) }}>ดำเนินการต่อ</button>
+          <CameraView
+            flashActive={flashActive}
+            media={(
+              activePhoto ? (
+                <div className={s.previewFrame} style={{ backgroundImage: `url(${activePhoto.url})` }} />
+              ) : (
+                <div className={s.cameraFrame}>
+                  <video ref={videoRef} muted playsInline style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 24 }} />
+                  <div className={s.cameraOverlay}>
+                    <div className={s.statusPill}>GPS อัตโนมัติ</div>
+                    <div className={s.statusPill}>{permission === 'granted' ? 'กล้องพร้อม' : loading ? 'กำลังเปิดกล้อง' : 'รอกล้อง'}</div>
+                  </div>
                 </div>
-              </div>
-            </div>
-          ) : (
-            <div className={s.cameraFrame}>
-              <div className={s.cameraOverlay}>
-                <div className={s.statusPill}>ใช้งานถ่ายภาพสด</div>
-                <div className={s.statusPill}>พร้อม GPS</div>
-              </div>
-              <div className={s.cameraFooter}>
-                <button className={s.captureBtn} onClick={() => {
-                  const sample = images[0] || 'https://placehold.co/900x1400?text=ภาพถ่ายทรัพย์'
-                  setPreviewImage(sample)
-                  setIsAnalyzing(true)
-                  setTimeout(() => setIsAnalyzing(false), 900)
-                }}>●</button>
-                <button className={s.galleryThumb} onClick={pickFiles}>แกลเลอรี</button>
-              </div>
-            </div>
-          )}
+              )
+            )}
+          />
+
+          <div className={s.cameraFooter}>
+            <button type="button" className={s.captureBtn} onClick={() => void capture()}>●</button>
+            <button type="button" className={s.galleryThumb} onClick={openGallery}>แกลเลอรี</button>
+          </div>
 
           <div className={s.infoStrip}>
-            <div><div className={s.infoLabel}>พิกัด GPS</div><div>{location[0].toFixed(4)}, {location[1].toFixed(4)}</div></div>
-            <div><div className={s.infoLabel}>ความแม่นยำ</div><div>{accuracy || '—'}</div></div>
-            <div><div className={s.infoLabel}>เจ้าหน้าที่</div><div>{officer}</div></div>
-          </div>
-        </section>
-
-        {isAnalyzing && (
-          <section className={s.section}>
-            <div className={s.sectionHeader}>
-              <div>
-                <div className={s.stepTitle}>วิเคราะห์ด้วย AI</div>
-                <div className={s.sectionTitle}>กำลังวิเคราะห์...</div>
-              </div>
-            </div>
-            <div className={s.loadingBar}><span /></div>
-          </section>
-        )}
-
-        <section className={s.section}>
-          <div className={s.sectionHeader}>
-            <div>
-              <div className={s.stepTitle}>OCR</div>
-              <div className={s.sectionTitle}>ผล OCR</div>
-            </div>
-            <button className={s.ghostBtn} onClick={() => addHistory('รัน OCR แล้ว')}>AI OCR</button>
-          </div>
-          <div className={s.ocrGrid}>
-            <div><label>เบอร์โทร</label><input className={s.input} value={phones[0] || ''} onChange={e=>setPhones([e.target.value, ...phones.slice(1)])} /></div>
-            <div><label>ราคาขาย</label><input className={s.input} value={price} onChange={e=>setPrice(e.target.value)} /></div>
-            <div><label>ชื่อโครงการ</label><input className={s.input} value={projectName} onChange={e=>setProjectName(e.target.value)} /></div>
-            <div><label>เลขที่บ้าน</label><input className={s.input} value={address.house} onChange={e=>setAddress(prev=>({...prev, house:e.target.value}))} /></div>
+            <div><div className={s.infoLabel}>ประเภท</div><div>{currentTypeLabel}</div></div>
+            <div><div className={s.infoLabel}>GPS</div><div>{location ? `${location.latitude.toFixed(5)}, ${location.longitude.toFixed(5)}` : 'กำลังจับพิกัด'}</div></div>
+            <div><div className={s.infoLabel}>ความแม่นยำ</div><div>{location ? `${location.accuracy} m • ${accuracyLevel}` : '—'}</div></div>
           </div>
         </section>
 
         <section className={s.section}>
           <div className={s.sectionHeader}>
             <div>
-              <div className={s.stepTitle}>ขั้นตอนที่ 2</div>
-              <div className={s.sectionTitle}>ประเภททรัพย์สิน</div>
+              <div className={s.stepTitle}>ขั้นตอนที่ 1</div>
+              <div className={s.sectionTitle}>เลือกประเภททรัพย์</div>
             </div>
+            <span className={s.muted}>บังคับ</span>
           </div>
           <div className={s.typeGrid}>
-            {propertyTypes.map(type => (
-              <button key={type.key} type="button" className={`${s.typeCard} ${propertyType===type.key ? s.typeSelected : ''}`} onClick={()=>{setPropertyType(type.key); addHistory(`เลือกประเภท ${type.label}`)}}>
-                <div className={s.typeEmoji}>{type.emoji}</div>
-                <div>{type.label}</div>
+            {propertyTypes.map((item) => (
+              <button
+                key={item.key}
+                type="button"
+                className={`${s.typeCard} ${propertyType === item.key ? s.typeSelected : ''}`}
+                onClick={() => setPropertyType(item.key)}
+              >
+                <div className={s.typeEmoji}>{item.emoji}</div>
+                <div>{item.label}</div>
               </button>
             ))}
           </div>
@@ -238,23 +246,40 @@ export default function AICameraV2(){
         <section className={s.section}>
           <div className={s.sectionHeader}>
             <div>
-              <div className={s.stepTitle}>ขั้นตอนที่ 3</div>
-              <div className={s.sectionTitle}>ข้อมูลการขาย</div>
+              <div className={s.stepTitle}>ขั้นตอนที่ 2</div>
+              <div className={s.sectionTitle}>เบอร์ผู้ขาย (ไม่บังคับ)</div>
             </div>
           </div>
-          <div className={s.fieldRow}><label>ราคาขาย</label><div className={s.amountInput}><span>บาท</span><input value={price} onChange={e=>setPrice(e.target.value)} placeholder="0" /></div></div>
           <div className={s.fieldColumn}>
-            <label>เบอร์โทรของผู้ขาย</label>
-            {phones.map((phone,index) => (
-              <div key={index} className={s.phoneRow}>
-                <input value={phone} readOnly className={s.input} />
-                <button type="button" className={s.smallBtn} onClick={()=>removePhone(index)}>ลบ</button>
+            <label className={s.fieldLabel}>เบอร์โทร</label>
+            <input
+              className={s.input}
+              inputMode="tel"
+              placeholder="080-123-4567"
+              value={sellerPhone}
+              onChange={(event) => setSellerPhone(event.target.value)}
+            />
+          </div>
+        </section>
+
+        <section className={s.section}>
+          <div className={s.sectionHeader}>
+            <div>
+              <div className={s.stepTitle}>ขั้นตอนที่ 3</div>
+              <div className={s.sectionTitle}>รูปภาพภาคสนาม</div>
+            </div>
+            <span className={s.muted}>{photos.length} รูป</span>
+          </div>
+          <div className={s.photoGallery}>
+            <button type="button" className={s.photoAdd} onClick={openGallery}>+ เพิ่มรูป</button>
+            {photos.map((photo, index) => (
+              <div key={photo.id} className={s.photoCard} style={{ backgroundImage: `url(${photo.url})` }}>
+                <div className={s.photoActions}>
+                  <button type="button" onClick={() => setActiveIndex(index)}>ดู</button>
+                  <button type="button" onClick={() => removePhoto(index)}>ลบ</button>
+                </div>
               </div>
             ))}
-            <div className={s.phoneAddRow}>
-              <input value={phoneInput} onChange={e=>setPhoneInput(e.target.value)} placeholder="เพิ่มเบอร์โทร" className={s.input} />
-              <button type="button" className={s.smallBtn} onClick={addPhoneNumber}>เพิ่ม</button>
-            </div>
           </div>
         </section>
 
@@ -262,154 +287,39 @@ export default function AICameraV2(){
           <div className={s.sectionHeader}>
             <div>
               <div className={s.stepTitle}>ขั้นตอนที่ 4</div>
-              <div className={s.sectionTitle}>ข้อมูลทรัพย์สิน</div>
+              <div className={s.sectionTitle}>สรุป GPS</div>
             </div>
           </div>
-          <div className={s.fieldGrid}>
-            <div>
-              <label>พื้นที่ดิน</label>
-              <div className={s.inlineGrid}>
-                <input className={s.input} value={landArea.rai} onChange={e=>setLandArea(prev=>({...prev, rai:e.target.value}))} placeholder="ไร่" />
-                <input className={s.input} value={landArea.ngan} onChange={e=>setLandArea(prev=>({...prev, ngan:e.target.value}))} placeholder="งาน" />
-                <input className={s.input} value={landArea.wah} onChange={e=>setLandArea(prev=>({...prev, wah:e.target.value}))} placeholder="วา" />
-              </div>
-            </div>
-            {propertyType !== 'land' && (
-              <>
-                <div>
-                  <label>พื้นที่ใช้สอย (ตร.ม.)</label>
-                  <input className={s.input} value={usableArea} onChange={e=>setUsableArea(e.target.value)} placeholder="เช่น 180" />
-                </div>
-                <div>
-                  <label>จำนวนชั้น</label>
-                  <input className={s.input} value={floors} onChange={e=>setFloors(e.target.value)} placeholder="เช่น 2" />
-                </div>
-              </>
-            )}
-            {propertyType === 'condo' && (
-              <>
-                <div>
-                  <label>ชื่อโครงการ</label>
-                  <input className={s.input} value={projectName} onChange={e=>setProjectName(e.target.value)} />
-                </div>
-                <div>
-                  <label>อาคาร</label>
-                  <input className={s.input} value={building} onChange={e=>setBuilding(e.target.value)} />
-                </div>
-                <div>
-                  <label>ชั้น</label>
-                  <input className={s.input} value={floor} onChange={e=>setFloor(e.target.value)} />
-                </div>
-              </>
-            )}
+          <div className={s.gpsInfo}>
+            <div><span>สถานะ</span><strong>{location ? 'จับพิกัดอัตโนมัติแล้ว' : 'กำลังรอ GPS'}</strong></div>
+            <div><span>พิกัด</span><strong>{location ? `${location.latitude.toFixed(5)}, ${location.longitude.toFixed(5)}` : '—'}</strong></div>
+            <div><span>ความแม่นยำ</span><strong>{location ? `${location.accuracy} m` : '—'}</strong></div>
           </div>
         </section>
 
-        <section className={s.section}>
-          <div className={s.sectionHeader}>
-            <div>
-              <div className={s.stepTitle}>ขั้นตอนที่ 5</div>
-              <div className={s.sectionTitle}>ตำแหน่ง GPS</div>
+        {savedId ? (
+          <section className={s.section}>
+            <div className={s.sectionHeader}>
+              <div>
+                <div className={s.stepTitle}>บันทึกแล้ว</div>
+                <div className={s.sectionTitle}>พร้อมไปที่รายการทรัพย์</div>
+              </div>
             </div>
-          </div>
-          <div className={s.mapPanel}>
-            <MapContainer center={location} zoom={15} style={{height:'220px', borderRadius:'18px'}}>
-              <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-              <CenterMap position={location} />
-              <Marker position={location} draggable eventHandlers={{ dragend: (event) => {
-                const latlng = event.target.getLatLng()
-                setLocation([latlng.lat, latlng.lng])
-                addHistory('ย้ายพิน GPS แล้ว')
-              } }}>
-                <Popup>ลากเพื่อปรับตำแหน่ง</Popup>
-              </Marker>
-            </MapContainer>
             <div className={s.mapActions}>
-              <button type="button" className={s.smallBtn} onClick={setCurrentLocation}>ใช้พิกัดปัจจุบัน</button>
-              <button type="button" className={s.smallBtn} onClick={handleSearchLocation}>ค้นหาสถานที่</button>
+              <button type="button" className={s.primaryBtn} onClick={() => navigate('/album')}>ไปที่รายการทรัพย์</button>
+              <button type="button" className={s.secondaryBtn} onClick={() => navigate(`/property/${savedId}`)}>เปิดรายละเอียด</button>
             </div>
-            <div className={s.gpsInfo}>
-              <div>ละติจูด {location[0].toFixed(6)}</div>
-              <div>ลองจิจูด {location[1].toFixed(6)}</div>
-              <div>ความแม่นยำ {accuracy || '—'}</div>
-            </div>
-          </div>
-        </section>
+          </section>
+        ) : null}
 
-        <section className={s.section}>
-          <div className={s.sectionHeader}>
-            <div>
-              <div className={s.stepTitle}>ขั้นตอนที่ 6</div>
-              <div className={s.sectionTitle}>ที่อยู่</div>
-            </div>
-          </div>
-          <div className={s.fieldGrid}>
-            <div><label>เลขที่บ้าน</label><input className={s.input} value={address.house} onChange={e=>setAddress(prev=>({...prev, house:e.target.value}))} /></div>
-            <div><label>ถนน</label><input className={s.input} value={address.road} onChange={e=>setAddress(prev=>({...prev, road:e.target.value}))} /></div>
-            <div><label>ตำบล</label><input className={s.input} value={address.subdistrict} onChange={e=>setAddress(prev=>({...prev, subdistrict:e.target.value}))} /></div>
-            <div><label>อำเภอ</label><input className={s.input} value={address.district} onChange={e=>setAddress(prev=>({...prev, district:e.target.value}))} /></div>
-            <div><label>จังหวัด</label><input className={s.input} value={address.province} onChange={e=>setAddress(prev=>({...prev, province:e.target.value}))} /></div>
-          </div>
-        </section>
+        {message ? <div className={s.muted}>{message}</div> : null}
 
-        <section className={s.section}>
-          <div className={s.sectionHeader}>
-            <div>
-              <div className={s.stepTitle}>ขั้นตอนที่ 7</div>
-              <div className={s.sectionTitle}>วันที่ตรวจสอบ</div>
-            </div>
-          </div>
-          <input type="date" className={s.input} value={inspectionDate} onChange={e=>{ setInspectionDate(e.target.value); addHistory('อัปเดตวันที่ตรวจสอบแล้ว') }} />
-        </section>
+        <div className={s.actionFooter}>
+          <button type="button" className={s.secondaryBtn} onClick={() => navigate('/map')}>ย้อนกลับ</button>
+          <button type="button" className={s.primaryBtn} disabled={saving} onClick={() => void saveCapture()}>{saving ? 'กำลังบันทึก...' : 'บันทึกทรัพย์'}</button>
+        </div>
 
-        <section className={s.section}>
-          <div className={s.sectionHeader}>
-            <div>
-              <div className={s.stepTitle}>ขั้นตอนที่ 8</div>
-              <div className={s.sectionTitle}>หมายเหตุ</div>
-            </div>
-          </div>
-          <textarea className={s.textarea} value={remark} onChange={e=>setRemark(e.target.value)} placeholder="ป้อนบันทึกการตรวจสอบ รายละเอียดสภาพแวดล้อม หรือข้อสังเกตไซต์" />
-        </section>
-
-        <section className={s.section}>
-          <div className={s.sectionHeader}>
-            <div>
-              <div className={s.stepTitle}>ขั้นตอนที่ 9</div>
-              <div className={s.sectionTitle}>เจ้าหน้าที่</div>
-            </div>
-          </div>
-          <div className={s.officerCard}>
-            <div className={s.badge}>{officer.slice(0,2).toUpperCase()}</div>
-            <div>
-              <div style={{fontWeight:700}}>{officer}</div>
-              <div style={{color:'var(--muted)'}}>เจ้าหน้าที่ประเมินทรัพย์สิน</div>
-            </div>
-          </div>
-        </section>
-
-        <section className={s.section}>
-          <div className={s.sectionHeader}>
-            <div>
-              <div className={s.stepTitle}>ขั้นตอนที่ 10</div>
-              <div className={s.sectionTitle}>ประวัติการเปลี่ยนแปลง</div>
-            </div>
-          </div>
-          <div className={s.historyList}>
-            {history.length ? history.map(item => (
-              <div key={item.id} className={s.historyItem}>
-                <div>{item.action}</div>
-                <div className={s.historyMeta}>{item.time}</div>
-              </div>
-            )) : <div className={s.muted}>ยังไม่มีประวัติการเปลี่ยนแปลง</div>}
-          </div>
-        </section>
-      </div>
-
-      <div className={s.actionFooter}>
-        <button className={s.secondaryBtn} onClick={()=>addHistory('บันทึกร่างแล้ว')}>บันทึกร่าง</button>
-        <button className={s.primaryBtn} onClick={handleUpload}>อัปโหลด</button>
-        <button className={s.secondaryBtn} onClick={()=>window.location.reload()}>ยกเลิก</button>
+        {toast ? <div className="entry-toast">{toast}</div> : null}
       </div>
     </Layout>
   )

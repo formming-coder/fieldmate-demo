@@ -117,9 +117,9 @@ export default function Home() {
   }))
   const quickActions = useMemo(
     () => [
-      { icon: 'map', title: 'แผนที่อัจฉริยะ', subtitle: 'สำรวจพื้นที่', path: '/map' },
-      { icon: 'photo_camera', title: 'กล้อง AI', subtitle: 'บันทึกภาพทรัพย์', path: '/camera' },
-      { icon: 'assignment', title: 'ประเมิน', subtitle: 'เปิดงานประเมิน', path: '/assessment' },
+      { icon: 'map', title: 'แผนที่', subtitle: 'สำรวจพื้นที่', path: '/map' },
+      { icon: 'photo_camera', title: 'บันทึกทรัพย์', subtitle: 'ถ่ายภาพภาคสนาม', path: '/camera' },
+      { icon: 'assignment', title: 'รายการทรัพย์', subtitle: 'ดูข้อมูลที่บันทึก', path: '/album' },
       { icon: 'route', title: 'วางแผนเส้นทาง', subtitle: 'วางแผนเส้นทาง', path: '/route-planner' },
       { icon: 'search', title: 'ค้นหา', subtitle: 'ค้นหาข้อมูล', path: '/search' },
       { icon: 'database', title: 'ข้อมูลส่วนกลาง', subtitle: 'ฐานข้อมูลกลาง', path: '/shared-intelligence' },

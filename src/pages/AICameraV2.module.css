@@ -33,6 +33,7 @@
 .typeEmoji { font-size:24px }
 .fieldRow, .fieldColumn { display:grid; gap:12px; }
 .fieldColumn { display:flex; flex-direction:column; }
+.fieldLabel { font-size:12px; color:var(--muted); font-weight:700; }
 .amountInput { display:flex; align-items:center; gap:10px; background: #fff; border:1px solid rgba(31,58,95,0.12); border-radius:14px; padding:10px 12px }
 .amountInput span { font-size:14px; color:#1f3a5f; font-weight:700 }
 .phoneRow { display:flex; gap:10px; align-items:center }

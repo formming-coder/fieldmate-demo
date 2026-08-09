@@ -76,7 +76,7 @@ export default function PropertyDetailContent({ property, nearby = [], onSelectN
         </button>
         <div className="hero-overlay">
           <span className="pill">{propertyType}</span>
-          <span className="pill accent">{property.marketPrice.toLocaleString()} บาท</span>
+          <span className="pill accent">{property.marketPrice > 0 ? `${property.marketPrice.toLocaleString()} บาท` : 'รออัปเดตภายหลัง'}</span>
         </div>
         <div className="hero-meta">
           <div style={{ fontWeight: 800 }}>{property.owner}</div>
@@ -101,6 +101,7 @@ export default function PropertyDetailContent({ property, nearby = [], onSelectN
           <div><span>ชั้น</span><strong>3</strong></div>
           <div><span>ที่อยู่</span><strong>{property.address}</strong></div>
           <div><span>พิกัด GPS</span><strong>{property.latitude.toFixed(4)}, {property.longitude.toFixed(4)}</strong></div>
+          <div><span>เบอร์ผู้ขาย</span><strong>{property.sellerPhone || 'ไม่ระบุ'}</strong></div>
           <div><span>วันที่ตรวจสอบ</span><strong>{new Date(property.lastInspection).toLocaleDateString('th-TH')}</strong></div>
           <div><span>เจ้าหน้าที่</span><strong>นีนา</strong></div>
           <div><span>เจ้าของ</span><strong>{property.owner}</strong></div>
@@ -127,13 +128,13 @@ export default function PropertyDetailContent({ property, nearby = [], onSelectN
       </div>
 
       <div className="detail-card">
-        <div className="section-title">สรุป AI</div>
+        <div className="section-title">สรุปภาคสนาม</div>
         <div className="ai-summary-card">
-          <div><span>ความเสี่ยง</span><strong>ปานกลางด้านสภาพจราจรและเสียงรบกวน</strong></div>
-          <div><span>คำแนะนำ</span><strong>เก็บภาพด้านหลังเพิ่ม 2 มุม และตรวจเอกสารสิทธิ์ซ้ำ</strong></div>
-          <div><span>ทรัพย์เปรียบเทียบเด่น</span><strong>ช่วงราคาใกล้เคียง {(property.marketPrice - 160000).toLocaleString()} บาท</strong></div>
-          <div><span>ความเชื่อมั่น</span><strong>92%</strong></div>
-          <div><span>ราคาแนะนำโดย AI</span><strong>{(property.marketPrice * 0.97).toLocaleString()} บาท</strong></div>
+          <div><span>สถานะ</span><strong>บันทึกภาคสนามแล้ว</strong></div>
+          <div><span>คำแนะนำ</span><strong>กลับมาเติมราคา เบอร์โทร และรายละเอียดภายหลังได้</strong></div>
+          <div><span>รูปภาพ</span><strong>{property.images.length} รูป</strong></div>
+          <div><span>GPS</span><strong>{property.latitude.toFixed(4)}, {property.longitude.toFixed(4)}</strong></div>
+          <div><span>ข้อมูลล่าสุด</span><strong>{new Date(property.lastInspection).toLocaleDateString('th-TH')}</strong></div>
         </div>
       </div>
 

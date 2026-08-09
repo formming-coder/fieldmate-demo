@@ -4,19 +4,47 @@ import Layout from '../components/Layout'
 import PropertyDetailContent from '../components/PropertyDetailContent'
 import { BottomSheet } from '../components/ui'
 import { usePropertiesQuery } from '../hooks/useBackendQueries'
-import 'leaflet/dist/leaflet.css'
+import { historyRepository } from '../repositories'
 import '../components/PropertyDetailContent.css'
+import '../pages/propertydetail.css'
+
+type FollowUpState = {
+  price: string
+  phone: string
+  notes: string
+}
+
+const defaultFollowUp: FollowUpState = {
+  price: '',
+  phone: '',
+  notes: '',
+}
+
+function readFollowUp(propertyId: string) {
+  if (typeof window === 'undefined') return defaultFollowUp
+  try {
+    const raw = window.localStorage.getItem(`fieldmate-followup:${propertyId}`)
+    return raw ? { ...defaultFollowUp, ...(JSON.parse(raw) as FollowUpState) } : defaultFollowUp
+  } catch {
+    return defaultFollowUp
+  }
+}
 
 export default function PropertyDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
   const { data: properties = [] } = usePropertiesQuery()
   const [toast, setToast] = useState('')
+  const [history, setHistory] = useState<Array<{ id: string; action: string; createdAt: string; actor: string }>>([])
+  const [followUp, setFollowUp] = useState<FollowUpState>(defaultFollowUp)
+
   const property = useMemo(() => properties.find((item) => item.id === id) || properties[0] || null, [properties, id])
-  const nearby = useMemo(() => {
-    if (!property) return []
-    return properties.filter((item) => item.id !== property.id && Math.abs(item.latitude - property.latitude) < 0.03).slice(0, 4)
-  }, [properties, property])
+
+  useEffect(() => {
+    if (!property) return
+    setFollowUp(readFollowUp(property.id))
+    void historyRepository.list(8).then(setHistory).catch(() => setHistory([]))
+  }, [property])
 
   useEffect(() => {
     if (!toast) return
@@ -24,31 +52,15 @@ export default function PropertyDetail() {
     return () => window.clearTimeout(timer)
   }, [toast])
 
-  const openNavigation = () => {
-    if (!property) return
-    window.open(`https://www.google.com/maps?q=${property.latitude},${property.longitude}`, '_blank', 'noopener,noreferrer')
-  }
+  const nearby = useMemo(() => {
+    if (!property) return []
+    return properties.filter((item) => item.id !== property.id && Math.abs(item.latitude - property.latitude) < 0.03).slice(0, 4)
+  }, [properties, property])
 
-  const shareProperty = async () => {
-    if (!property) return
-
-    const detail = `${property.owner} • ${property.province} • ${property.marketPrice.toLocaleString()} บาท`
-    if (navigator.share) {
-      try {
-        await navigator.share({ title: 'รายละเอียดทรัพย์สิน', text: detail })
-        setToast('แชร์ข้อมูลสำเร็จ')
-        return
-      } catch {
-        // Fall back to clipboard when share sheet is cancelled or unavailable.
-      }
-    }
-
-    try {
-      await navigator.clipboard.writeText(detail)
-      setToast('คัดลอกข้อมูลเพื่อแชร์แล้ว')
-    } catch {
-      setToast('ไม่สามารถแชร์ได้ในขณะนี้')
-    }
+  const saveFollowUp = () => {
+    if (!property || typeof window === 'undefined') return
+    window.localStorage.setItem(`fieldmate-followup:${property.id}`, JSON.stringify(followUp))
+    setToast('บันทึกข้อมูลอัปเดตภายหลังแล้ว')
   }
 
   if (!property) {
@@ -57,7 +69,7 @@ export default function PropertyDetail() {
         <div className="detail-shell">
           <div className="detail-card">
             <p>ยังไม่พบข้อมูลทรัพย์สินที่เลือก</p>
-            <button type="button" className="action-btn primary" onClick={() => navigate('/map')}>กลับไปแผนที่อัจฉริยะ</button>
+            <button type="button" className="action-btn primary" onClick={() => navigate('/album')}>กลับไปรายการทรัพย์</button>
           </div>
         </div>
       </Layout>
@@ -70,24 +82,54 @@ export default function PropertyDetail() {
         open
         mode="property"
         title="รายละเอียดทรัพย์สิน"
-        onClose={() => navigate('/map', { replace: true })}
+        onClose={() => navigate('/album', { replace: true })}
         footer={(
           <>
-            <button type="button" onClick={() => navigate(`/survey/${property.id}`)}>เริ่มสำรวจ</button>
-            <button type="button" onClick={openNavigation}>นำทาง</button>
-            <button type="button" onClick={() => setToast('บันทึกข้อมูลทรัพย์สินเรียบร้อยแล้ว')}>บันทึก</button>
+            <button type="button" onClick={() => navigate('/camera')}>บันทึกเพิ่ม</button>
+            <button type="button" onClick={() => setToast('พร้อมกลับมาอัปเดตข้อมูลภายหลัง')}>อัปเดตภายหลัง</button>
+            <button type="button" onClick={() => navigate('/album')}>รายการทรัพย์</button>
           </>
         )}
       >
         <PropertyDetailContent property={property} nearby={nearby} onSelectNearby={(item) => navigate(`/property/${item.id}`, { replace: true })} />
 
-          <div className="detail-secondary-actions">
-            <button type="button" className="action-btn" onClick={() => void shareProperty()}>แชร์</button>
-            <button type="button" className="action-btn" onClick={() => navigate('/camera')}>เพิ่มภาพ</button>
-            <button type="button" className="action-btn" onClick={() => navigate('/assessment')}>แก้ไข</button>
+        <div className="detail-card">
+          <div className="section-title">อัปเดตภายหลัง</div>
+          <div className="follow-up-grid">
+            <label>
+              <span>ราคา</span>
+              <input value={followUp.price} onChange={(event) => setFollowUp((current) => ({ ...current, price: event.target.value }))} placeholder="ราคาขายหรือราคาประเมิน" />
+            </label>
+            <label>
+              <span>เบอร์โทร</span>
+              <input value={followUp.phone} onChange={(event) => setFollowUp((current) => ({ ...current, phone: event.target.value }))} placeholder="เบอร์ผู้ขาย" />
+            </label>
+            <label className="full-width">
+              <span>หมายเหตุ</span>
+              <textarea value={followUp.notes} onChange={(event) => setFollowUp((current) => ({ ...current, notes: event.target.value }))} placeholder="รายละเอียดเพิ่มเติมภายหลัง" />
+            </label>
           </div>
+          <div className="detail-secondary-actions">
+            <button type="button" className="action-btn primary" onClick={saveFollowUp}>บันทึกอัปเดต</button>
+          </div>
+        </div>
 
-          {toast ? <div className="detail-toast" role="status" aria-live="polite">{toast}</div> : null}
+        <div className="detail-card">
+          <div className="section-title">ประวัติ</div>
+          <div className="timeline-list">
+            {history.map((item) => (
+              <div key={item.id} className="timeline-item">
+                <div className="timeline-dot" />
+                <div>
+                  <div style={{ fontWeight: 700 }}>{item.action}</div>
+                  <div style={{ color: 'var(--muted)', fontSize: 12 }}>{item.actor} • {new Date(item.createdAt).toLocaleString('th-TH')}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {toast ? <div className="detail-toast" role="status" aria-live="polite">{toast}</div> : null}
       </BottomSheet>
     </Layout>
   )
