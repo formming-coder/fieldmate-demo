@@ -355,7 +355,7 @@ export default function SmartMap() {
     setIsMapBusy(false)
   }
 
-  const showMapSkeleton = loading || mapLoadState !== 'ready'
+  const showMapSkeleton = loading || mapLoadState === 'initializing' || mapLoadState === 'loading'
   const showMapError = mapLoadState === 'error'
 
   return (
@@ -377,6 +377,7 @@ export default function SmartMap() {
               showTraffic={showTraffic}
               properties={filteredProperties}
               selectedId={selectedId}
+              radiusKm={radiusKm}
               currentLocation={location}
               retrySeed={mapRetrySeed}
               measureMode={measureMode}
@@ -394,6 +395,7 @@ export default function SmartMap() {
               showTraffic={showTraffic}
               properties={filteredProperties}
               selectedId={selectedId}
+              radiusKm={radiusKm}
               currentLocation={location}
               measureMode={measureMode}
               onMeasurePoint={addMeasurePoint}

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from 'react'
+import React, { useEffect, useMemo, useRef } from 'react'
 import { Circle, MapContainer, Marker, Polyline, TileLayer, useMap, useMapEvents } from 'react-leaflet'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
@@ -15,6 +15,7 @@ type SmartMapCanvasProps = {
   showTraffic: boolean
   properties: Property[]
   selectedId: string | null
+  radiusKm: number
   currentLocation: { latitude: number; longitude: number; accuracy: number } | null
   measureMode: boolean
   onMeasurePoint: (latitude: number, longitude: number) => void
@@ -96,6 +97,7 @@ export default function SmartMapCanvas({
   showTraffic,
   properties,
   selectedId,
+  radiusKm,
   currentLocation,
   measureMode,
   onMeasurePoint,
@@ -115,6 +117,12 @@ export default function SmartMapCanvas({
   }, [properties])
 
   const trafficPath = useMemo(() => buildTrafficPath(center), [center])
+  const hasSignaledReadyRef = useRef(false)
+  const signalReadyOnce = () => {
+    if (hasSignaledReadyRef.current) return
+    hasSignaledReadyRef.current = true
+    onReady()
+  }
 
   return (
     <MapContainer
@@ -128,8 +136,11 @@ export default function SmartMapCanvas({
         attribution={TILE_SOURCES[mapMode].attribution}
         url={TILE_SOURCES[mapMode].url}
         eventHandlers={{
-          load: onReady,
-          tileerror: () => onError?.(new Error('ไม่สามารถโหลดแผนที่สำรองได้')),
+          load: signalReadyOnce,
+          tileerror: () => {
+            signalReadyOnce()
+            onError?.(new Error('ไม่สามารถโหลดแผนที่สำรองได้'))
+          },
         }}
       />
       <MapReady />
@@ -144,7 +155,7 @@ export default function SmartMapCanvas({
           />
           <Circle
             center={[currentLocation.latitude, currentLocation.longitude]}
-            radius={2000}
+            radius={radiusKm * 1000}
             pathOptions={{ color: '#ffb100', fillColor: '#ffe188', fillOpacity: 0.1, weight: 2 }}
           />
         </>
@@ -156,7 +167,7 @@ export default function SmartMapCanvas({
         if (node.items.length > 1) {
           return (
             <Marker
-              key={`smart-cluster-${index}`}
+              key={`smart-cluster-${node.lat}-${node.lon}`}
               position={[node.lat, node.lon]}
               icon={createClusterIcon(node.items.length)}
               eventHandlers={{
